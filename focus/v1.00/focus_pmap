@@ -1,0 +1,180 @@
+#!/bin/bash
+# Bash script to strip images of label, focus, reattach label and save focused image
+
+# Step 0: Check that we've been called with an argument (the target directory)
+if [ "$#" -ne 1 ] || ! [ -d "$1" ]; then
+	echo "Use: focus_pmap <directory name>"
+	exit 1
+fi
+
+# Assign variables:
+TARGETDIR=`readlink -f $1`
+BATCHXML=${TARGETDIR}/zsbatch.xml
+NUMDIRS=$(find ${TARGETDIR} -type d -name obj\* | wc -l)
+
+# Step 1: Create 'stripped' directory:
+echo "Stripping labels from images in $NUMDIRS directories ..."
+mkdir ${TARGETDIR}/stripped
+for dir in `find ${TARGETDIR} -type d -name obj\* `; do
+	OUTDIR=$(basename $dir)
+	echo "Converting: $OUTDIR"
+	mkdir ${TARGETDIR}/stripped/${OUTDIR}
+	for file in `find ${dir} -type f -name \*plane\*tif `; do
+		OUTFILE=`basename $file`
+		convert $file -crop +0-125 +repage ${TARGETDIR}/stripped/${OUTDIR}/${OUTFILE}
+	done
+done
+echo "Label stripping complete!"
+
+# Step 2: Initialize the batch XML file:
+echo "Writing batch processing XML file..."
+cat << EOF > ${BATCHXML}
+<?xml version="1.0" encoding="UTF-8"?>
+<ZereneStackerBatchScript>
+  <WrittenBy value="Zerene Stacker 1.04 Build T201404082055" />
+	  <BatchQueue>
+		    <Batches length="${NUMDIRS}">
+EOF
+
+
+# Step 3: Loop over all object directories:
+for dir in `find ${TARGETDIR}/stripped -type d -name obj\*` ; do
+cat << EOF >> ${BATCHXML}
+      <Batch>
+        <Sources length="1">
+          <Source value="${dir}" />
+        </Sources>
+        <ProjectDispositionCode value="101" />
+        <Tasks length="1">
+          <Task>
+            <OutputImageDispositionCode value="2" />
+            <OutputImagesDesignatedFolder value="${TARGETDIR}/focused/" />
+            <Preferences>
+              <AcquisitionSequencer.BacklashMillimeters value="0.22" />
+              <AcquisitionSequencer.CommandLogging value="false" />
+              <AcquisitionSequencer.DistancePerStepperRotation value="1.5875" />
+              <AcquisitionSequencer.MaximumMmPerSecond value="2.0" />
+              <AcquisitionSequencer.MicrostepsPerRotation value="3200" />
+              <AcquisitionSequencer.MovementRampTime value="2.0" />
+              <AcquisitionSequencer.NumberOfSteps value="5" />
+              <AcquisitionSequencer.PrecisionThreshold value="0.05" />
+              <AcquisitionSequencer.PrerunMillimeters value="0.0" />
+              <AcquisitionSequencer.RPPIndicatorLeft value="-100.0" />
+              <AcquisitionSequencer.RPPIndicatorRight value="+100.0" />
+              <AcquisitionSequencer.SettlingTime value="3.0" />
+              <AcquisitionSequencer.ShutterActivationsPerStep value="1" />
+              <AcquisitionSequencer.ShutterAfterTime value="2.0" />
+              <AcquisitionSequencer.ShutterBetweenTime value="1.0" />
+              <AcquisitionSequencer.ShutterPulseTime value="0.3" />
+              <AcquisitionSequencer.StepSize value="0.1" />
+              <AcquisitionSequencer.StepSizeAdjustmentFactor value="1.0" />
+              <AcquisitionSequencer.StepSizesFile value="" />
+              <AlignmentControl.AddNewFilesAsAlreadyAligned value="false" />
+              <AlignmentControl.AlignmentSettingsChanged value="false" />
+              <AlignmentControl.AllowRotation value="false" />
+              <AlignmentControl.AllowScale value="false" />
+              <AlignmentControl.AllowShiftX value="false" />
+              <AlignmentControl.AllowShiftY value="false" />
+              <AlignmentControl.BrightnessSettingsChanged value="false" />
+              <AlignmentControl.CorrectBrightness value="true" />
+              <AlignmentControl.MaxRelDegRotation value="20" />
+              <AlignmentControl.MaxRelPctScale value="20" />
+              <AlignmentControl.MaxRelPctShiftX value="20" />
+              <AlignmentControl.MaxRelPctShiftY value="20" />
+              <AlignmentControl.Order.Automatic value="true" />
+              <AlignmentControl.Order.NarrowFirst value="true" />
+              <AllowReporting.UsageStatistics value="false" />
+              <ColorManagement.DebugPrintProfile value="false" />
+              <ColorManagement.InputOption value="Use_EXIF_and_DCF_rules" />
+              <ColorManagement.InputOption.AssumedProfile value="sRGB IEC61966-2.1" />
+              <ColorManagement.ManageZSDisplays value="false" />
+              <ColorManagement.ManageZSDisplaysHasChanged value="false" />
+              <ColorManagement.OutputOption value="CopyInput" />
+              <DepthMapControl.AlgorithmIdentifier value="1" />
+              <DepthMapControl.ContrastThresholdLevel value="0" />
+              <DepthMapControl.ContrastThresholdPercentile value="25.0" />
+              <DepthMapControl.EstimationRadius value="10" />
+              <DepthMapControl.SaveDepthMapImage value="false" />
+              <DepthMapControl.SaveDepthMapImageDirectory value="" />
+              <DepthMapControl.SaveUsedPixelImages value="false" />
+              <DepthMapControl.SmoothingRadius value="5" />
+              <DepthMapControl.UseFixedContrastThresholdLevel value="false" />
+              <DepthMapControl.UseFixedContrastThresholdPercentile value="true" />
+              <DepthMapControl.UsedPixelFractionThreshold value="0.5" />
+              <FileIO.UseExternalTIFFReader value="false" />
+              <Interpolator.RenderingSelection value="Interpolator.Spline4x4" />
+              <Interpolator.ShowAdvanced value="false" />
+              <LightroomPlugin.CurrentInstallationFolder value="" />
+              <LightroomPlugin.DefaultColorSpace value="AdobeRGB" />
+              <OutputImageNaming.Template value="ZS" />
+              <Precrop.LimitsString value="" />
+              <Precrop.Selected value="false" />
+              <Prerotation.Degrees value="0" />
+              <Prerotation.Selected value="false" />
+              <Presize.UserSetting.Scale value="1.0" />
+              <Presize.UserSetting.Selected value="false" />
+              <Presize.Working.Scale value="1.0" />
+              <PyramidControl.GritSuppressionMethod value="1" />
+              <PyramidControl.RetainUDRImage value="false" />
+              <RetouchingBrush.Hardness value="0.5" />
+              <RetouchingBrush.ShowBrushes value="false" />
+              <RetouchingBrush.Type value="Details" />
+              <RetouchingBrush.Width value="10" />
+              <SaveImage.BitsPerColor value="8" />
+              <SaveImage.CompressionQuality value="1.00" />
+              <SaveImage.FileType value="tif" />
+              <SaveImage.RescaleImageToAvoidOverflow value="false" />
+              <SkewSequence.FirstImage.MaximumShiftXPct value="-3.0" />
+              <SkewSequence.FirstImage.MaximumShiftYPct value="0.0" />
+              <SkewSequence.LastImage.MaximumShiftXPct value="3.0" />
+              <SkewSequence.LastImage.MaximumShiftYPct value="0.0" />
+              <SkewSequence.NumberOfOutputImages value="3" />
+              <SkewSequence.Selected value="false" />
+              <StackingControl.FrameSkipFactor value="1" />
+              <StackingControl.FrameSkipSelected value="false" />
+              <StereoOrdering.LeftRightIndexSeparation value="1" />
+              <WatchDirectoryOptions.AcceptViaDelay value="false" />
+              <WatchDirectoryOptions.AcceptViaDelaySeconds value="2.0" />
+            </Preferences>
+            <TaskIndicatorCode value="1" />
+          </Task>
+        </Tasks>
+      </Batch>
+EOF
+	
+done
+
+# Step 4: Close the XML file:
+cat << EOF >> ${BATCHXML}
+    </Batches>
+  </BatchQueue>
+</ZereneStackerBatchScript>
+EOF
+echo "Batch XML file written!"
+
+# Step 5: Run the XML file:
+echo "Running Zerene Stacker..."
+xvfb-run /hull-disk1/ph269/software/ZereneStacker/v1.04/ZereneStacker $BATCHXML > ${TARGETDIR}/zerene.log
+echo "Zerene Stacker finished!"
+
+# Step 6: Combine focused image with label:
+echo "Re-labeling images ..."
+mkdir ${TARGETDIR}/focused
+mkdir ${TARGETDIR}/focused_unlabeled
+
+for dir in `find ${TARGETDIR} -maxdepth 1 -type d -name obj\*  `; do
+  echo "Processing $dir"
+	HIGHEST=$(find ${dir} -name \*plane\*tif | sort | tail -1 )
+	LABELDIR=$(basename $dir)
+	FOCUSEDFILE=$(basename $dir)
+	convert ${HIGHEST} -gravity South -crop 0x125+0+0 ${TARGETDIR}/stripped/${LABELDIR}/label.tif
+	convert -append ${TARGETDIR}/stripped/${LABELDIR}/ZS.tif ${TARGETDIR}/stripped/${LABELDIR}/label.tif ${TARGETDIR}/focused/${FOCUSEDFILE}.tif
+	cp ${TARGETDIR}/stripped/${LABELDIR}/ZS.tif ${TARGETDIR}/focused_unlabeled/${FOCUSEDFILE}.tif
+done
+
+echo "Cleaning up..."
+# Step 7: Clean up
+rm -rf ${TARGETDIR}/stripped
+
+echo "Done!"
+

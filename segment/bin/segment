@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [ $# -ne 1 ]
+then
+	echo "Usage: segment <settings file>"
+	exit
+fi
+
+SETTINGSFILE=`readlink -f $1`
+
+matlab -nodisplay -nodesktop -nosplash -r "addpath('/hull-disk1/ph269/software/segment/current'); segment('$SETTINGSFILE'); exit"

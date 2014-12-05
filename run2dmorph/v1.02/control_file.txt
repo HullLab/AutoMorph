@@ -1,0 +1,70 @@
+# Control file for batch2dmorph function. To use default values, set variables = [].
+# Variables that are designated as (required) have no default value and must be set by
+# the user.
+
+# Directory:
+# The full path of the folder containing the image files to be processed (required)
+directory = /hull-disk1/ph269/segmented/IP.307625_CH-82-21-0-1cm-43nlat-29wlon-2103m-g150_Hrectangle_N1of4_Mcompound_Oumbilical_I1_TzEDF-0_X5/final_th=0.1600_size=0125u-2000u/focused_unlabeled
+
+# Image Extension:
+# String designating file extension of images to process (required)
+image_extension = .tif
+
+# Sample ID:
+# String designating the Sample ID # used to identify the processed files (required)
+sampleID = IP.307625
+
+# Output Filename:
+# String designating the output filename base (default: 'sampleID_outputID')
+output_filename = []
+
+# Microns Per Pixel:
+# A number specifying the conversion factor for microns to pixels (default: 1)
+microns_per_pixel = []
+
+# Get Coordinates:
+# A boolean specifying whether coordinate data should be extracted and saved to file
+# (default: true)
+get_coordinates = []
+
+# Save Intermediates:
+# A boolean specifying whether the function should output intermediate images of the
+# outline extraction process for troubleshooting (default: false)
+save_intermediates = []
+
+# Intensity Range In:
+# Specifies the input range for the intensity filtering step (default: [0 0.5])
+intensity_range_in = []
+
+# Intensity Range Out:
+# Specifies the output range for the intensity filtering step (default: [0 1])
+intensity_range_out = []
+
+# Gamma:
+# Specifies the gamma value for the intensity filtering step (default: 1)
+gamma = []
+
+# Threshold Adjustment:
+# Specifies an adjustment value for the automatic threshold value during conversion of
+# image to black and white. Higher values correspond to higher tolerance (default: 0.2)
+threshold_adjustment = []
+
+# Smoothing Sigma:
+# An integer that controls the amount of smoothing applied to the edge outline for
+# rugosity calculations. Higher values correspond to higher amounts of smoothing
+# (default: 7)
+smoothing_sigma = []
+
+# Write CSV:
+# A boolean specifying whether individual CSV files per object should be written (as
+# opposed to a single CSV file containing all parameters/measurements/coordinates)
+# (default: false)
+write_csv = []
+
+# Downsample:
+# A boolean specifying whether extracted coordinates should be downsampled (default: true)
+downsample = []
+
+# Number of Points:
+# An integer specifying the number of points desired if downsample == true (default: 100)
+num_points = []
