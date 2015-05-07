@@ -1,0 +1,84 @@
+# Control file for batch2dmorph function. To use default values, set variables = [].
+# Variables that are designated as (required) have no default value and must be set by
+# the user.
+
+# Directory:
+# The full path of the folder containing the image files to be processed (required)
+directory = /Users/ahsiang/Desktop/Automated_Morphometrics/2D_edge_detection/tests/stuff
+
+# Image Extension:
+# String designating file extension of images to process (required)
+image_extension = .tif
+
+# Sample ID:
+# String designating the Sample ID # used to identify the processed files (required)
+sampleID = test
+
+# Output Filename:
+# String designating the output filename base (default: 'sampleID_outputID')
+output_filename = []
+
+# Microns Per Pixel X:
+# A number specifying the conversion factor for microns to pixels for the x-axis/width
+# (default: 1)
+microns_per_pixel_X = []
+
+# Microns Per Pixel Y:
+# A number specifying the conversion factor for microns to pixels for the y-axis/height
+# (default: 1)
+microns_per_pixel_Y = []
+
+# Get Coordinates:
+# A boolean specifying whether coordinate data should be extracted and saved to file
+# (default: true)
+get_coordinates = []
+
+# Save Intermediates:
+# A boolean specifying whether the function should output intermediate images of the
+# outline extraction process for troubleshooting (default: false)
+save_intermediates = []
+
+# Intensity Range In:
+# Specifies the input range for the intensity filtering step (default: [0 0.2])
+intensity_range_in = []
+
+# Intensity Range Out:
+# Specifies the output range for the intensity filtering step (default: [0 1])
+intensity_range_out = []
+
+# Gamma:
+# Specifies the gamma value for the intensity filtering step (default: 2)
+gamma = []
+
+# Threshold Adjustment:
+# Specifies an adjustment value for the automatic threshold value during conversion of
+# image to black and white. Higher values correspond to higher tolerance. Adjustment value
+# is ADDED to the automatic threshold value (default: 0)
+threshold_adjustment = []
+
+# Smoothing Sigma:
+# An integer that controls the amount of smoothing applied to the edge outline for
+# rugosity calculations. Higher values correspond to higher amounts of smoothing
+# (default: 7)
+smoothing_sigma = []
+
+# Noise Removal Limit:
+# A number specifying the size (in proportion of total image size) below which objects
+# will be removed from the image during the noise removal step. For instance, if the
+# noise removal limit is 0.05, then all objects smaller than 5% of the total image size
+# will be removed (default: 0.05)
+limit = []
+
+# Write CSV:
+# A boolean specifying whether individual CSV files per object should be written (as
+# opposed to a single CSV file containing all parameters/measurements/coordinates)
+# (default: false)
+write_csv = []
+
+# Downsample:
+# A boolean specifying whether extracted coordinates should be downsampled (default: true)
+downsample = []
+
+# Number of Points:
+# An integer specifying the number of points desired if downsample == true (default: 100)
+num_points = []
