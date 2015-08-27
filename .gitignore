@@ -1,0 +1,22 @@
+#OS X
+.DS_Store
+._*
+
+#Linux
+*~
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+
+#Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+#Matlab
+*.asv
+*.m~
+*.mex*
