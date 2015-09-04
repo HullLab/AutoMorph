@@ -46,6 +46,14 @@ def load(filename, run):
     return img
 
 
+def save(image, filename):
+
+    if isinstance(image, (np.ndarray, np.generic)):
+        image = Image.fromarray(np.uint8(image))
+
+    image.save(filename)
+
+
 def list_files(directory, verbosity, file_extension='tif'):
     '''
     This function takes a directory and returns a list of all TIF images in that
@@ -59,6 +67,7 @@ def list_files(directory, verbosity, file_extension='tif'):
 
         debug_msg('INFO: images.find() found %d files' % num_files, True)
 
+    print file_list
     return file_list
 
 
@@ -79,20 +88,26 @@ def find_objects(img, run):
     print connected_objs
 
     # Create list of bounding boxes and filled
-    box_list = regionprops(connected_objs).bbox
-    num_objects = len(box_list)
+    region_list = regionprops(connected_objs)
+    num_objects = len(region_list)
+
+    bounding_boxes = [region.bbox for region in region_list]
 
     # Extract the size of the bounding box into arrays
-    size_x = box_list[]  # take every 4th element starting at 3 (width)
-    size_y = box_list[]  # take ever 4th element starting at 4 (hieght)
+    size_x = np.array([box[2] for box in bounding_boxes])  # take every 4th element starting at 3 (width)
+    size_y = np.array([box[3] for box in bounding_boxes])  # take every 4th element starting at 4 (height)
 
-    minimum_size = run['minimum_size'] / run['microns_per_pixel']
-    maximum_size = run['maximum_size'] / run['microns_per_pixel']
+    minimum_size = run['minimumSize'] / run['microns_per_pixel']
+    maximum_size = run['maximumSize'] / run['microns_per_pixel']
 
-    minimum_size = sqrt((minimum_size * maximum_size) / 2.)
-    box_list = box_list[]
+    minimum_size = math.sqrt((minimum_size * maximum_size) / 2.)
+    mask = ((size_x > minimum_size) & (size_x < maximum_size) &
+            (size_y > minimum_size) & (size_y < maximum_size))
 
-    box_list = expand_bounding_box(box_list, 0.20, n)
+    box_list = np.array(bounding_boxes)
+    box_list = box_list[mask]
+
+    box_list = expand_bounding_box(box_list, 0.20, connected_objs.shape)
 
     debug_msg('INFO: findObjects -> %d total [ Thresh: %f ] -->  %d valid'
               % (n, run['threshold'], len(box_list)), run['debug'] >= 1)
@@ -112,6 +127,35 @@ def border(img, border_size):
     img[:, width-round(width * border_size):width, :] = 0
 
     return Image.fromarray(np.uint8(img))
+
+
+def expand_bounding_box(box_list, scale_factor, i_size):
+
+    num_boxes = len(box_list)
+
+    for i, bounding_box in enumerate(box_list):
+        # PROBABLY WRONG SINCE BOUNDING BOXES ARE DEFINED DIFFERENTLY
+        # (min_row, min_col, max_row, max_col)
+        new_left = bounding_box[0] - round(bounding_box[2] * scale_factor)
+        if new_left < 1:
+            new_left = 1
+
+        new_top = bounding_box[1] - round(bounding_box[3] * scale_factor)
+        if new_top < 1:
+            new_top = 1
+
+        new_width = bounding_box[2] + round(bounding_box[2] * 2 * scale_factor)
+        if new_left + new_width > i_size[1]:
+            new_width = i_size[1] - new_left - 1
+
+        new_height = bounding_box[3] + round(bounding_box[3] * 2 * scale_factor)
+        if new_top + new_height > i_size[0]:
+            new_height = i_size[0] - new_top - 1
+
+        new_box = [new_left, new_top, new_width, new_height]
+        box_list[i] = new_box
+
+    return box_list
 
 
 def microns_per_pixel_xml(filename):

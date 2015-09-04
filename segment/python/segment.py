@@ -14,6 +14,8 @@ import sys
 
 def segment(settings_file):
 
+    version = '2015-8-31'
+
     runs = settings.parse(settings_file)
 
     for i, run in enumerate(runs):
@@ -33,25 +35,21 @@ def segment(settings_file):
         # Identify all objects based on threshold & minimumLight values
         objects = images.find_objects(current_image, run)
 
-        # # If we're running in 'sample' or 'save' modes, we've got more to do
-        # if run['mode'] in ['sample', 'save']:
-        #     # Loop over the planes we're interested in, load an image, then process it
-        #     for plane in range(len(target_images)):
-        #         current_image = image.load_image(target_images[plane])
+        # If we're running in 'sample' or 'save' modes, we've got more to do
+        if run['mode'] in ['sample', 'save']:
+            # Loop over the planes we're interested in, load an image, then process it
+            for plane in range(len(target_images)):
+                current_image = images.load(target_images[plane])
 
-        #         if run['mode'] == 'sample':
-        #             process.sample(current_image, objects, target_images[plane], version, run)
-        #         elif run['mode'] == 'save':
-        #             process.save_all(current_image, objects, target_images[plane], plane, version, run)
+                if run['mode'] == 'sample':
+                    process.sample(current_image, objects, target_images[plane], version, run)
+        #        elif run['mode'] == 'save':
+        #            process.save_all(current_image, objects, target_images[plane], plane, version, run)
 
         # dire
 
 
-
-
 if __name__ == "__main__":
-
-    version = '2015-8-31'
 
     if len(sys.argv) == 2:
         segment(sys.argv[1])
