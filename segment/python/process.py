@@ -2,69 +2,87 @@ import os
 import math
 import images
 
+import aux
 
-def sample(image, box_list, source, version, run):
+import numpy as np
 
-    # Define the size of the length of the square of our region to save (in microns)
+
+def sample(image, box_list, orig_filename, run):
+
+    # Define the size of the length of the square of our region to save
     region_size = 3000
 
-    # Get the original (end-level) directory
-    directory_id = os.path.basename(run['directory'])
-    # Set up main level directory
-    main_directory = run['output'] + os.sep + directory_id
+    save_overview_image(image, box_list, orig_filename, run)
 
-    if run['tag'] == 'final':
-        sub_directory = 'final'
-    else:
-        sub_directory = '%s_th=%05.4f_size=%04.0fu-%04.0fu' \
-                        % (run['tag'], run['threshold'], run['minimumSize'], run['maximumSize'])
+    # make list of 5 sample images and define cropping boundaries
+    samples = pick_and_expand_sample_boxes(image, box_list, region_size)
 
-    output_directory = main_directory + os.sep + sub_directory
-    source_label = directory_id + os.sep + os.path.basename(source)
+    for i, sample in enumerate(samples):
 
-    image_array = draw_bounding_boxes(image, box_list)
+        output_filename = '%s%s%s_sample_%s_%02d.%s' % (run['output'], os.sep, run['unique_id'],
+                                                        run['image_file_label'], i,
+                                                        run['output_ext'])
 
-    # create a unique id
-    unique_id = directory_id.split('_')[0]
+        image_subsample = images.crop(image, sample)
 
-    output_directory = output_directory + os.sep + 'sample'
-    if not os.path.exists(output_directory):
-        os.makedirs(output_directory)
+        description = 'Object #%05d of %05d ( %d x %d pixels at slide position %05.2f x %05.2f )' \
+                      % (i+1, len(samples), region_size, region_size, sample[0], sample[1])
+
+        labeled_image_subsample, _ = images.label_image(image_subsample, orig_filename, description, run)
+
+        images.save(labeled_image_subsample, output_filename)
+
+
+def final(orig_filename, box_list, run):
+
+    print orig_filename
+    image = images.load(orig_filename, run)
+
+    save_overview_image(image.copy(), box_list, orig_filename, run)
+
+    for i, box in enumerate(box_list):
+
+        # crop expects [x1, y1, x2, y2], box is [y1, x1, y2, x2]
+        crop_box = [box[1], box[0], box[3], box[2]]
+        width = crop_box[2] - crop_box[0]
+        height = crop_box[3] - crop_box[1]
+        image_subsample = images.crop(image, crop_box)
+
+        description = 'Sample Window %d of %d ( %d x %d pixels at slide position %05.2f x %05.2f )' \
+                      % (i+1, len(box_list), width, height, crop_box[0], crop_box[1])
+
+        labeled_image_subsample, label = images.label_image(image_subsample, orig_filename,
+                                                            description, run)
+
+        output_filename = '%s%s%s_sample_%s_%02d.%s' % (run['output'], os.sep, run['unique_id'],
+                                                        run['image_file_label'], i,
+                                                        run['output_ext'])        
+
+        images.save(labeled_image_subsample, output_filename)
+        images.add_comment(output_filename, '. '.join(label))
+
+
+def save_overview_image(full_image, box_list, orig_filename, run):
+    '''
+    Save low resolution jpg of entire image with boxes marked
+    '''
+
+    full_image = images.draw_bounding_boxes(full_image, box_list)
 
     # save entire image
-    filename_tif = output_directory + os.sep + unique_id + '_boxes.tif'
-    filename_jpg = output_directory + os.sep + unique_id + '_boxes.jpg'
-    images.save(image_array, filename_tif)
-    # images.save(image_array, filename_jpg)
+    filename_full_image = run['output'] + os.sep + run['unique_id'] + '_boxes.jpg'
 
-    # make list of 5 sample images
-    sample = pick_sample(image_array, box_list)
+    description = 'Full Image'
+    labeled_image, _ = images.label_image(full_image, orig_filename, description, run)
 
-
-def draw_bounding_boxes(image, box_list):
-
-    image_array = np.array(image)
-
-    # Mark the bounding boxes of all objects
-    for box in box_list:
-        X = math.ceil(box[0])
-        Y = math.ceil(box[1])
-        size_X = math.ceil(box[2]) - X
-        size_Y = math.ceil(box[3]) - Y
-
-        pixel_size = 3
-        red_value = 192
-
-        # top, bottom, left, right borders
-        image_array[Y:(Y + pixel_size), X:(X + size_X), 1] = red_value
-        image_array[(Y + size_Y - pixel_size):(Y + size_Y), X:(X + size_X), 1] = red_value
-        image_array[Y:(Y + size_Y), X:(X + pixel_size), 1] = red_value
-        image_array[Y:(Y + size_Y), (X + size_X - pixel_size):(X + size_X), 1] = red_value
-
-    return image
+    images.save(labeled_image, filename_full_image)
 
 
-def pick_sample(image, box_list):
+def pick_and_expand_sample_boxes(image, box_list, region_size):
+
+    image_size = image.size
+
+    image = np.array(image)
 
     chosen_boxes = []
 
@@ -78,11 +96,32 @@ def pick_sample(image, box_list):
         chosen_boxes.append(closest_box(image, box_list, location))
 
     if len(chosen_boxes) > len(set(chosen_boxes)):
-        print('At least one object is picked twice as a sample image; less than five images will be created.')
-    
         chosen_boxes = set(chosen_boxes)
+        print('At least one object is picked twice as a sample image; only %d images will be created.' % len(chosen_boxes))
 
-    return chosen_boxes
+    samples = [box_list[chosen_box] for chosen_box in chosen_boxes]
+
+    # size cropping boxes to a specified region size
+    for i, sample in enumerate(samples):
+
+        mid_y = (sample[0]+sample[2])/2
+        mid_x = (sample[1]+sample[3])/2
+
+        corner_x = mid_x - region_size/2
+        if corner_x < 1:
+            corner_x = 0
+        elif (corner_x + region_size) > image_size[0]:
+            corner_x = image_size[0] - region_size
+
+        corner_y = mid_y - region_size/2
+        if corner_y < 1:
+            corner_y = 0
+        elif (corner_y + region_size) > image_size[1]:
+            corner_y = image_size[1] - region_size
+
+        samples[i] = [corner_x, corner_y, corner_x + region_size, corner_y + region_size]
+
+    return samples
 
 
 def closest_box(image, box_list, x_and_y):
@@ -103,4 +142,3 @@ def closest_box(image, box_list, x_and_y):
             closest_distance = distance
 
     return closest_index
- 

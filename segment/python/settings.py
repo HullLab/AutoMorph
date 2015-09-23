@@ -18,14 +18,21 @@ def parse(filename):
 
     # Set up defaults
     default_step_size = 0.01
-    defaults = {'tag': '',
-                'threshold': 0.20,
+    defaults = {'threshold': 0.20,
                 'minimumSize': 100,
                 'maximumSize': 2000,
                 'mode': 'sample',
                 'source': 'Unspecified Source',
                 'age': 'Unspecified Age',
-                'debug': 0
+                'debug': 0,
+                'input_ext': 'tif',
+                'output_ext': 'tif',
+                'pixel_size_x': None,
+                'pixel_size_y': None,
+                'location': 'Yale Peabody Museum',
+                'catalog_prefix': 'YPM IP',
+                'unit': 'microns',
+                'author': None
                 }
 
     debug_settings = {'off': 0, 'low': 1, 'high': 2}
@@ -34,24 +41,26 @@ def parse(filename):
     settings = {}
 
     settings['timestamp'] = datetime.now().strftime('%Y-%m-%d at %H:%M:%S')
-    settings['microns_per_pixel'] = 0.0
 
-    parser = SafeConfigParser()
+    parser = SafeConfigParser(defaults, allow_no_value=True)
     vfile = StringIO(u'[settings]\n%s' % open(filename).read())
     parser.readfp(vfile)
 
     # set required variable
     settings['directory'] = parser.get('settings', 'directory')
+    if settings['directory'].endswith('/'):
+        settings['directory'] = settings['directory'][:-1]
+
     settings['output'] = parser.get('settings', 'output')
 
     # set optional variables
     for setting in defaults.keys():
-        print setting
+
         if setting == 'threshold':
             threshold_str = parser.get('settings', 'threshold', defaults)
 
             # remove human language
-            thresholds = threshold_str.replace('-', '').replace('by', '').split()
+            thresholds = threshold_str.replace('-',',').replace('by',',').split(',')
             thresholds = map(float, thresholds)
 
             if len(thresholds) == 2 or len(thresholds) == 3:
@@ -72,11 +81,18 @@ def parse(filename):
         else:
             settings[setting] = parser.get('settings', setting, defaults)
 
-    # duplicate settings for each value of threshold
+    # Set up additional global settings
+    # define full output directory
+    main_directory = settings['output'] + os.sep + os.path.basename(settings['directory'])
+    settings['output'] = main_directory + os.sep + settings['mode']
 
+    # create a unique id
+    settings['unique_id'] = os.path.basename(settings['directory']).split('_')[0]
+
+    # duplicate settings for each value of threshold
     all_settings = []
     for i in range(num_permutations):
-        all_settings.append(settings)
+        all_settings.append(settings.copy())
         all_settings[i]['threshold'] = thresholds[i]
 
     return all_settings
@@ -84,7 +100,7 @@ def parse(filename):
 
 def save(settings, write_directory):
 
-    parser = ConfigParser.SafeConfigParser()
+    parser = SafeConfigParser()
 
     username = os.getuid()
     timestamp = datetime.now().strftime('%Y_%m_%d-%H:%M:%S')

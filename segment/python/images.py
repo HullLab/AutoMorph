@@ -2,7 +2,7 @@ from aux import debug_msg
 
 import xml.etree.ElementTree as xml_tree
 from skimage.measure import regionprops
-from PIL import Image
+from PIL import Image, ImageFont, ImageDraw, TiffImagePlugin
 
 import numpy as np
 from scipy import ndimage
@@ -13,40 +13,23 @@ import os
 
 
 def load(filename, run):
+    '''
+    Load image from given path and resizes it.
+    '''
 
     start = time.time()
 
-    # Get the dimensions of the image
     img = Image.open(filename)
-    m_image, n_image = img.size
 
-    # Get the microns-per-pixel values
-    (m_x, m_y, _) = microns_per_pixel_xml(filename)
-
-    # Calculate the new dimensions
-
-    scale_factor_y = run['microns_per_pixel'] / m_y
-    scale_factor_x = run['microns_per_pixel'] / m_x
-
-    m_resized = int(math.ceil(scale_factor_x * n_image))
-    n_resized = int(math.ceil(scale_factor_y * m_image))
-
-    # resize image
-    scaled = img.resize((m_resized, n_resized), Image.ANTIALIAS)
-    del img
-
-    # apply the border
-    border_size = 0.01
-    img = border(scaled, border_size)
-    del scaled
+    scaled_img = resize(img, filename, run)
 
     end = time.time()
     debug_msg('INFO: images.load() processed %s ( %f seconds)' % (filename, end-start), run['debug'] >= 1)
 
-    return img
+    return scaled_img
 
 
-def save(image, filename):
+def save(image, filename, tag=''):
 
     if isinstance(image, (np.ndarray, np.generic)):
         image = Image.fromarray(np.uint8(image))
@@ -54,7 +37,16 @@ def save(image, filename):
     image.save(filename)
 
 
-def list_files(directory, verbosity, file_extension='tif'):
+def add_comment(filename, comment):
+
+    tags = TiffImagePlugin.ImageFileDirectory()
+    tags['Description'] = comment
+    print tags, filename
+
+    tags.save(filename)
+
+
+def list_files(directory, verbosity, file_extension):
     '''
     This function takes a directory and returns a list of all TIF images in that
     directory
@@ -67,8 +59,34 @@ def list_files(directory, verbosity, file_extension='tif'):
 
         debug_msg('INFO: images.find() found %d files' % num_files, True)
 
-    print file_list
     return file_list
+
+
+def resize(img, filename, run):
+    '''
+    Scales image based on microns per pixel
+    '''
+
+    x_image, y_image = img.size
+    # Calculate the new dimensions
+
+    scale_factor_x = run['units_per_pixel'] / run['pixel_size_x']
+    scale_factor_y = run['units_per_pixel'] / run['pixel_size_y']
+
+    m_resized = int(math.ceil(scale_factor_x * x_image))
+    n_resized = int(math.ceil(scale_factor_y * y_image))
+
+    return img.resize((m_resized, n_resized), Image.ANTIALIAS)
+
+
+def crop(image, box):
+
+    if isinstance(image, (np.ndarray, np.generic)):
+        image = Image.fromarray(np.uint8(image))
+
+    image_subsample = image.crop(box)
+
+    return image_subsample
 
 
 def find_objects(img, run):
@@ -85,7 +103,6 @@ def find_objects(img, run):
 
     # label connected objects
     connected_objs, n = ndimage.measurements.label(bw_filled_img)
-    print connected_objs
 
     # Create list of bounding boxes and filled
     region_list = regionprops(connected_objs)
@@ -94,11 +111,11 @@ def find_objects(img, run):
     bounding_boxes = [region.bbox for region in region_list]
 
     # Extract the size of the bounding box into arrays
-    size_x = np.array([box[2] for box in bounding_boxes])  # take every 4th element starting at 3 (width)
-    size_y = np.array([box[3] for box in bounding_boxes])  # take every 4th element starting at 4 (height)
+    size_x = np.array([box[2]-box[0] for box in bounding_boxes])  # take every 4th element starting at 3 (width)
+    size_y = np.array([box[3]-box[1] for box in bounding_boxes])  # take every 4th element starting at 4 (height)
 
-    minimum_size = run['minimumSize'] / run['microns_per_pixel']
-    maximum_size = run['maximumSize'] / run['microns_per_pixel']
+    minimum_size = run['minimumSize'] / run['units_per_pixel']
+    maximum_size = run['maximumSize'] / run['units_per_pixel']
 
     minimum_size = math.sqrt((minimum_size * maximum_size) / 2.)
     mask = ((size_x > minimum_size) & (size_x < maximum_size) &
@@ -115,18 +132,120 @@ def find_objects(img, run):
     return box_list
 
 
-def border(img, border_size):
+def border(image, border_size):
+    '''
+    No longer used. Can be deleted
+    '''
 
-    height, width = img.size
-    img = np.array(img)
+    width, height = image.size
+    image = np.array(image)  # y, x, color
 
     # Top, Bottom, Left, Right
-    img[:round(height * border_size), :, :] = 0
-    img[height-round(height * border_size * 6):height, :, :] = 0
-    img[:, :round(width * border_size), :] = 0
-    img[:, width-round(width * border_size):width, :] = 0
+    image[:round(height * border_size), :, :] = 0
+    image[height-round(height * border_size * 6):height, :, :] = 0
+    image[:, :round(width * border_size), :] = 0
+    image[:, width-round(width * border_size):width, :] = 0
 
-    return Image.fromarray(np.uint8(img))
+    return Image.fromarray(np.uint8(image))
+
+
+def add_label_area(image):
+
+    image = np.array(image)
+
+    width = np.shape(image)[1]
+
+    label_area = np.empty([160, width, 3])
+    label_area.fill(255)
+
+    image = np.vstack((image, label_area))
+
+    return Image.fromarray(np.uint8(image))
+
+
+def label_image(orig_image, orig_filename, description, run):
+
+    orig_height = orig_image.size[1]
+
+    image = add_label_area(orig_image)
+
+    mid_x = image.size[0]/2
+    draw = ImageDraw.Draw(image)
+
+    # Draw scale bars
+    bar_in_pixels_25 = 25 / run['units_per_pixel']
+    bar_in_pixels_100 = bar_in_pixels_25 * 4.
+
+    y_100 = orig_height+15
+    y_25 = y_100 + 10
+    width = 2
+
+    start_100_x = int(mid_x - bar_in_pixels_100/2)
+    start_25_x = int(mid_x - bar_in_pixels_25/2)
+
+    draw.line((start_100_x, y_100, start_100_x + bar_in_pixels_100, y_100), fill='black', width=width)
+    draw.line((start_25_x, y_25, start_25_x + bar_in_pixels_25, y_25), fill='black', width=width)
+
+    # draw.line((start_100, end_100), fill='white', width=width)
+    # draw.line((start_25, end_25), fill='white', width=width)
+
+    font = set_fontsize(10)
+    draw.text((start_100_x+bar_in_pixels_100+10, y_100 - 4), '100 microns', fill='black', font=font)
+    draw.text((start_25_x+bar_in_pixels_25+10, y_25 - 4), '25 microns', fill='black', font=font)
+
+    orig_filename = os.path.basename(orig_filename)
+
+    label = run['image_label'][:]
+    label.insert(0, description)
+    label.append('File: %s' % orig_filename)
+
+    text_y = y_25 + 10 + np.array([0, 20, 40, 70, 85, 100, 115])
+    text_size = [14, 14, 14, 9, 9, 9, 9]
+
+    for i, line in enumerate(label):
+        font = set_fontsize(text_size[i])
+        w, h = draw.textsize(line, font=font)
+        new_x = (mid_x*2 - w)/2
+        draw.text((new_x, text_y[i]), line, fill='black', font=font)
+
+    return image, label
+
+
+def set_fontsize(font_size):
+
+    font_path = os.path.dirname(os.path.realpath(__file__))+os.sep+'OpenSans-Regular.ttf'
+    return ImageFont.truetype(font_path, font_size)
+
+
+def draw_bounding_boxes(image, box_list):
+
+    draw = ImageDraw.Draw(image)
+
+    # Mark the bounding boxes of all objects
+    for i, box in enumerate(box_list):
+        y1 = math.ceil(box[0])
+        x1 = math.ceil(box[1])
+        y2 = math.ceil(box[2])
+        x2 = math.ceil(box[3])
+
+        draw.line([x1, y2, x2, y2], fill='red', width=20)
+        draw.line([x1, y1, x2, y1], fill='red', width=20)
+        draw.line([x1, y1, x1, y2], fill='red', width=20)
+        draw.line([x2, y1, x2, y2], fill='red', width=20)
+
+        font = set_fontsize(40)
+        draw.text((x2+40, y2), str(i), fill='red', font=font)
+
+        # pixel_size = 20
+        # red_value = 192
+
+        # top, bottom, left, right borders
+        # image_array[Y1:(Y1 + pixel_size), X1:X2, 0] = 192
+        # image_array[(Y2 - pixel_size):Y2, X1:X2, 0] = 192
+        # image_array[Y1:Y2, X1:(X1 + pixel_size), 0] = 192
+        # image_array[Y1:Y2, (X2 - pixel_size):X2, 0] = 192
+
+    return image
 
 
 def expand_bounding_box(box_list, scale_factor, i_size):
@@ -134,25 +253,27 @@ def expand_bounding_box(box_list, scale_factor, i_size):
     num_boxes = len(box_list)
 
     for i, bounding_box in enumerate(box_list):
-        # PROBABLY WRONG SINCE BOUNDING BOXES ARE DEFINED DIFFERENTLY
-        # (min_row, min_col, max_row, max_col)
-        new_left = bounding_box[0] - round(bounding_box[2] * scale_factor)
-        if new_left < 1:
-            new_left = 1
+        width = bounding_box[3]-bounding_box[1]
+        height = bounding_box[2]-bounding_box[0]
 
-        new_top = bounding_box[1] - round(bounding_box[3] * scale_factor)
+        # bounding_box -> (min_row, min_col, max_row, max_col)
+        new_top = bounding_box[0] - round(height * scale_factor)
         if new_top < 1:
             new_top = 1
 
-        new_width = bounding_box[2] + round(bounding_box[2] * 2 * scale_factor)
-        if new_left + new_width > i_size[1]:
-            new_width = i_size[1] - new_left - 1
+        new_left = bounding_box[1] - round(width * scale_factor)
+        if new_left < 1:
+            new_left = 1
 
-        new_height = bounding_box[3] + round(bounding_box[3] * 2 * scale_factor)
-        if new_top + new_height > i_size[0]:
-            new_height = i_size[0] - new_top - 1
+        new_bottom = bounding_box[2] + round(height * scale_factor)
+        if new_bottom > i_size[0]:
+            new_bottom = i_size[0] - new_top - 1
 
-        new_box = [new_left, new_top, new_width, new_height]
+        new_right = bounding_box[3] + round(width * scale_factor)
+        if new_right > i_size[1]:
+            new_right = i_size[1] - new_left - 1
+
+        new_box = [new_top, new_left, new_bottom, new_right]
         box_list[i] = new_box
 
     return box_list
@@ -168,6 +289,4 @@ def microns_per_pixel_xml(filename):
     x = float(sub_root.findtext('MicronsPerPixelX'))
     y = float(sub_root.findtext('MicronsPerPixelY'))
 
-    # Calculate the new dimensions
-    m_p_p = round(y * 10) / 10.0  # Nearest tenth of original factor
-    return x, y, m_p_p
+    return x, y

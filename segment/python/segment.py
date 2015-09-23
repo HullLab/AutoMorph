@@ -1,6 +1,11 @@
 import settings
 import images
+import process
+import aux
+
 import sys
+import os
+
 
 # Segment uses the bounding box identified by the sharpest image in a
 # set of stacks to chop just the edf into individual images
@@ -24,30 +29,42 @@ def segment(settings_file):
               % (i+1, len(runs), settings_file))
 
         # Get list of images in directory
-        target_images = images.list_files(run['directory'], run['debug'])
+        target_image_list = images.list_files(run['directory'], run['debug'], run['input_ext'])
+        top_image_filename = target_image_list[-1]
+
+        # Set up additonal run parameters
 
         # Get the microns per pixel for this image: (new, and ugly, modification - Oct. 2014)
-        run['microns_per_pixel'] = images.microns_per_pixel_xml(target_images[0])[2]
+        if run['pixel_size_x'] == None:
+            print 'No pixel size set in settings file, attempting to read microns per pixel from xml file...'
+            run['pixel_size_x'], run['pixel_size_y'] = images.microns_per_pixel_xml(top_image_filename)
 
-        # Load, resize and border top-level image
-        current_image = images.load(target_images[0], run)
+        run['units_per_pixel'] = round(run['pixel_size_y'] * 10) / 10.0
+
+        # Set up output directory and labels
+        run = aux.construct_output_labels(run, version)
+
+        if not os.path.exists(run['output']):
+            os.makedirs(run['output'])
+
+        # Load and resize top-level image
+        top_image = images.load(top_image_filename, run)
 
         # Identify all objects based on threshold & minimumLight values
-        objects = images.find_objects(current_image, run)
+        objects = images.find_objects(top_image, run)
 
-        # If we're running in 'sample' or 'save' modes, we've got more to do
-        if run['mode'] in ['sample', 'save']:
+        if run['mode'] == 'sample':
+            process.sample(top_image, objects, top_image_filename, run)
+
+        elif run['mode'] == 'final':
             # Loop over the planes we're interested in, load an image, then process it
-            for plane in range(len(target_images)):
-                current_image = images.load(target_images[plane])
+            for plane_image in target_image_list[:-2]:
 
-                if run['mode'] == 'sample':
-                    process.sample(current_image, objects, target_images[plane], version, run)
-        #        elif run['mode'] == 'save':
-        #            process.save_all(current_image, objects, target_images[plane], plane, version, run)
+                process.final(plane_image, objects, run)
+                # todo: need to current_image = images.load(plane_image, run) at beginning of function
 
-        # dire
-
+            # print('Saving Settings into %s' % run['output'])
+            # settings.save(run, run['output'])
 
 if __name__ == "__main__":
 
