@@ -1,9 +1,12 @@
-from ConfigParser import SafeConfigParser
+import ConfigParser
 from io import StringIO
 from datetime import datetime
 import numpy as np
 import sys
 import os
+
+
+debug_settings = {'off': 0, 'low': 1, 'high': 2}
 
 
 def parse(filename):
@@ -35,16 +38,20 @@ def parse(filename):
                 'author': None
                 }
 
-    debug_settings = {'off': 0, 'low': 1, 'high': 2}
-
     # Parse setting
     settings = {}
 
     settings['timestamp'] = datetime.now().strftime('%Y-%m-%d at %H:%M:%S')
 
-    parser = SafeConfigParser(defaults, allow_no_value=True)
-    vfile = StringIO(u'[settings]\n%s' % open(filename).read())
-    parser.readfp(vfile)
+    parser = ConfigParser.SafeConfigParser(defaults, allow_no_value=True)
+
+    try:
+        parser.read(filename)
+    except ConfigParser.MissingSectionHeaderError:
+        vfile = StringIO(u'[settings]\n%s' % open(filename).read())
+        parser.readfp(vfile)
+    except:
+        raise
 
     # set required variable
     settings['directory'] = parser.get('settings', 'directory')
@@ -60,7 +67,7 @@ def parse(filename):
             threshold_str = parser.get('settings', 'threshold', defaults)
 
             # remove human language
-            thresholds = threshold_str.replace('-',',').replace('by',',').split(',')
+            thresholds = threshold_str.replace('-', ',').replace('by', ',').split(',')
             thresholds = map(float, thresholds)
 
             if len(thresholds) == 2 or len(thresholds) == 3:
@@ -83,11 +90,13 @@ def parse(filename):
 
     # Set up additional global settings
     # define full output directory
-    main_directory = settings['output'] + os.sep + os.path.basename(settings['directory'])
-    settings['output'] = main_directory + os.sep + settings['mode']
+    settings['subdirectory'] = os.path.basename(settings['directory'])
+    new_directory = settings['output'] + os.sep + settings['subdirectory']
+    settings['full_output'] = new_directory + os.sep + settings['mode']
+    print settings['full_output']
 
     # create a unique id
-    settings['unique_id'] = os.path.basename(settings['directory']).split('_')[0]
+    settings['unique_id'] = settings['subdirectory'].split('_')[0]
 
     # duplicate settings for each value of threshold
     all_settings = []
@@ -98,9 +107,23 @@ def parse(filename):
     return all_settings
 
 
-def save(settings, write_directory):
+def drop_extra_settings(settings):
 
-    parser = SafeConfigParser()
+    del settings['subdirectory']
+    del settings['unique_id']
+    del settings['image_label']
+    del settings['full_output']
+
+    return settings
+
+
+def save(settings):
+
+    write_directory = settings['full_output']
+    settings = drop_extra_settings(settings)
+
+    parser = ConfigParser.SafeConfigParser()
+    parser.optionxform = str  # preserve case
 
     username = os.getuid()
     timestamp = datetime.now().strftime('%Y_%m_%d-%H:%M:%S')
@@ -109,12 +132,15 @@ def save(settings, write_directory):
     if not os.path.exists(write_directory):
         os.makedirs(write_directory)
 
-    for option, value in settings.keys():
-        if option == 'debug':
-            debug = debug_settings.keys()[debug_settings.values().index(value)]
-        else:
-            parser.set(option, value)
+    section = 'settings'
+    parser.add_section(section)
 
-    with open(write_directory+'/'+filename) as f:
-        f.write('# Saved Settings:')
+    for option, value in settings.iteritems():
+        if option == 'debug':
+            value = debug_settings.keys()[debug_settings.values().index(value)]
+
+        parser.set(section, str(option), str(value))
+
+    with open(write_directory+'/'+filename, 'w') as f:
+        f.write('# Saved Settings:\n')
         parser.write(f)

@@ -29,21 +29,27 @@ def load(filename, run):
     return scaled_img
 
 
-def save(image, filename, tag=''):
+def save(image, filename, tags=''):
 
     if isinstance(image, (np.ndarray, np.generic)):
         image = Image.fromarray(np.uint8(image))
 
-    image.save(filename)
+    if tags:
+        image.save(filename, tiffinfo=tags)
+    else:
+        image.save(filename)
 
 
 def add_comment(filename, comment):
 
     tags = TiffImagePlugin.ImageFileDirectory()
-    tags['Description'] = comment
-    print tags, filename
+    tags[270] = comment
+    tags.tagtype['Description'] = 2
 
-    tags.save(filename)
+    Image.DEBUG = False
+    TiffImagePlugin.WRITE_LIBTIFF = True
+
+    return tags
 
 
 def list_files(directory, verbosity, file_extension):
@@ -111,8 +117,8 @@ def find_objects(img, run):
     bounding_boxes = [region.bbox for region in region_list]
 
     # Extract the size of the bounding box into arrays
-    size_x = np.array([box[2]-box[0] for box in bounding_boxes])  # take every 4th element starting at 3 (width)
-    size_y = np.array([box[3]-box[1] for box in bounding_boxes])  # take every 4th element starting at 4 (height)
+    size_x = np.array([box[2]-box[0] for box in bounding_boxes])
+    size_y = np.array([box[3]-box[1] for box in bounding_boxes])
 
     minimum_size = run['minimumSize'] / run['units_per_pixel']
     maximum_size = run['maximumSize'] / run['units_per_pixel']
@@ -186,9 +192,6 @@ def label_image(orig_image, orig_filename, description, run):
     draw.line((start_100_x, y_100, start_100_x + bar_in_pixels_100, y_100), fill='black', width=width)
     draw.line((start_25_x, y_25, start_25_x + bar_in_pixels_25, y_25), fill='black', width=width)
 
-    # draw.line((start_100, end_100), fill='white', width=width)
-    # draw.line((start_25, end_25), fill='white', width=width)
-
     font = set_fontsize(10)
     draw.text((start_100_x+bar_in_pixels_100+10, y_100 - 4), '100 microns', fill='black', font=font)
     draw.text((start_25_x+bar_in_pixels_25+10, y_25 - 4), '25 microns', fill='black', font=font)
@@ -234,16 +237,7 @@ def draw_bounding_boxes(image, box_list):
         draw.line([x2, y1, x2, y2], fill='red', width=20)
 
         font = set_fontsize(40)
-        draw.text((x2+40, y2), str(i), fill='red', font=font)
-
-        # pixel_size = 20
-        # red_value = 192
-
-        # top, bottom, left, right borders
-        # image_array[Y1:(Y1 + pixel_size), X1:X2, 0] = 192
-        # image_array[(Y2 - pixel_size):Y2, X1:X2, 0] = 192
-        # image_array[Y1:Y2, X1:(X1 + pixel_size), 0] = 192
-        # image_array[Y1:Y2, (X2 - pixel_size):X2, 0] = 192
+        draw.text((x2+40, y2), str(i+1), fill='red', font=font)
 
     return image
 

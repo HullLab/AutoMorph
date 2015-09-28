@@ -13,8 +13,6 @@ import os
 # Started on 3/21/2014 by Yusu Liu
 # code uses base code of PM Hull (20-Oct-13)with updates by B. Dobbins, PMH, and Y. Liu
 # converted to python by K. Nelson (2015-Sept)
-# NOTE: It is now a function, not a stand-alone script
-#       (Additional info on the parameters coming soon by brian)
 
 
 def segment(settings_file):
@@ -41,11 +39,10 @@ def segment(settings_file):
 
         run['units_per_pixel'] = round(run['pixel_size_y'] * 10) / 10.0
 
-        # Set up output directory and labels
-        run = aux.construct_output_labels(run, version)
+        run['image_label'] = aux.contruct_image_label(run, version)
 
-        if not os.path.exists(run['output']):
-            os.makedirs(run['output'])
+        if not os.path.exists(run['full_output']):
+            os.makedirs(run['full_output'])
 
         # Load and resize top-level image
         top_image = images.load(top_image_filename, run)
@@ -53,18 +50,21 @@ def segment(settings_file):
         # Identify all objects based on threshold & minimumLight values
         objects = images.find_objects(top_image, run)
 
+        process.save_overview_image(top_image, objects, top_image_filename, run)
+
         if run['mode'] == 'sample':
+            run['image_file_label'] = 'th=%05.4f_size=%04.0fu-%04.0fu' \
+                              % (run['threshold'], run['minimumSize'], run['maximumSize'])
             process.sample(top_image, objects, top_image_filename, run)
 
         elif run['mode'] == 'final':
+
+            print('Saving Settings into %s' % run['full_output'])
+            settings.save(run.copy())
             # Loop over the planes we're interested in, load an image, then process it
-            for plane_image in target_image_list[:-2]:
+            for plane_num, plane_image in enumerate(target_image_list[:-2]):
+                process.final(plane_image, objects, run, plane_num)
 
-                process.final(plane_image, objects, run)
-                # todo: need to current_image = images.load(plane_image, run) at beginning of function
-
-            # print('Saving Settings into %s' % run['output'])
-            # settings.save(run, run['output'])
 
 if __name__ == "__main__":
 
