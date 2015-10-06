@@ -98,7 +98,10 @@ def parse(filename):
         settings['mode'] = 'final'
 
     if settings['mode'] not in ['final','sample']:
-        print 'Error: unrecognized mode settings. Please specify final or sample only'
+        print 'Error: unrecognized mode settings. Please specify final or sample only.'
+        sys.exit
+    if settings['mode'] != 'sample' and num_permutations > 1:
+        print 'Error: for final mode, only give a single threshold value, not a range.'
         sys.exit
 
     # Set up additional global settings
@@ -125,6 +128,9 @@ def drop_extra_settings(settings):
     del settings['unique_id']
     del settings['image_label']
     del settings['full_output']
+    del settings['timestamp']
+    del settings['image_file_label']
+    del settings['units_per_pixel']
 
     return settings
 

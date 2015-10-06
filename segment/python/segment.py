@@ -33,7 +33,7 @@ def segment(settings_file):
         # Set up additonal run parameters
 
         # Get the microns per pixel for this image: (new, and ugly, modification - Oct. 2014)
-        if run['pixel_size_x'] == None:
+        if run['pixel_size_x'] and run ['pixel_size_y']:
             print 'No pixel size set in settings file, attempting to read microns per pixel from xml file...'
             run['pixel_size_x'], run['pixel_size_y'] = images.microns_per_pixel_xml(top_image_filename)
 

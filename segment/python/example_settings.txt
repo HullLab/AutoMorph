@@ -1,0 +1,86 @@
+# Saved Settings:
+[settings]
+
+# directory:
+# The full path of the scans we want to process - currently does not descend
+# into subdirectories
+directory = /hull-disk1/ph269/scans/VM-20-248-0-1cm-33nlat-64slon-1575m/VM-20-248-0-1cm-33nlat-64slon-1575m-g150_X5/IP.307717_VM-20-248-0-1cm-g150-4square-example_Hrectangle_N3of4_Mcompound_Oumbilical_I1_TzEDF-0_X5
+
+# output:
+# The full path where we should save the results - a subdirectory will be
+# created in this directory based on original directory name and selected mode:
+output = /home/kln26/hull/segment_testing
+
+# threshold:
+# The B/W image thresholding value used to segment images- best values tend to
+# be 0.15-0.40 for Hull Lab images. For new projects, try multiple possible
+# values with : threshold = 0.15 - 0.40 by 0.1
+# for sample, you can select a range as threshold = 0.15 - 0.40 by 0.1
+# for final mode, only give a single threshold value as threshold = 0.16
+threshold = 0.16
+
+#minimumSize:
+# The smallest width of a valid object in microns (or other base unit). The
+# minimum size is designed to filter out background light scatter. You
+# can, again, use multiple sizes and this will run the segmentation process
+# multiple times, one with each combination of values:
+minimumSize = 100.0
+
+# maximumSize:
+# Same as minimumSize, but for the maximum width of a valid object. The
+# maximum size is designed to ignore the white rim of some slides or other
+# large-scale noise.  maximimSize is also given in the pixel
+# base unit:
+maximumSize = 2000.0
+
+# mode:
+# tells what method we want to use:
+#  'sample' - save five objects per settings/directories; used to identify
+#           best parameters
+#  'final' - full save of all objects segmented with the best parameters
+mode = final
+
+# debug:
+# Set a level for debug output - off, low or high:
+debug = high
+
+# pixel_size_x, pixel_size_y
+# size of x and y pixels, comment out or remove if reading from xml file
+# must set neither or both pixel sizes
+# pixel_size_x = 
+# pixel_size_y = 
+
+# unit
+# base unit of measure used in the pixel based unit
+unit = microns
+
+## FILE FORMATS
+
+# input_ext
+# file extension for input images (used in generating file list)
+input_ext = tif
+
+# output_ext
+# file type for output object images, full image will always be a jpg
+output_ext = tif
+
+## LABELING
+
+# 'Age' tag, used to report a geological age estimation on the sample:
+age = Recent
+
+# 'Source' tag, used to give reference or other source of age estimation data:
+source = Coretop
+
+# location:
+# Processing location of images, for use in the processed image labels
+location = Yale Peabody Museum
+
+# author:
+# Group or institution who preformed the image processing
+author = the Hull Lab
+
+# catalog_prefix:
+# Library/Museum catalog number prefix, for use in the processed image labels
+catalog_prefix = YPM IP
+
