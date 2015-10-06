@@ -97,7 +97,7 @@ def parse(filename):
     if settings['mode'] == 'save':
         settings['mode'] = 'final'
 
-    if settings['mode'] not in ['final','sample']:
+    if settings['mode'] not in ['final', 'sample']:
         sys.exit('Error: unrecognized mode settings. Please specify final or sample only.')
     if settings['mode'] != 'sample' and num_permutations > 1:
         sys.exit('Error: for final mode, only give a single threshold value, not a range.')

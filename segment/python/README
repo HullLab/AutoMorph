@@ -1,0 +1,9 @@
+Requirements:
+
+python (2.7)
+scikit-learn
+scipy
+numpy
+pillow
+
+Easiest way is just install Anaconda (https://www.continuum.io/downloads).

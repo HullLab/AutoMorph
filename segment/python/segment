@@ -35,14 +35,15 @@ def segment(settings_file):
         # Set up additonal run parameters
 
         # Get the microns per pixel for this image: (new, and ugly, modification - Oct. 2014)
-        if run['pixel_size_x'] and run ['pixel_size_y']:
+        if run['pixel_size_x'] and run['pixel_size_y']:
             print 'No pixel size set in settings file, attempting to read microns per pixel from xml file...'
             run['pixel_size_x'], run['pixel_size_y'] = images.microns_per_pixel_xml(top_image_filename)
 
         run['units_per_pixel'] = round(run['pixel_size_y'] * 10) / 10.0
 
-        run['image_file_label'] = 'th=%05.4f_size=%04.0fu-%04.0fu' \
-                      % (run['threshold'], run['minimumSize'], run['maximumSize'])
+        run['image_file_label'] = 'th=%05.4f_size=%04.0fu-%04.0fu' % (run['threshold'],
+                                                                      run['minimumSize'],
+                                                                      run['maximumSize'])
 
         run['image_label'] = aux.contruct_image_label(run, version)
 
