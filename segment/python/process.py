@@ -8,6 +8,10 @@ import numpy as np
 
 
 def sample(image, box_list, orig_filename, run):
+    '''
+    Deprecated. This functionality was never particularly useful apparently.
+    To be removed.
+    '''
 
     # Define the size of the length of the square of our region to save
     region_size = 3000

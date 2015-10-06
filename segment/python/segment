@@ -53,15 +53,16 @@ def segment(settings_file):
         # Load and resize top-level image
         top_image = images.load(top_image_filename, run)
 
-        # Identify all objects based on threshold & minimumLight values
+        # Identify all objects based on threshold and size values
         objects = images.find_objects(top_image, run)
 
         process.save_overview_image(top_image, objects, top_image_filename, run)
 
-        if run['mode'] == 'sample':
-            process.sample(top_image, objects, top_image_filename, run)
+        # Leanne said this no long really used, so I've commented it out for later removal
+        # if run['mode'] == 'sample':
+        #   process.sample(top_image, objects, top_image_filename, run)
 
-        elif run['mode'] == 'final':
+        if run['mode'] == 'final':
 
             print('Saving Settings into %s' % run['full_output'])
             settings.save(run.copy())
