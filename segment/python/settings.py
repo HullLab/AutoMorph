@@ -98,11 +98,9 @@ def parse(filename):
         settings['mode'] = 'final'
 
     if settings['mode'] not in ['final','sample']:
-        print 'Error: unrecognized mode settings. Please specify final or sample only.'
-        sys.exit
+        sys.exit('Error: unrecognized mode settings. Please specify final or sample only.')
     if settings['mode'] != 'sample' and num_permutations > 1:
-        print 'Error: for final mode, only give a single threshold value, not a range.'
-        sys.exit
+        sys.exit('Error: for final mode, only give a single threshold value, not a range.')
 
     # Set up additional global settings
     # define full output directory
