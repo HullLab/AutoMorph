@@ -65,7 +65,7 @@ def list_files(directory, verbosity, file_extension):
 
         debug_msg('INFO: images.find() found %d files' % num_files, True)
 
-    return file_list
+    return sorted(file_list)
 
 
 def resize(img, filename, run):
@@ -105,7 +105,7 @@ def find_objects(img, run):
     bw_img[bw_img >= 255*run['threshold']] = 255  # White
 
     # and fill holes
-    bw_filled_img = ndimage.morphology.binary_fill_holes(bw_img)
+    bw_filled_img = ndimage.morphology.binary_fill_holes(bw_img/255.).astype(int)*255
 
     # label connected objects
     connected_objs, n = ndimage.measurements.label(bw_filled_img)
@@ -123,7 +123,10 @@ def find_objects(img, run):
     minimum_size = run['minimumSize'] / run['units_per_pixel']
     maximum_size = run['maximumSize'] / run['units_per_pixel']
 
-    minimum_size = math.sqrt((minimum_size * maximum_size) / 2.)
+    # Eliminate all boxed objects with a dimension smaller than the minimum and a huge area:
+    # True minimum length can be smaller if the minimum length is oriented at a 45-degree angle,
+    # so calculate it for vertical / horizontal minimums:
+    minimum_size = math.sqrt((minimum_size * minimum_size) / 2.)
     mask = ((size_x > minimum_size) & (size_x < maximum_size) &
             (size_y > minimum_size) & (size_y < maximum_size))
 
@@ -157,9 +160,18 @@ def border(image, border_size):
 
 def add_label_area(image):
 
+    minimum_width = 640
+
     image = np.array(image)
 
-    width = np.shape(image)[1]
+    height, width, _ = np.shape(image)
+
+    # If we're less than minimumX in the X direction, pad with black:
+    if width < minimum_width:
+        padding_width = math.ceil((minimum_width - width) / 2)
+        padding = np.zeros([height, padding_width, 3])
+        image = np.hstack((padding, image, padding))
+        width += padding_width*2
 
     label_area = np.empty([160, width, 3])
     label_area.fill(255)
@@ -253,19 +265,19 @@ def expand_bounding_box(box_list, scale_factor, i_size):
         # bounding_box -> (min_row, min_col, max_row, max_col)
         new_top = bounding_box[0] - round(height * scale_factor)
         if new_top < 1:
-            new_top = 1
+            new_top = 0
 
         new_left = bounding_box[1] - round(width * scale_factor)
         if new_left < 1:
-            new_left = 1
+            new_left = 0
 
         new_bottom = bounding_box[2] + round(height * scale_factor)
         if new_bottom > i_size[0]:
-            new_bottom = i_size[0] - new_top - 1
+            new_bottom = i_size[0]
 
         new_right = bounding_box[3] + round(width * scale_factor)
         if new_right > i_size[1]:
-            new_right = i_size[1] - new_left - 1
+            new_right = i_size[1]
 
         new_box = [new_top, new_left, new_bottom, new_right]
         box_list[i] = new_box

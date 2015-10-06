@@ -39,11 +39,12 @@ def parse(filename):
                 }
 
     # Parse setting
-    settings = {}
+    settings = defaults
 
     settings['timestamp'] = datetime.now().strftime('%Y-%m-%d at %H:%M:%S')
 
-    parser = ConfigParser.SafeConfigParser(defaults, allow_no_value=True)
+    parser = ConfigParser.SafeConfigParser(allow_no_value=True)
+    parser.optionxform = str  # preserve case
 
     try:
         parser.read(filename)
@@ -61,10 +62,9 @@ def parse(filename):
     settings['output'] = parser.get('settings', 'output')
 
     # set optional variables
-    for setting in defaults.keys():
-
+    for setting in parser.options('settings'):
         if setting == 'threshold':
-            threshold_str = parser.get('settings', 'threshold', defaults)
+            threshold_str = parser.get('settings', 'threshold')
 
             # remove human language
             thresholds = threshold_str.replace('-', ',').replace('by', ',').split(',')
@@ -82,18 +82,30 @@ def parse(filename):
             num_permutations = len(thresholds)
 
         elif setting == 'debug':
-            settings['debug'] = debug_settings[parser.get('settings', 'debug', defaults)]
-        elif 'Size' in setting:
-            settings[setting] = float(parser.get('settings', setting, defaults))
+            debug_option = parser.get('settings', 'debug')
+            if len(debug_option) > 1:
+                settings['debug'] = debug_settings[debug_option]
+            else:
+                settings['debug'] = int(debug_option)
+
+        elif 'Size' in setting or 'size' in setting:
+            settings[setting] = float(parser.get('settings', setting))
         else:
-            settings[setting] = parser.get('settings', setting, defaults)
+            settings[setting] = str(parser.get('settings', setting))
+
+    # Backwards compatibility tweaks
+    if settings['mode'] == 'save':
+        settings['mode'] = 'final'
+
+    if settings['mode'] not in ['final','sample']:
+        print 'Error: unrecognized mode settings. Please specify final or sample only'
+        sys.exit
 
     # Set up additional global settings
     # define full output directory
     settings['subdirectory'] = os.path.basename(settings['directory'])
     new_directory = settings['output'] + os.sep + settings['subdirectory']
     settings['full_output'] = new_directory + os.sep + settings['mode']
-    print settings['full_output']
 
     # create a unique id
     settings['unique_id'] = settings['subdirectory'].split('_')[0]

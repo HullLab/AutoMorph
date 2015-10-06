@@ -39,6 +39,9 @@ def segment(settings_file):
 
         run['units_per_pixel'] = round(run['pixel_size_y'] * 10) / 10.0
 
+        run['image_file_label'] = 'th=%05.4f_size=%04.0fu-%04.0fu' \
+                      % (run['threshold'], run['minimumSize'], run['maximumSize'])
+
         run['image_label'] = aux.contruct_image_label(run, version)
 
         if not os.path.exists(run['full_output']):
@@ -53,8 +56,6 @@ def segment(settings_file):
         process.save_overview_image(top_image, objects, top_image_filename, run)
 
         if run['mode'] == 'sample':
-            run['image_file_label'] = 'th=%05.4f_size=%04.0fu-%04.0fu' \
-                              % (run['threshold'], run['minimumSize'], run['maximumSize'])
             process.sample(top_image, objects, top_image_filename, run)
 
         elif run['mode'] == 'final':
