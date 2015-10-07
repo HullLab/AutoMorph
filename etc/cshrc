@@ -1,3 +1,0 @@
-setenv PATH ${PATH}:/software/segment/bin
-setenv PATH ${PATH}:/software/focus/bin
-setenv PATH ${PATH}:/software/run2dmorph/bin

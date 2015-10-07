@@ -1,3 +1,0 @@
-export PATH=${PATH}:/software/segment/bin
-export PATH=${PATH}:/software/focus/bin
-export PATH=${PATH}:/software/run2dmorph/bin
