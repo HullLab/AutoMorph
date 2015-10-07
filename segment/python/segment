@@ -67,7 +67,7 @@ def segment(settings_file):
             print('Saving Settings into %s' % run['full_output'])
             settings.save(run.copy())
             # Loop over the planes we're interested in, load an image, then process it
-            for plane_num, plane_image in enumerate(target_image_list[:-2]):
+            for plane_num, plane_image in enumerate(target_image_list[:-1]):
                 process.final(plane_image, objects, run, plane_num)
 
 

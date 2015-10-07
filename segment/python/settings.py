@@ -4,6 +4,7 @@ from datetime import datetime
 import numpy as np
 import sys
 import os
+import getpass
 
 
 debug_settings = {'off': 0, 'low': 1, 'high': 2}
@@ -141,7 +142,7 @@ def save(settings):
     parser = ConfigParser.SafeConfigParser()
     parser.optionxform = str  # preserve case
 
-    username = os.getuid()
+    username = getpass.getuser()
     timestamp = datetime.now().strftime('%Y_%m_%d-%H:%M:%S')
     filename = 'settings_%s_%s.txt' % (username, timestamp)
 

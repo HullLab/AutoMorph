@@ -77,7 +77,11 @@ def save_overview_image(full_image, box_list, orig_filename, run):
     full_image = images.draw_bounding_boxes(full_image, box_list)
 
     # save entire image
-    filename_full_image = "%s%s%s_boxes_%s.jpg" % (run['full_output'], os.sep, run['unique_id'],
+    if run["mode"] == "final":
+        output_dir = run['full_output'].replace('/final','')
+    else:
+        output_dir = run['full_output']    
+    filename_full_image = "%s%s%s_boxes_%s.jpg" % (output_dir, os.sep, run['unique_id'],
                                                    run['image_file_label'])
 
     description = 'Full Image'
