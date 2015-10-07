@@ -12,7 +12,7 @@ import tarfile
 import zerene
 
 
-def focus(directories):
+def focus(directories, software):
 
     # Assign our ID variable:
     ID = os.path.basename(os.path.normpath(directories['input']))[0:9]
@@ -30,35 +30,24 @@ def focus(directories):
 
         shutil.copytree(directories['input'], orig_dir)
 
-    # SETTING UP DIRECTORIES
     directories['objects'] = [os.path.realpath(x) for x in glob.glob(os.path.join(directories['input'], '*_obj*'))]
 
+    # STRIPPING LABELS
+    print 'Stripping labels from', len(directories['objects']), 'images..'
     directories['stripped'] = os.path.join(directories['input'], 'stripped')
     if not os.path.exists(directories['stripped']):
         os.makedirs(directories['stripped'])
 
-    directories['unlabeled_focused'] = os.path.join(directories['input'], 'focused_unlabeled')
-    if not os.path.exists(directories['unlabeled_focused']):
-        os.makedirs(directories['unlabeled_focused'])
-
-    directories['final_focused'] = os.path.join(directories['input'], 'focused')
-    if not os.path.exists(directories['final_focused']):
-        os.makedirs(directories['final_focused'])
-
-    directories['zstack'] = os.path.join(directories['input'], 'z.stacks')
-    if not os.path.exists(directories['zstack']):
-        os.makedirs(directories['zstack'])
-
-    # STRIPPING LABELS
     print 'Stripping labels from', len(directories['objects']), 'images..'
     strip_labels(directories)
     print 'Stripping labels complete.'
 
     # RUNNING EXTERNAL SOFTWARE
+
     if software['name'] == "zerene":
 
         # Initialize the batch XML file
-        zerene.write_batchfile(directories['objects'])
+        zerene.write_batchfile(directories)
 
         # Run the XML file
         zerene_command = zerene.construct_command(software)
@@ -66,12 +55,37 @@ def focus(directories):
                                         os.path.join(directories['input'], 'zerene.log'))
         print 'Running Zerene Stacker: ', zerene_command
 
-        subprocess.call(zerene_command, shell=True)
+#        subprocess.call(zerene_command, shell=True)
 
-        print 'Zerene Stacker finished!'
+        first_object = os.path.realpath(os.path.join(directories['stripped'],
+                                                     os.path.basename(directories["objects"][0]),
+                                                     'ZS.tif'))
+        last_object = os.path.realpath(os.path.join(directories['stripped'],
+                                                    os.path.basename(directories["objects"][-1],
+                                                    'ZS.tif'))
+        
+        if not os.path.exists(first_object):
+            sys.exit("Error: Zerene didn't create files. Perhaps something went wrong? Exiting...")
+        elif not os.path.exists(last_object):
+            sys.exit("Error: Zerene didn't finish creating files. Perhaps something went wrong? Exiting...")
+        else:
+            print 'Zerene Stacker finished!'
 
     # ADD BACK LABELS
     print 'Re-labeling images ...'
+
+    directories['final_focused'] = os.path.join(directories['input'], 'focused')
+    if not os.path.exists(directories['final_focused']):
+        os.makedirs(directories['final_focused'])
+
+    directories['unlabeled_focused'] = os.path.join(directories['input'], 'focused_unlabeled')
+    if not os.path.exists(directories['unlabeled_focused']):
+        os.makedirs(directories['unlabeled_focused'])
+
+    directories['zstack'] = os.path.join(directories['input'], 'z.stacks')
+    if not os.path.exists(directories['zstack']):
+        os.makedirs(directories['zstack'])
+
     add_labels(directories)
 
     # ARCHIVE
@@ -160,8 +174,8 @@ def load_settings():
     if software['name'] not in ['zerene']:
         sys.exit('Unrecongized software. Available software: zerene')
 
-    for setting in parser.options(software):
-        software[setting] = str(parser.get(software, setting))
+    for setting in parser.options(software['name']):
+        software[setting] = str(parser.get(software['name'], setting))
 
     return software
 
@@ -183,6 +197,7 @@ if __name__ == "__main__":
         print 'Argument to focus must be a directory name - quitting.'
         sys.exit(0)
 
+    directories = {}
     # Assign our target directory variable:
     directories['input'] = os.path.realpath(sys.argv[1])
     print 'Running Focus on ', directories['input']

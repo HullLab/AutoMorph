@@ -1,5 +1,7 @@
 import platform
-
+import os
+import glob
+import pwd
 
 def construct_command(software):
 
@@ -35,12 +37,12 @@ def construct_command(software):
         for extension in zerene_java_extensions:
             zerene_class_path = zerene_class_path + ':' + os.path.join(zerene_dir, 'JREextensions', extension)
 
-    zerene_command = ' '.join(headless, zerene_java, zerene_java_options, zerene_class_path, zerene_options)
+    zerene_command = ' '.join([headless, zerene_java, zerene_java_options, zerene_class_path, zerene_options])
 
     return zerene_command
 
 
-def write_batchfile(object_dir_list):
+def write_batchfile(directories):
 
     batchxml_header = """
     <?xml version="1.0" encoding="UTF-8"?>
@@ -48,7 +50,7 @@ def write_batchfile(object_dir_list):
       <WrittenBy value="Zerene Stacker 1.04 Build T201404082055" />
           <BatchQueue>
                 <Batches length="{0}">
-                      """.format(len(object_dir_list))
+                      """.format(len(directories['objects']))
 
     batchxml_object = """
     <Batch>
@@ -160,7 +162,7 @@ def write_batchfile(object_dir_list):
                       """
 
     # Step 4: Loop over all object directories and write the ZereneStacker batch XML file:
-    with open(os.path.join(directories["target"], 'zsbatch.xml'), 'w') as zsbatch:
+    with open(os.path.join(directories["input"], 'zsbatch.xml'), 'w') as zsbatch:
 
         zsbatch.write(batchxml_header)
 
@@ -168,7 +170,7 @@ def write_batchfile(object_dir_list):
 
         for stripped_object in stripped_objects:
             print 'Adding object to batch file: ', stripped_object
-            zsbatch.write(batchxml_object.format(stripped_object, directories["target"]))
+            zsbatch.write(batchxml_object.format(stripped_object, directories["input"]))
 
         zsbatch.write(batchxml_footer)
         print 'Batch XML file written.'
