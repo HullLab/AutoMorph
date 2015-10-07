@@ -56,7 +56,7 @@ def focus(directories):
 
     # RUNNING EXTERNAL SOFTWARE
     if software['name'] == "zerene":
-        
+
         # Initialize the batch XML file
         zerene.write_batchfile(directories['objects'])
 
@@ -116,39 +116,32 @@ def strip_labels(directories):
 def add_labels(directories):
 
     for object_dir in directories['objects']:
-        print 'Processing: ', object_dir
+        print 'Adding labels to ', object_dir
 
-        label_dir = object_dir
-        focusedfname = os.path.basename(object_dir)+".tif"
-        edffname = os.path.basename(object_dir)+"_edf.jpg"
-
-        highestfile = os.path.realpath(sorted(glob.glob(os.path.join(object_dir, '*plane*tif')))[-1])
-
-        labelfile = os.path.realpath(os.path.join(label_dir, 'label.tif'))
-        zsfile = os.path.realpath(os.path.join(directories['stripped'], os.path.basename(object_dir), 'ZS.tif'))
-        edffile = os.path.realpath(os.path.join(directories['final_focused'], edffname))
-        unlabeledfile = os.path.realpath(os.path.join(directories['unlabeled_focused'], focusedfname))
+        object_name = os.path.basename(object_dir)
+        top_file = os.path.realpath(sorted(glob.glob(os.path.join(object_dir, '*plane*tif')))[-1])
 
         # Grab the label:
+        label_file = os.path.realpath(os.path.join(object_dir, 'label.tif'))
         #   convert ${HIGHEST} -gravity South -crop 0x160+0+0 ${directories['input']}/stripped/${label_dir}/label.tif
-        # convert_command = 'convert ' + highestfile + ' -gravity South -crop 0x160+0+0 ' + labelfile
-        convert_command = "convert {0} -gravity South -crop 0x160+0+0 {1}".format(highestfile, labelfile)
+        # convert_command = 'convert ' + top_file + ' -gravity South -crop 0x160+0+0 ' + label_file
+        convert_command = "convert %s -gravity South -crop 0x160+0+0 %s" % (top_file, label_file)
         subprocess.call(convert_command, shell=True)
 
-        #   convert ${directories['input']}/stripped/${label_dir}/label.tif -fill white -stroke white -draw "path 'M 0,143 l 99999,0 l 0,20 l -99999,0 '" ${directories['input']}/stripped/${label_dir}/label.tif
-        # convert_command = 'convert ' + labelfile + ' -fill white -stroke white -draw "path 'M 0,143 l 99999,0 l 0,20 l -99999,0 '"
-        convert_command = """convert {0} -fill white -stroke white -draw "path 'M 0,143 l 99999,0 l 0,20 l -99999,0 '" {1} """.format(labelfile, labelfile)
+        convert_command = """convert {0} -fill white -stroke white -draw "path 'M 0,143 l 99999,0 l 0,20 l -99999,0 '" {1} """.format(label_file, label_file)
         subprocess.call(convert_command, shell=True)
 
-        # convert -append ${directories['input']}/stripped/${label_dir}/ZS.tif ${directories['input']}/stripped/${label_dir}/label.tif ${directories['input']}/focused/${FOCUSEDFILE}_edf.jpg
-        convert_command = "convert -append {0} {1} {2}".format(zsfile, labelfile, edffile)
+        # Add label
+        edf_file = os.path.realpath(os.path.join(directories['final_focused'], object_name+"_edf.jpg"))
+        zs_file = os.path.realpath(os.path.join(directories['stripped'], object_name, 'ZS.tif'))
+
+        convert_command = "convert -append %s %s %s" % (zs_file, label_file, edf_file)
         subprocess.call(convert_command, shell=True)
 
-        #
-        #   #convert ${directories['input']}/stripped/${label_dir}/ZS.tif ${directories['input']}/focused_unlabeled/${FOCUSEDFILE}.tif
-        convert_command = "convert {0} {1}".format(zsfile, unlabeledfile)
+        unlabeled_file = os.path.realpath(os.path.join(directories['unlabeled_focused'], object_name+".tif"))
+        convert_command = "convert %s %s" % (zs_file, unlabeled_file)
         subprocess.call(convert_command, shell=True)
-        # shutil.copyfile(zsfile, unlabeledfile)
+        # shutil.copyfile(zs_file, unlabeled_file)
 
 
 def load_settings():
