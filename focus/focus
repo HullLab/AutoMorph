@@ -50,12 +50,12 @@ if len(sys.argv) != 2 :
     else :
         print 'Use: focus <directory name>'
         print 'To preserve original files, use: focus <directory name> debug'
-        sys.exit
+        sys.exit(0)
 
 # If that option isn't a directory name, quite:
 if not os.path.isdir(sys.argv[1]) :
 	print 'Argument to focus must be a directory name - quitting.'
-	sys.exit
+	sys.exit(0)
 
 # Assign our target directory variable:
 targetdir = os.path.realpath(sys.argv[1])
@@ -66,11 +66,14 @@ ID = os.path.basename(os.path.normpath(targetdir))[0:9]
 print 'ID = ', ID
 
 if debug :
-    print "Backing up unprocessed image to orginals directory..."
+    print "Backing up unprocessed image to originals directory..."
     orig_dir = os.path.join(targetdir, 'originals')
     if os.path.exists(orig_dir) :
-        print "Error: originals directory already exists, please remove before proceeding."
-        sys.exit
+        sys.exit("Error: originals directory already exists, please remove before proceeding.")
+
+    focus_dir = os.path.join(targetdir, 'focused')
+    if os.path.exists(focus_dir) :
+        sys.exit("Error: this directory has already been focused, please clean out before proceeding.")
 
     shutil.copytree(targetdir, orig_dir)
 
@@ -88,7 +91,7 @@ for object in objectdirs:
 	if not os.path.exists(currentdir):
 		os.makedirs(currentdir)
 	
-	print 'Converting', os.path.basename(object)
+	print 'Cropping ', os.path.basename(object)
 	files = [os.path.realpath(x) for x in glob.glob(os.path.join(object, '*plane*tif'))]
 	for infile in files:
 		# It'd be nice to use the ImageMagick API here,.. but it doesn't
