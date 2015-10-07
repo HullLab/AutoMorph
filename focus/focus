@@ -1,5 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
+import ConfigParser
 import sys
 import os
 import pwd
@@ -7,308 +8,192 @@ import glob
 import subprocess
 import shutil
 import tarfile
-import platform
 
-# Set up some global variables for easy changing on other installs:
-zereneDir = '/hull-disk1/ph269/software/ZereneStacker/current'
-systemMemoryMB = '96000'
-tmpDir = '/tmp'
-headless='xvfb-run --auto-servernum --server-num=1 '
+import zerene
 
-if platform.system() == 'Darwin':
-	print 'Configuring for Mac OS X'
-	# Set up the Zerene Variables for Mac OS X:
-	zereneJava = '/usr/bin/java'
-	zereneJavaOptions = " -Xmx{0}m -Djava.io.tmpdir={1}".format(systemMemoryMB, os.path.join(tmpDir, pwd.getpwuid(os.getuid()).pw_name)+'_ZereneStacker')
-	zereneJavaExtensions = [ 'jai_codec.jar', 'jai_core.jar', 'jai_imageio.jar', 'jdom.jar', 'metadata-extractor-2.4.0-beta-1.jar' ]
-	zereneClassPath = ' -classpath ' + os.path.join(zereneDir, 'Contents/Resources/Java', 'ZereneStacker.jar')
-	for extension in zereneJavaExtensions:
-		zereneClassPath = zereneClassPath + ':' + os.path.join(zereneDir, 'Contents/Resources/Java', extension)
 
-	zereneOptions = " com.zerenesystems.stacker.gui.MainFrame -exitOnBatchScriptCompletion -noSplashScreen -runMinimized -showProgressWhenMinimized=false  -batchScript "
-	zereneCommand = headless + zereneJava + zereneJavaOptions + zereneClassPath + zereneOptions
+def focus(directories):
 
-else:
-  	# Set up the Zerene Variables for Linux:
-	print 'Configuring for Linux'
-	zereneJava = os.path.join(zereneDir, 'jre', 'bin', 'java')
-	zereneJavaOptions = " -Xmx{0}m -Djava.io.tmpdir={1}".format(systemMemoryMB, os.path.join(tmpDir, pwd.getpwuid(os.getuid()).pw_name)+'_ZereneStacker')
-	zereneJavaExtensions = [ 'AppleShell.jar', 'jai_codec.jar', 'jai_core.jar', 'jai_imageio.jar', 'jdom.jar', 'metadata-extractor-2.4.0-beta-1.jar' ]
-	zereneClassPath = ' -classpath ' + os.path.join(zereneDir, 'ZereneStacker.jar')
-	for extension in zereneJavaExtensions:
-		zereneClassPath = zereneClassPath + ':' + os.path.join(zereneDir, 'JREextensions', extension)
+    # Assign our ID variable:
+    ID = os.path.basename(os.path.normpath(directories['input']))[0:9]
+    print 'ID = ', ID
 
-	zereneOptions = " com.zerenesystems.stacker.gui.MainFrame -exitOnBatchScriptCompletion -noSplashScreen -runMinimized -showProgressWhenMinimized=false  -batchScript "
-	zereneCommand = headless + zereneJava + zereneJavaOptions + zereneClassPath + zereneOptions
+    if debug:
+        print 'Backing up unprocessed image to originals directory...'
+        orig_dir = os.path.join(directories['input'], 'originals')
+        if os.path.exists(orig_dir):
+            sys.exit("Error: originals directory already exists, please remove before proceeding.")
 
-# If we aren't being called with a single option (plus our executable), quit:
-debug = False
-if len(sys.argv) != 2 :
-    if len(sys.argv) == 3 and sys.argv[2] == "debug":
-        debug = True
+        focus_dir = os.path.join(directories['input'], 'focused')
+        if os.path.exists(focus_dir):
+            sys.exit("Error: this directory has already been focused, please clean out before proceeding.")
 
-    else :
-        print 'Use: focus <directory name>'
-        print 'To preserve original files, use: focus <directory name> debug'
+        shutil.copytree(directories['input'], orig_dir)
+
+    # SETTING UP DIRECTORIES
+    directories['objects'] = [os.path.realpath(x) for x in glob.glob(os.path.join(directories['input'], '*_obj*'))]
+
+    directories['stripped'] = os.path.join(directories['input'], 'stripped')
+    if not os.path.exists(directories['stripped']):
+        os.makedirs(directories['stripped'])
+
+    directories['unlabeled_focused'] = os.path.join(directories['input'], 'focused_unlabeled')
+    if not os.path.exists(directories['unlabeled_focused']):
+        os.makedirs(directories['unlabeled_focused'])
+
+    directories['final_focused'] = os.path.join(directories['input'], 'focused')
+    if not os.path.exists(directories['final_focused']):
+        os.makedirs(directories['final_focused'])
+
+    directories['zstack'] = os.path.join(directories['input'], 'z.stacks')
+    if not os.path.exists(directories['zstack']):
+        os.makedirs(directories['zstack'])
+
+    # STRIPPING LABELS
+    print 'Stripping labels from', len(directories['objects']), 'images..'
+    strip_labels(directories)
+    print 'Stripping labels complete.'
+
+    # RUNNING EXTERNAL SOFTWARE
+    if software['name'] == "zerene":
+        
+        # Initialize the batch XML file
+        zerene.write_batchfile(directories['objects'])
+
+        # Run the XML file
+        zerene_command = zerene.construct_command(software)
+        zerene_command += ' %s > %s' % (os.path.join(directories['input'], 'zsbatch.xml'),
+                                        os.path.join(directories['input'], 'zerene.log'))
+        print 'Running Zerene Stacker: ', zerene_command
+
+        subprocess.call(zerene_command, shell=True)
+
+        print 'Zerene Stacker finished!'
+
+    # ADD BACK LABELS
+    print 'Re-labeling images ...'
+    add_labels(directories)
+
+    # ARCHIVE
+    print 'Archiving focused images ... '
+
+    for object_dir in directories['objects']:
+        shutil.move(object_dir, directories['zstack'])
+
+    # Final Images
+    archive(ID+'-focused.tar', directories['final_focused'], directories)
+
+    # Z-stacks (Original Segmented Images?)
+    archive(ID+'-z.stacks.tar', directories['zstack'], directories)
+
+
+def archive(tar_filename, dir_to_tar, directories):
+
+    tar_filename = os.path.join(os.path.dirname(directories['input']), tar_filename)
+    tar = tarfile.open(tar_filename, 'w:gz')
+    tar.add(dir_to_tar)
+    tar.close()
+
+
+def strip_labels(directories):
+
+    for object in directories['objects']:
+        currentdir = os.path.join(directories['stripped'], os.path.basename(object))
+        if not os.path.exists(currentdir):
+            os.makedirs(currentdir)
+
+        print 'Cropping ', os.path.basename(object)
+        files = [os.path.realpath(x) for x in glob.glob(os.path.join(object, '*plane*tif'))]
+        for infile in files:
+            # It'd be nice to use the ImageMagick API here,.. but it doesn't
+            # yet work, so we're using a system call instead:
+            fname = os.path.splitext(os.path.basename(infile))[0]+".jpg"
+            outfile = os.path.join(directories['input'], 'stripped', os.path.basename(object), fname)
+            convert_command = 'convert ' + infile + ' -crop +0-160 +repage ' + outfile
+            subprocess.call(convert_command, shell=True)
+
+
+def add_labels(directories):
+
+    for object_dir in directories['objects']:
+        print 'Processing: ', object_dir
+
+        label_dir = object_dir
+        focusedfname = os.path.basename(object_dir)+".tif"
+        edffname = os.path.basename(object_dir)+"_edf.jpg"
+
+        highestfile = os.path.realpath(sorted(glob.glob(os.path.join(object_dir, '*plane*tif')))[-1])
+
+        labelfile = os.path.realpath(os.path.join(label_dir, 'label.tif'))
+        zsfile = os.path.realpath(os.path.join(directories['stripped'], os.path.basename(object_dir), 'ZS.tif'))
+        edffile = os.path.realpath(os.path.join(directories['final_focused'], edffname))
+        unlabeledfile = os.path.realpath(os.path.join(directories['unlabeled_focused'], focusedfname))
+
+        # Grab the label:
+        #   convert ${HIGHEST} -gravity South -crop 0x160+0+0 ${directories['input']}/stripped/${label_dir}/label.tif
+        # convert_command = 'convert ' + highestfile + ' -gravity South -crop 0x160+0+0 ' + labelfile
+        convert_command = "convert {0} -gravity South -crop 0x160+0+0 {1}".format(highestfile, labelfile)
+        subprocess.call(convert_command, shell=True)
+
+        #   convert ${directories['input']}/stripped/${label_dir}/label.tif -fill white -stroke white -draw "path 'M 0,143 l 99999,0 l 0,20 l -99999,0 '" ${directories['input']}/stripped/${label_dir}/label.tif
+        # convert_command = 'convert ' + labelfile + ' -fill white -stroke white -draw "path 'M 0,143 l 99999,0 l 0,20 l -99999,0 '"
+        convert_command = """convert {0} -fill white -stroke white -draw "path 'M 0,143 l 99999,0 l 0,20 l -99999,0 '" {1} """.format(labelfile, labelfile)
+        subprocess.call(convert_command, shell=True)
+
+        # convert -append ${directories['input']}/stripped/${label_dir}/ZS.tif ${directories['input']}/stripped/${label_dir}/label.tif ${directories['input']}/focused/${FOCUSEDFILE}_edf.jpg
+        convert_command = "convert -append {0} {1} {2}".format(zsfile, labelfile, edffile)
+        subprocess.call(convert_command, shell=True)
+
+        #
+        #   #convert ${directories['input']}/stripped/${label_dir}/ZS.tif ${directories['input']}/focused_unlabeled/${FOCUSEDFILE}.tif
+        convert_command = "convert {0} {1}".format(zsfile, unlabeledfile)
+        subprocess.call(convert_command, shell=True)
+        # shutil.copyfile(zsfile, unlabeledfile)
+
+
+def load_settings():
+
+    filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'focus.cfg')
+
+    parser = ConfigParser.SafeConfigParser(allow_no_value=True)
+    parser.optionxform = str  # preserve case
+
+    parser.read(filename)
+
+    software = {}
+    # set required variable
+    software['name'] = parser.get('focus', 'software')
+
+    if software['name'] not in ['zerene']:
+        sys.exit('Unrecongized software. Available software: zerene')
+
+    for setting in parser.options(software):
+        software[setting] = str(parser.get(software, setting))
+
+    return software
+
+
+if __name__ == "__main__":
+
+    debug = False
+    if len(sys.argv) != 2:
+        if len(sys.argv) == 3 and sys.argv[2] == "debug":
+            debug = True
+
+        else:
+            print 'Use: focus <directory name>'
+            print 'To preserve original files, use: focus <directory name> debug'
+            sys.exit(0)
+
+    # If that option isn't a directory name, quite:
+    if not os.path.isdir(sys.argv[1]):
+        print 'Argument to focus must be a directory name - quitting.'
         sys.exit(0)
 
-# If that option isn't a directory name, quite:
-if not os.path.isdir(sys.argv[1]) :
-	print 'Argument to focus must be a directory name - quitting.'
-	sys.exit(0)
+    # Assign our target directory variable:
+    directories['input'] = os.path.realpath(sys.argv[1])
+    print 'Running Focus on ', directories['input']
 
-# Assign our target directory variable:
-targetdir = os.path.realpath(sys.argv[1])
-print 'target dir = ', targetdir
+    software = load_settings()
 
-# Assign our ID variable:
-ID = os.path.basename(os.path.normpath(targetdir))[0:9]
-print 'ID = ', ID
-
-if debug :
-    print "Backing up unprocessed image to originals directory..."
-    orig_dir = os.path.join(targetdir, 'originals')
-    if os.path.exists(orig_dir) :
-        sys.exit("Error: originals directory already exists, please remove before proceeding.")
-
-    focus_dir = os.path.join(targetdir, 'focused')
-    if os.path.exists(focus_dir) :
-        sys.exit("Error: this directory has already been focused, please clean out before proceeding.")
-
-    shutil.copytree(targetdir, orig_dir)
-
-# Step 1 - Create a 'stripped' directory:
-strippeddir = os.path.join(targetdir, 'stripped')
-if not os.path.exists(strippeddir) :
-	os.makedirs(strippeddir)
-
-# Step 2 - strip labels from images:
-objectdirs = [os.path.realpath(x) for x in glob.glob(os.path.join(targetdir, '*_obj*'))]
-
-print 'Stripping labels from', len(objectdirs), 'images..'
-for object in objectdirs:
-	currentdir = os.path.join(strippeddir, os.path.basename(object))
-	if not os.path.exists(currentdir):
-		os.makedirs(currentdir)
-	
-	print 'Cropping ', os.path.basename(object)
-	files = [os.path.realpath(x) for x in glob.glob(os.path.join(object, '*plane*tif'))]
-	for infile in files:
-		# It'd be nice to use the ImageMagick API here,.. but it doesn't
-		# yet work, so we're using a system call instead:
-		fname = os.path.splitext(os.path.basename(infile))[0]+".jpg"
-		outfile = os.path.join(targetdir, 'stripped', os.path.basename(object), fname)
-		convertCommand = 'convert ' + infile + ' -crop +0-160 +repage ' + outfile
-		subprocess.call(convertCommand, shell=True)
-		
-print 'Stripping labels complete.'
-
-
-# Step 3 - Initialize the batch XML file parts:
-batchxml_header = """<?xml version="1.0" encoding="UTF-8"?>
-<ZereneStackerBatchScript>
-  <WrittenBy value="Zerene Stacker 1.04 Build T201404082055" />
-	  <BatchQueue>
-		    <Batches length="{0}">
-""".format(len(objectdirs))
-
-batchxml_object = """
-<Batch>
-        <Sources length="1">
-          <Source value="{0}" />
-        </Sources>
-        <ProjectDispositionCode value="101" />
-        <Tasks length="1">
-          <Task>
-            <OutputImageDispositionCode value="2" />
-            <OutputImagesDesignatedFolder value="{1}/focused/" />
-            <Preferences>
-              <AcquisitionSequencer.BacklashMillimeters value="0.22" />
-              <AcquisitionSequencer.CommandLogging value="false" />
-              <AcquisitionSequencer.DistancePerStepperRotation value="1.5875" />
-              <AcquisitionSequencer.MaximumMmPerSecond value="2.0" />
-              <AcquisitionSequencer.MicrostepsPerRotation value="3200" />
-              <AcquisitionSequencer.MovementRampTime value="2.0" />
-              <AcquisitionSequencer.NumberOfSteps value="5" />
-              <AcquisitionSequencer.PrecisionThreshold value="0.05" />
-              <AcquisitionSequencer.PrerunMillimeters value="0.0" />
-              <AcquisitionSequencer.RPPIndicatorLeft value="-100.0" />
-              <AcquisitionSequencer.RPPIndicatorRight value="+100.0" />
-              <AcquisitionSequencer.SettlingTime value="3.0" />
-              <AcquisitionSequencer.ShutterActivationsPerStep value="1" />
-              <AcquisitionSequencer.ShutterAfterTime value="2.0" />
-              <AcquisitionSequencer.ShutterBetweenTime value="1.0" />
-              <AcquisitionSequencer.ShutterPulseTime value="0.3" />
-              <AcquisitionSequencer.StepSize value="0.1" />
-              <AcquisitionSequencer.StepSizeAdjustmentFactor value="1.0" />
-              <AcquisitionSequencer.StepSizesFile value="" />
-              <AlignmentControl.AddNewFilesAsAlreadyAligned value="false" />
-              <AlignmentControl.AlignmentSettingsChanged value="false" />
-              <AlignmentControl.AllowRotation value="false" />
-              <AlignmentControl.AllowScale value="false" />
-              <AlignmentControl.AllowShiftX value="false" />
-              <AlignmentControl.AllowShiftY value="false" />
-              <AlignmentControl.BrightnessSettingsChanged value="false" />
-              <AlignmentControl.CorrectBrightness value="false" />
-              <AlignmentControl.MaxRelDegRotation value="20" />
-              <AlignmentControl.MaxRelPctScale value="20" />
-              <AlignmentControl.MaxRelPctShiftX value="20" />
-              <AlignmentControl.MaxRelPctShiftY value="20" />
-              <AlignmentControl.Order.Automatic value="true" />
-              <AlignmentControl.Order.NarrowFirst value="true" />
-              <AllowReporting.UsageStatistics value="false" />
-              <ColorManagement.DebugPrintProfile value="false" />
-              <ColorManagement.InputOption value="Use_EXIF_and_DCF_rules" />
-              <ColorManagement.InputOption.AssumedProfile value="sRGB IEC61966-2.1" />
-              <ColorManagement.ManageZSDisplays value="false" />
-              <ColorManagement.ManageZSDisplaysHasChanged value="false" />
-              <ColorManagement.OutputOption value="CopyInput" />
-              <DepthMapControl.AlgorithmIdentifier value="1" />
-              <DepthMapControl.ContrastThresholdLevel value="0" />
-              <DepthMapControl.ContrastThresholdPercentile value="25.0" />
-              <DepthMapControl.EstimationRadius value="10" />
-              <DepthMapControl.SaveDepthMapImage value="false" />
-              <DepthMapControl.SaveDepthMapImageDirectory value="" />
-              <DepthMapControl.SaveUsedPixelImages value="false" />
-              <DepthMapControl.SmoothingRadius value="5" />
-              <DepthMapControl.UseFixedContrastThresholdLevel value="false" />
-              <DepthMapControl.UseFixedContrastThresholdPercentile value="true" />
-              <DepthMapControl.UsedPixelFractionThreshold value="0.5" />
-              <FileIO.UseExternalTIFFReader value="false" />
-              <Interpolator.RenderingSelection value="Interpolator.Spline4x4" />
-              <Interpolator.ShowAdvanced value="false" />
-              <LightroomPlugin.CurrentInstallationFolder value="" />
-              <LightroomPlugin.DefaultColorSpace value="AdobeRGB" />
-              <OutputImageNaming.Template value="ZS" />
-              <Precrop.LimitsString value="" />
-              <Precrop.Selected value="false" />
-              <Prerotation.Degrees value="0" />
-              <Prerotation.Selected value="false" />
-              <Presize.UserSetting.Scale value="1.0" />
-              <Presize.UserSetting.Selected value="false" />
-              <Presize.Working.Scale value="1.0" />
-              <PyramidControl.GritSuppressionMethod value="1" />
-              <PyramidControl.RetainUDRImage value="false" />
-              <RetouchingBrush.Hardness value="0.5" />
-              <RetouchingBrush.ShowBrushes value="false" />
-              <RetouchingBrush.Type value="Details" />
-              <RetouchingBrush.Width value="10" />
-              <SaveImage.BitsPerColor value="8" />
-              <SaveImage.CompressionQuality value="1.00" />
-              <SaveImage.FileType value="tif" />
-              <SaveImage.RescaleImageToAvoidOverflow value="false" />
-              <SkewSequence.FirstImage.MaximumShiftXPct value="-3.0" />
-              <SkewSequence.FirstImage.MaximumShiftYPct value="0.0" />
-              <SkewSequence.LastImage.MaximumShiftXPct value="3.0" />
-              <SkewSequence.LastImage.MaximumShiftYPct value="0.0" />
-              <SkewSequence.NumberOfOutputImages value="3" />
-              <SkewSequence.Selected value="false" />
-              <StackingControl.FrameSkipFactor value="1" />
-              <StackingControl.FrameSkipSelected value="false" />
-              <StereoOrdering.LeftRightIndexSeparation value="1" />
-              <WatchDirectoryOptions.AcceptViaDelay value="false" />
-              <WatchDirectoryOptions.AcceptViaDelaySeconds value="2.0" />
-            </Preferences>
-            <TaskIndicatorCode value="2" />
-          </Task>
-        </Tasks>
-      </Batch>
-"""
-
-batchxml_footer = """
-    </Batches>
-  </BatchQueue>
-</ZereneStackerBatchScript>
-"""
-
-# Step 4: Loop over all object directories and write the ZereneStacker batch XML file:
-with open(os.path.join(targetdir, 'zsbatch.xml'), 'w') as zsbatch:
-	zsbatch.write(batchxml_header)
-
-	print 'stripppeddir = ', strippeddir
-
-	dirs = [os.path.realpath(x) for x in glob.glob(os.path.join(strippeddir, '*_obj*'))]
-	for object in dirs:
-		print 'Adding object: ', object
-		zsbatch.write(batchxml_object.format(object, targetdir))
-
-	zsbatch.write(batchxml_footer)
-	print 'Batch XML file written.'
-
-# Step 5: Run the XML file:
-zereneCommand = zereneCommand + ' ' + os.path.join(targetdir, 'zsbatch.xml') + ' > ' + os.path.join(targetdir, 'zerene.log') 
-print 'Running Zerene Stacker : ', zereneCommand
-#print 'Running Zerene Stacker..'
-subprocess.call(zereneCommand, shell=True)
-print 'Zerene Stacker finished!'
-
-# Step 6: Combine focused image with label:
-print  'Re-labeling images ...'
-focuseddir = os.path.join(targetdir, 'focused')
-if not os.path.exists(focuseddir) :
-	os.makedirs(focuseddir)
-
-focuseddir2 = os.path.join(targetdir, 'focused_unlabeled')
-if not os.path.exists(focuseddir2) :
-	os.makedirs(focuseddir2)
-
-dirs = [os.path.realpath(x) for x in glob.glob(os.path.join(targetdir, '*_obj*'))]
-for dir in dirs:
-	print 'Processing: ', dir
-	labeldir = dir
-	focusedfname = os.path.basename(dir)+".tif"
-	edffname = os.path.basename(dir)+"_edf.jpg"
-
-	highestfile = os.path.realpath(sorted(glob.glob(os.path.join(dir, '*plane*tif')))[-1])
-	labelfile = os.path.realpath(os.path.join(labeldir, 'label.tif'))
-	zsfile = os.path.realpath(os.path.join(strippeddir, os.path.basename(dir), 'ZS.tif'))
-	edffile = os.path.realpath(os.path.join(focuseddir, edffname))
-	unlabeledfile = os.path.realpath(os.path.join(focuseddir2, focusedfname))
-
-	# Grab the label:
-	#	convert ${HIGHEST} -gravity South -crop 0x160+0+0 ${TARGETDIR}/stripped/${LABELDIR}/label.tif
-	#convertCommand = 'convert ' + highestfile + ' -gravity South -crop 0x160+0+0 ' + labelfile
-	convertCommand = "convert {0} -gravity South -crop 0x160+0+0 {1}".format(highestfile, labelfile)
-	subprocess.call(convertCommand, shell=True)
-
-	# 
-	#	convert ${TARGETDIR}/stripped/${LABELDIR}/label.tif -fill white -stroke white -draw "path 'M 0,143 l 99999,0 l 0,20 l -99999,0 '" ${TARGETDIR}/stripped/${LABELDIR}/label.tif
-	#convertCommand = 'convert ' + labelfile + ' -fill white -stroke white -draw "path 'M 0,143 l 99999,0 l 0,20 l -99999,0 '"  
-	convertCommand = """convert {0} -fill white -stroke white -draw "path 'M 0,143 l 99999,0 l 0,20 l -99999,0 '" {1} """.format(labelfile, labelfile)
-	subprocess.call(convertCommand, shell=True)
-
-	# 
-	#	convert -append ${TARGETDIR}/stripped/${LABELDIR}/ZS.tif ${TARGETDIR}/stripped/${LABELDIR}/label.tif ${TARGETDIR}/focused/${FOCUSEDFILE}_edf.jpg
-	convertCommand = "convert -append {0} {1} {2}".format(zsfile, labelfile, edffile)
-	subprocess.call(convertCommand, shell=True)
-
-	#
-	#	#convert ${TARGETDIR}/stripped/${LABELDIR}/ZS.tif ${TARGETDIR}/focused_unlabeled/${FOCUSEDFILE}.tif
-	convertCommand = "convert {0} {1}".format(zsfile, unlabeledfile)
-	subprocess.call(convertCommand, shell=True)
-	#shutil.copyfile(zsfile, unlabeledfile)
-
-# Step 7: Clean up
-# NEW: tar up the focused directory:
-print ' Archiving focused images .. '
-
-tarfilename = os.path.join(os.path.dirname(targetdir), ID+'-focused.tar')
-tar = tarfile.open(tarfilename, 'w:gz')
-tar.add(focuseddir)
-tar.close()
-
-# Z-stacks:
-zdir = os.path.join(targetdir, 'z.stacks')
-if not os.path.exists(zdir) :
-	os.makedirs(zdir)
-
-dirs = [os.path.realpath(x) for x in glob.glob(os.path.join(targetdir, '*_obj*'))]
-for dir in dirs:
-	shutil.move(dir, zdir)
-
-tarfilename = os.path.join(os.path.dirname(targetdir), ID+'-z.stacks.tar')
-tar = tarfile.open(tarfilename, 'w:gz')
-tar.add(zdir)
-tar.close()
-
-print 'Done!'
+    focus(directories, software)
