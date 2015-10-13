@@ -205,8 +205,8 @@ def label_image(orig_image, orig_filename, description, run):
     draw.line((start_25_x, y_25, start_25_x + bar_in_pixels_25, y_25), fill='black', width=width)
 
     font = set_fontsize(10)
-    draw.text((start_100_x+bar_in_pixels_100+10, y_100 - 4), '100 microns', fill='black', font=font)
-    draw.text((start_25_x+bar_in_pixels_25+10, y_25 - 4), '25 microns', fill='black', font=font)
+    draw.text((start_100_x+bar_in_pixels_100+10, y_100 - 4), '100 '+run['unit'], fill='black', font=font)
+    draw.text((start_25_x+bar_in_pixels_25+10, y_25 - 4), '25 '+run['unit'], fill='black', font=font)
 
     orig_filename = os.path.basename(orig_filename)
 

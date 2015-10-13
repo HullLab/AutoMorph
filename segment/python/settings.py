@@ -36,7 +36,8 @@ def parse(filename):
                 'location': 'Yale Peabody Museum',
                 'catalog_prefix': 'YPM IP',
                 'unit': 'microns',
-                'author': None
+                'author': None,
+                'unique_id': None
                 }
 
     # Parse setting
@@ -47,18 +48,19 @@ def parse(filename):
     parser = ConfigParser.SafeConfigParser(allow_no_value=True)
     parser.optionxform = str  # preserve case
 
-    try:
-        parser.read(filename)
-    except ConfigParser.MissingSectionHeaderError:
-        vfile = StringIO(u'[settings]\n%s' % open(filename).read())
-        parser.readfp(vfile)
-    except:
-        raise
+    if os.path.isfile(filename):
+        try:
+            parser.read(filename)
+        except ConfigParser.MissingSectionHeaderError:
+            vfile = StringIO(u'[settings]\n%s' % open(filename).read())
+            parser.readfp(vfile)
+    else:
+        sys.exit("Error: Cannot open settings file.")
 
     # set required variable
     settings['directory'] = parser.get('settings', 'directory')
     if settings['directory'].endswith('/'):
-        settings['directory'] = settings['directory'][:-1]
+        settings['directory'] = settings['directory'][:-2]
 
     settings['output'] = parser.get('settings', 'output')
 
@@ -77,7 +79,7 @@ def parse(filename):
                     thresholds.append(default_step_size)
                 thresholds = np.arange(thresholds[0], thresholds[1],
                                        thresholds[2])
-            elif len(thresholds) > 3:
+            elif len(thresholds) > 3 or len(thresholds) < 1:
                 sys.exit('Error: unrecognized syntax for threshold setting')
 
             num_permutations = len(thresholds)
@@ -110,7 +112,8 @@ def parse(filename):
     settings['full_output'] = new_directory + os.sep + settings['mode']
 
     # create a unique id
-    settings['unique_id'] = settings['subdirectory'].split('_')[0]
+    if settings['unique_id'] is None:
+        settings['unique_id'] = settings['subdirectory'].split('_')[0]
 
     # duplicate settings for each value of threshold
     all_settings = []

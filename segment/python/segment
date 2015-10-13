@@ -21,6 +21,7 @@ def segment(settings_file):
 
     version = '2015-8-31'
 
+    print "Loading settings from %s..." % settings_file
     runs = settings.parse(settings_file)
 
     for i, run in enumerate(runs):

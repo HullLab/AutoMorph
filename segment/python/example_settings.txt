@@ -46,6 +46,7 @@ debug = high
 
 # pixel_size_x, pixel_size_y
 # size of x and y pixels, comment out or remove if reading from xml file
+# set to # of units (see below) per pixel
 # must set neither or both pixel sizes
 # pixel_size_x = 
 # pixel_size_y = 
@@ -65,6 +66,13 @@ input_ext = tif
 output_ext = tif
 
 ## LABELING
+
+# id
+# Collection identifier code. Used as prefix in filename and on label
+# with below catalog prefix
+# if left out, segment will try to read from directory name, by using
+# everything preceding the first underscore in last the directory in path.
+id = 12577
 
 # 'Age' tag, used to report a geological age estimation on the sample:
 age = Recent
