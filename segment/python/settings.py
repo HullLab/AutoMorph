@@ -39,6 +39,7 @@ def parse(filename):
                 'author': None,
                 'unique_id': None
                 }
+    required_list = ['directory', 'output']
 
     # Parse setting
     settings = defaults
@@ -56,13 +57,6 @@ def parse(filename):
             parser.readfp(vfile)
     else:
         sys.exit("Error: Cannot open settings file.")
-
-    # set required variable
-    settings['directory'] = parser.get('settings', 'directory')
-    if settings['directory'].endswith('/'):
-        settings['directory'] = settings['directory'][:-2]
-
-    settings['output'] = parser.get('settings', 'output')
 
     # set optional variables
     for setting in parser.options('settings'):
@@ -96,6 +90,11 @@ def parse(filename):
         else:
             settings[setting] = str(parser.get('settings', setting))
 
+    # check for required parameters
+    for required in required_list:
+        if required not in settings.keys():
+            sys.exit('Error: '+required+' must be set in settings file.')
+
     # Backwards compatibility tweaks
     if settings['mode'] == 'save':
         settings['mode'] = 'final'
@@ -106,10 +105,14 @@ def parse(filename):
         sys.exit('Error: for final mode, only give a single threshold value, not a range.')
 
     # Set up additional global settings
+    if settings['directory'].endswith(os.sep):
+        settings['directory'] = settings['directory'].rstrip(os.sep)
+
     # define full output directory
-    settings['subdirectory'] = os.path.basename(settings['directory'])
+    settings['subdirectory'] = os.path.split(settings['directory'])[1]
     new_directory = settings['output'] + os.sep + settings['subdirectory']
     settings['full_output'] = new_directory + os.sep + settings['mode']
+    print settings['subdirectory']
 
     # create a unique id
     if settings['unique_id'] is None:
