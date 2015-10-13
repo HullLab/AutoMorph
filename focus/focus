@@ -12,11 +12,7 @@ import tarfile
 import zerene
 
 
-def focus(directories, software):
-
-    # Assign our ID variable:
-    ID = os.path.basename(os.path.normpath(directories['input']))[0:9]
-    print 'ID = ', ID
+def focus(directories, software, ID):
 
     if debug:
         print 'Backing up unprocessed image to originals directory...'
@@ -62,8 +58,8 @@ def focus(directories, software):
                                                      'ZS.tif'))
         last_object = os.path.realpath(os.path.join(directories['stripped'],
                                                     os.path.basename(directories["objects"][-1],
-                                                    'ZS.tif'))
-        
+                                                    'ZS.tif')))
+
         if not os.path.exists(first_object):
             sys.exit("Error: Zerene didn't create files. Perhaps something went wrong? Exiting...")
         elif not os.path.exists(last_object):
@@ -74,15 +70,12 @@ def focus(directories, software):
     # ADD BACK LABELS
     print 'Re-labeling images ...'
 
-    directories['final_focused'] = os.path.join(directories['input'], 'focused')
     if not os.path.exists(directories['final_focused']):
         os.makedirs(directories['final_focused'])
 
-    directories['unlabeled_focused'] = os.path.join(directories['input'], 'focused_unlabeled')
     if not os.path.exists(directories['unlabeled_focused']):
         os.makedirs(directories['unlabeled_focused'])
 
-    directories['zstack'] = os.path.join(directories['input'], 'z.stacks')
     if not os.path.exists(directories['zstack']):
         os.makedirs(directories['zstack'])
 
@@ -180,16 +173,53 @@ def load_settings():
     return software
 
 
+def clean(directories):
+
+    if not os.path.exists(directories['zstack_tar']):
+        sys.exit('Error: tar of zstack files not present! Exiting...')
+
+    if os.path.exists(directories['stripped']):
+        shutil.rmtree(directories['stripped'])
+
+    if os.path.exists(directories['zstack']):
+        shutil.rmtree(directories['zstack'])
+
+
+def reset(directories, ID):
+
+    if os.path.exists(directories['final_focused']):
+        shutil.rmtree(directories['final_focused'])
+    if os.path.exists(directories['unlabeled_focused']):
+        shutil.rmtree(directories['unlabeled_focused'])
+    if os.path.exists(directories['stripped']):
+        shutil.rmtree(directories['stripped'])
+
+    if os.path.exists(directories['focus_tar']):
+        os.remove(directories['focus_tar'])
+    if os.path.exists(directories['zstack_tar']):
+        os.remove(directories['zstack_tar'])
+
+    # copy back originals if they have been moved
+    if os.path.exists(directories['zstack']):
+        if os.listdir(directories['zstack']) != []:
+            for directory in os.listdir(directories['zstack']):
+                shutil.move(directory, directories['input'])
+        os.rmdir(directories['zstack'])
+
+
 if __name__ == "__main__":
 
-    debug = False
+    mode = 'focus'
     if len(sys.argv) != 2:
-        if len(sys.argv) == 3 and sys.argv[2] == "debug":
-            debug = True
+        if len(sys.argv) == 3:
+            mode = sys.argv[2]
 
         else:
-            print 'Use: focus <directory name>'
-            print 'To preserve original files, use: focus <directory name> debug'
+            print 'Use: focus <directory name> <mode>'
+            print 'mode is optional, can be set to:'
+            print 'leave out to run focus normally'
+            print 'reset: will revert the directory back to the pre-focused state'
+            print 'clean: to remove intermediate files created by focus'
             sys.exit(0)
 
     # If that option isn't a directory name, quite:
@@ -197,11 +227,38 @@ if __name__ == "__main__":
         print 'Argument to focus must be a directory name - quitting.'
         sys.exit(0)
 
-    directories = {}
-    # Assign our target directory variable:
-    directories['input'] = os.path.realpath(sys.argv[1])
-    print 'Running Focus on ', directories['input']
+    # Assign our directory variables:
+    input_dir = os.path.realpath(sys.argv[1])
+
+    # Assign our ID variable:
+    ID = os.path.basename(os.path.normpath(input_dir)[0:9]
+    print 'ID = ', ID
+
+    directories = {'input': input_dir,
+                   'final_focused':  os.path.join(input_dir, 'focused'),
+                   'unlabeled_focused': os.path.join(input_dir, 'focused_unlabeled'),
+                   'zstack': os.path.join(input_dir, 'z.stacks'),
+                   'focus_tar': os.path.join(input_dir, ID+'-focused.tar'),
+                   'zstack_tar': os.path.join(input_dir, ID+'-z.stacks.tar)
+                    }
 
     software = load_settings()
 
-    focus(directories, software)
+    if mode == "focus":
+        print 'Running Focus on ', directories['input']
+        focus(directories, software, ID)
+
+    elif mode == "reset":
+        reset(directories, ID)
+
+    elif mode == "clean":
+        sys.exit("Error: clean mode not implemented yet.")
+        clean(directories)
+
+    else:
+        sys.exit("Error: Unrecongized mode. Accepted modes are reset and clean.")
+
+
+
+
+
