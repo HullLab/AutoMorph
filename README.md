@@ -59,7 +59,9 @@ Focus will move the original segmented files to z.stacks/ and (if run sucessfull
 
 Focus can be run with the following optional flags:
 
--v, --verbose : increases the verbosity of focus, in particular it will print the zerene.log to the screen as ZereneStacker runs
+-v, --verbose : increases the verbosity of focus, in particular it will print the zerene.log to the screen as ZereneStacker runs. May cause ZereneStacker to run more slowly.
+
+-i, --interactive: runs focusing software with headless mode turned off, to be used if the software isn't running properly. Use only for debugging, since interactive mode severely affects performance.
 
 --reset : will reset the input directory to a pre-focused state, to be used if focus fails for some reason or you want to rerun
 

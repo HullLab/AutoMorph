@@ -18,7 +18,9 @@ def construct_command(software):
     zerene_java_extensions = ['jai_codec.jar', 'jai_core.jar', 'jai_imageio.jar',
                               'jdom.jar', 'metadata-extractor-2.4.0-beta-1.jar']
     zerene_options = "com.zerenesystems.stacker.gui.MainFrame -exitOnBatchScriptCompletion"
-    zerene_options += " -noSplashScreen -runMinimized -showProgressWhenMinimized=false  -batchScript"
+    if headless != '':
+        zerene_options += " -runMinimized"
+    zerene_options += " -noSplashScreen -showProgressWhenMinimized=false  -batchScript"
 
     if platform.system() == 'Darwin':
         print 'Configuring for Mac OS X'

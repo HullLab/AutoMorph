@@ -232,6 +232,8 @@ if __name__ == "__main__":
     parser.add_argument('input_dir', help='input directory')
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
                        action="store_true")
+    parser.add_argument("-i", "--interactive", help="run focusing software interactively (not headless)",
+                       action="store_true")
     parser.add_argument("--reset", help="revert input directory to pre-focused state",
                        action="store_true")
     args = parser.parse_args()
@@ -258,6 +260,9 @@ if __name__ == "__main__":
 
     software = load_settings()
     software['verbose'] = args.verbose
+    if args.interactive:
+        print "Running focus in interactive mode. Note: This will cause focus to run MUCH more slowly."
+        software['headless'] = ''
 
     if args.reset:
         reset(directories, software)
