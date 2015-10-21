@@ -44,8 +44,7 @@ def construct_command(software):
 
 def write_batchfile(directories):
 
-    batchxml_header = """
-    <?xml version="1.0" encoding="UTF-8"?>
+    batchxml_header = """<?xml version="1.0" encoding="UTF-8"?>
     <ZereneStackerBatchScript>
       <WrittenBy value="Zerene Stacker 1.04 Build T201404082055" />
           <BatchQueue>

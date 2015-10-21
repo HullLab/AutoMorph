@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import ConfigParser
+import argparse
 import sys
 import os
 import pwd
@@ -14,23 +15,9 @@ import zerene
 
 def focus(directories, software, ID):
 
-    if debug:
-        print 'Backing up unprocessed image to originals directory...'
-        orig_dir = os.path.join(directories['input'], 'originals')
-        if os.path.exists(orig_dir):
-            sys.exit("Error: originals directory already exists, please remove before proceeding.")
-
-        focus_dir = os.path.join(directories['input'], 'focused')
-        if os.path.exists(focus_dir):
-            sys.exit("Error: this directory has already been focused, please clean out before proceeding.")
-
-        shutil.copytree(directories['input'], orig_dir)
-
     directories['objects'] = [os.path.realpath(x) for x in glob.glob(os.path.join(directories['input'], '*_obj*'))]
 
     # STRIPPING LABELS
-    print 'Stripping labels from', len(directories['objects']), 'images..'
-    directories['stripped'] = os.path.join(directories['input'], 'stripped')
     if not os.path.exists(directories['stripped']):
         os.makedirs(directories['stripped'])
 
@@ -47,18 +34,22 @@ def focus(directories, software, ID):
 
         # Run the XML file
         zerene_command = zerene.construct_command(software)
-        zerene_command += ' %s > %s' % (os.path.join(directories['input'], 'zsbatch.xml'),
-                                        os.path.join(directories['input'], 'zerene.log'))
+        if software['verbose']:
+            zerene_command += ' %s 2>&1 | tee %s' % (os.path.join(directories['input'], 'zsbatch.xml'),
+                                            os.path.join(directories['input'], 'zerene.log'))
+        else:
+            zerene_command += ' %s > %s' % (os.path.join(directories['input'], 'zsbatch.xml'),
+                                            os.path.join(directories['input'], 'zerene.log'))
         print 'Running Zerene Stacker: ', zerene_command
 
-#        subprocess.call(zerene_command, shell=True)
+        subprocess.call(zerene_command, shell=True)
 
         first_object = os.path.realpath(os.path.join(directories['stripped'],
                                                      os.path.basename(directories["objects"][0]),
                                                      'ZS.tif'))
         last_object = os.path.realpath(os.path.join(directories['stripped'],
-                                                    os.path.basename(directories["objects"][-1],
-                                                    'ZS.tif')))
+                                                    os.path.basename(directories["objects"][-1]),
+                                                    'ZS.tif'))
 
         if not os.path.exists(first_object):
             sys.exit("Error: Zerene didn't create files. Perhaps something went wrong? Exiting...")
@@ -185,7 +176,7 @@ def clean(directories):
         shutil.rmtree(directories['zstack'])
 
 
-def reset(directories, ID):
+def reset(directories, software):
 
     if os.path.exists(directories['final_focused']):
         shutil.rmtree(directories['final_focused'])
@@ -193,6 +184,14 @@ def reset(directories, ID):
         shutil.rmtree(directories['unlabeled_focused'])
     if os.path.exists(directories['stripped']):
         shutil.rmtree(directories['stripped'])
+
+    if software['name'] == "zerene" :
+        batch_file = os.path.join(directories['input'], 'zsbatch.xml')
+        if os.path.exists(batch_file):
+            os.remove(batch_file)
+        log_file = os.path.join(directories['input'], 'zerene.log')
+        if os.path.exists(log_file):
+            os.remove(log_file)
 
     if os.path.exists(directories['focus_tar']):
         os.remove(directories['focus_tar'])
@@ -203,60 +202,68 @@ def reset(directories, ID):
     if os.path.exists(directories['zstack']):
         if os.listdir(directories['zstack']) != []:
             for directory in os.listdir(directories['zstack']):
+                directory = os.path.join(directories['zstack'], directory)
                 shutil.move(directory, directories['input'])
         os.rmdir(directories['zstack'])
+
+    if software['name'] == "zerene" :
+        batch_file = os.path.join(directories['input'], 'zsbatch.xml')
+        if os.path.exists(batch_file):
+            os.remove(batch_file)
+        log_file = os.path.join(directories['input'], 'zerene.log')
+        if os.path.exists(log_file):
+            os.remove(log_file)
+
+    directories['objects'] = [os.path.realpath(x) for x in glob.glob(os.path.join(directories['input'], '*_obj*'))] 
+    for object_dir in directories['objects']:
+        label_file = os.path.join(object_dir, 'label.tif')
+        if os.path.exists(label_file):
+            os.remove(label_file)
+        if software['name'] == 'zerene':
+            zs_file = os.path.join(object_dir, 'ZS.tif')
+            if os.path.exists(zs_file):
+                os.remove(zs_file)
 
 
 if __name__ == "__main__":
 
-    mode = 'focus'
-    if len(sys.argv) != 2:
-        if len(sys.argv) == 3:
-            mode = sys.argv[2]
+    parser = argparse.ArgumentParser(description='')
 
-        else:
-            print 'Use: focus <directory name> <mode>'
-            print 'mode is optional, can be set to:'
-            print 'leave out to run focus normally'
-            print 'reset: will revert the directory back to the pre-focused state'
-            print 'clean: to remove intermediate files created by focus'
-            sys.exit(0)
-
+    parser.add_argument('input_dir', help='input directory')
+    parser.add_argument("-v", "--verbose", help="increase output verbosity",
+                       action="store_true")
+    parser.add_argument("--reset", help="revert input directory to pre-focused state",
+                       action="store_true")
+    args = parser.parse_args()
+    
     # If that option isn't a directory name, quite:
-    if not os.path.isdir(sys.argv[1]):
+    if not os.path.isdir(args.input_dir):
         print 'Argument to focus must be a directory name - quitting.'
         sys.exit(0)
 
     # Assign our directory variables:
-    input_dir = os.path.realpath(sys.argv[1])
+    input_dir = os.path.realpath(args.input_dir)
 
     # Assign our ID variable:
-    ID = os.path.basename(os.path.normpath(input_dir)[0:9]
-    print 'ID = ', ID
+    ID = os.path.basename(os.path.normpath(input_dir))[0:9]
 
     directories = {'input': input_dir,
+                   'stripped': os.path.join(input_dir, 'stripped'),
                    'final_focused':  os.path.join(input_dir, 'focused'),
                    'unlabeled_focused': os.path.join(input_dir, 'focused_unlabeled'),
                    'zstack': os.path.join(input_dir, 'z.stacks'),
                    'focus_tar': os.path.join(input_dir, ID+'-focused.tar'),
-                   'zstack_tar': os.path.join(input_dir, ID+'-z.stacks.tar)
+                   'zstack_tar': os.path.join(input_dir, ID+'-z.stacks.tar')
                     }
 
     software = load_settings()
+    software['verbose'] = args.verbose
 
-    if mode == "focus":
+    if args.reset:
+        reset(directories, software)
+    else:
         print 'Running Focus on ', directories['input']
         focus(directories, software, ID)
-
-    elif mode == "reset":
-        reset(directories, ID)
-
-    elif mode == "clean":
-        sys.exit("Error: clean mode not implemented yet.")
-        clean(directories)
-
-    else:
-        sys.exit("Error: Unrecongized mode. Accepted modes are reset and clean.")
 
 
 
