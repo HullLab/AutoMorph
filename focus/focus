@@ -79,17 +79,16 @@ def focus(directories, software, ID):
         shutil.move(object_dir, directories['zstack'])
 
     # Final Images
-    archive(ID+'-focused.tar', directories['final_focused'], directories)
+    archive('final_focused', directories)
 
     # Z-stacks (Original Segmented Images?)
-    archive(ID+'-z.stacks.tar', directories['zstack'], directories)
+    archive('zstack', directories)
 
 
-def archive(tar_filename, dir_to_tar, directories):
+def archive(dir_to_tar, directories):
 
-    tar_filename = os.path.join(os.path.dirname(directories['input']), tar_filename)
-    tar = tarfile.open(tar_filename, 'w:gz')
-    tar.add(dir_to_tar)
+    tar = tarfile.open(directories[dir_to_tar+'_tar'], 'w:gz')
+    tar.add(directories[dir_to_tar])
     tar.close()
 
 
@@ -178,12 +177,11 @@ def clean(directories):
 
 def reset(directories, software):
 
-    if os.path.exists(directories['final_focused']):
-        shutil.rmtree(directories['final_focused'])
-    if os.path.exists(directories['unlabeled_focused']):
-        shutil.rmtree(directories['unlabeled_focused'])
-    if os.path.exists(directories['stripped']):
-        shutil.rmtree(directories['stripped'])
+    remove_directories = ['final_focused', 'unlabeled_focused',
+                          'stripped']
+    for directory in remove_directories:
+        if os.path.exists(directories[directory]):
+            shutil.rmtree(directories[directory])
 
     if software['name'] == "zerene" :
         batch_file = os.path.join(directories['input'], 'zsbatch.xml')
@@ -193,10 +191,10 @@ def reset(directories, software):
         if os.path.exists(log_file):
             os.remove(log_file)
 
-    if os.path.exists(directories['focus_tar']):
-        os.remove(directories['focus_tar'])
-    if os.path.exists(directories['zstack_tar']):
-        os.remove(directories['zstack_tar'])
+    remove_files = ['final_focused_tar', 'zstack_tar']
+    for file in remove_files:
+        if os.path.exists(directories[file]):
+            os.remove(directories[file])
 
     # copy back originals if they have been moved
     if os.path.exists(directories['zstack']):
@@ -254,7 +252,7 @@ if __name__ == "__main__":
                    'final_focused':  os.path.join(input_dir, 'focused'),
                    'unlabeled_focused': os.path.join(input_dir, 'focused_unlabeled'),
                    'zstack': os.path.join(input_dir, 'z.stacks'),
-                   'focus_tar': os.path.join(input_dir, ID+'-focused.tar'),
+                   'final_focused_tar': os.path.join(input_dir, ID+'-focused.tar'),
                    'zstack_tar': os.path.join(input_dir, ID+'-z.stacks.tar')
                     }
 
@@ -265,6 +263,7 @@ if __name__ == "__main__":
         software['headless'] = ''
 
     if args.reset:
+        print "Resetting ", directories['input']
         reset(directories, software)
     else:
         print 'Running Focus on ', directories['input']
