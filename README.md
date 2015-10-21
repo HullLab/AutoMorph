@@ -57,7 +57,7 @@ Use focus as (<directory_path> = directory you want to run focus on):
 
 Focus will move the original segmented files to z.stacks/ and (if run sucessfully) the final images can be found in focused/.
 
-Focus can all be run with the following flags:
+Focus can be run with the following optional flags:
 
 -v, --verbose : increases the verbosity of focus, in particular it will print the zerene.log to the screen as ZereneStacker runs
 
