@@ -38,7 +38,7 @@ def sample(image, box_list, orig_filename, run):
 def final(orig_filename, box_list, run, plane_num):
 
     image = images.load(orig_filename, run)
-    image_size = image.size   # [width, height]
+    image_size = np.shape(image)   # [width, height]
 
     for box_num, box in enumerate(box_list):
 
@@ -48,8 +48,8 @@ def final(orig_filename, box_list, run, plane_num):
         height = crop_box[3] - crop_box[1]
         image_subsample = images.crop(image, crop_box)
 
-        x_percent = crop_box[0] / image_size[0] * 100
-        y_percent = crop_box[1] / image_size[1] * 100
+        x_percent = crop_box[0] / image_size[1] * 100
+        y_percent = crop_box[1] / image_size[0] * 100
         description = 'Object #%05d of %05d ( %d x %d pixels at slide position %05.2f x %05.2f )' \
                       % (box_num+1, len(box_list), width, height, x_percent, y_percent)
 
@@ -67,27 +67,6 @@ def final(orig_filename, box_list, run, plane_num):
 
         tags = images.add_comment(output_filename, '. '.join(label))
         images.save(labeled_image_subsample, output_filename, tags=tags)
-
-
-def save_overview_image(full_image, box_list, orig_filename, run):
-    '''
-    Save low resolution jpg of entire image with boxes marked
-    '''
-
-    full_image = images.draw_bounding_boxes(full_image, box_list)
-
-    # save entire image
-    if run["mode"] == "final":
-        output_dir = run['full_output'].replace('/final','')
-    else:
-        output_dir = run['full_output']    
-    filename_full_image = "%s%s%s_boxes_%s.jpg" % (output_dir, os.sep, run['unique_id'],
-                                                   run['image_file_label'])
-
-    description = 'Full Image'
-    labeled_image, _ = images.label_image(full_image, orig_filename, description, run)
-
-    images.save(labeled_image, filename_full_image)
 
 
 def pick_and_expand_sample_boxes(image, box_list, region_size):

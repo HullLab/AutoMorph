@@ -1,11 +1,11 @@
-from aux import debug_msg
-
 import xml.etree.ElementTree as xml_tree
 from skimage.measure import regionprops
+from skimage import color
 from PIL import Image, ImageFont, ImageDraw, TiffImagePlugin
+import tifffile
 
 import numpy as np
-from scipy import ndimage
+from scipy import ndimage, misc
 import time
 import glob
 import math
@@ -19,25 +19,55 @@ def load(filename, run):
 
     start = time.time()
 
-    img = Image.open(filename)
+    try:
+        img = Image.open(filename)
+        img = np.array(img)
+    except IOError:
+        if run['input_ext'] == 'tif':
+            print "File may be a BIGtiff, attempting alternate read..."
+            img = tifffile.imread('Plane031.tif')
+        else:
+            raise
 
-    scaled_img = resize(img, filename, run)
-
+    print np.shape(img)
     end = time.time()
-    debug_msg('INFO: images.load() processed %s ( %f seconds)' % (filename, end-start), run['debug'] >= 1)
+    print 'INFO: images.load() processed %s ( %f seconds)' % (filename, end-start)
 
-    return scaled_img
+    return img
 
 
 def save(image, filename, tags=''):
 
     if isinstance(image, (np.ndarray, np.generic)):
-        image = Image.fromarray(np.uint8(image))
+        image = Image.fromarray(image)
 
     if tags:
         image.save(filename, tiffinfo=tags)
     else:
         image.save(filename)
+
+
+def save_overview_image(full_image, box_list, orig_filename, run):
+    '''
+    Save low resolution jpg of entire image with boxes marked
+    '''
+
+    # if bigtiff, drop resolutions significantly
+
+    full_image = draw_bounding_boxes(full_image, box_list)
+
+    # save entire image
+    if run["mode"] == "final":
+        output_dir = run['full_output'].replace('/final', '')
+    else:
+        output_dir = run['full_output']
+    filename_full_image = "%s%s%s_boxes_%s.jpg" % (output_dir, os.sep, run['unique_id'],
+                                                   run['image_file_label'])
+
+    description = 'Full Image'
+    labeled_image, _ = label_image(full_image, orig_filename, description, run)
+
+    save(labeled_image, filename_full_image)
 
 
 def add_comment(filename, comment):
@@ -52,7 +82,7 @@ def add_comment(filename, comment):
     return tags
 
 
-def list_files(directory, verbosity, file_extension):
+def list_files(directory, file_extension):
     '''
     This function takes a directory and returns a list of all TIF images in that
     directory
@@ -60,46 +90,57 @@ def list_files(directory, verbosity, file_extension):
 
     file_list = glob.glob(directory+os.sep+"*."+file_extension)
 
-    if verbosity >= 1:
-        num_files = len(file_list)
-
-        debug_msg('INFO: images.find() found %d files' % num_files, True)
+    print 'INFO: images.find() found %d files' % len(file_list)
 
     return sorted(file_list)
 
 
-def resize(img, filename, run):
+def resize(image, filename, run):
     '''
-    Scales image based on microns per pixel
+    Scales image based on units per pixel
+    DEPRECATED: this function existed to deal with non-square pixels but is non-square
+    longer needed.
     '''
+    # if isinstance(image, (np.ndarray, np.generic)):
+    #    image = Image.fromarray(image)
 
-    x_image, y_image = img.size
+    print 'INFO: resizing...'
+    height, width, _ = np.shape(image)
+    # x_image, y_image = image.size
     # Calculate the new dimensions
 
     scale_factor_x = run['units_per_pixel'] / run['pixel_size_x']
     scale_factor_y = run['units_per_pixel'] / run['pixel_size_y']
 
-    m_resized = int(math.ceil(scale_factor_x * x_image))
-    n_resized = int(math.ceil(scale_factor_y * y_image))
+    # if scale_factor_x == 1 and scale_factor_y == 1:
+    #    return image
 
-    return img.resize((m_resized, n_resized), Image.ANTIALIAS)
+    m_resized = int(math.ceil(scale_factor_x * width))
+    n_resized = int(math.ceil(scale_factor_y * height))
+
+    # return image.resize((m_resized, n_resized), Image.ANTIALIAS)
+    return ndimage.zoom(image, (scale_factor_y, scale_factor_x))
 
 
 def crop(image, box):
 
-    if isinstance(image, (np.ndarray, np.generic)):
-        image = Image.fromarray(np.uint8(image))
-
-    image_subsample = image.crop(box)
+    image_subsample = image[box[1]:box[3], box[0]:box[2], :]
 
     return image_subsample
 
 
+def rgb2gray(rgb):
+
+    r, g, b = rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2]
+    gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
+
+    return gray
+
+
 def find_objects(img, run):
 
-    # Make image black and white
-    bw_img = img.convert('L')
-    bw_img = np.array(bw_img)
+    bw_img = rgb2gray(img)
+
     # Pixel range is 0...255
     bw_img[bw_img < 255*run['threshold']] = 0     # Black
     bw_img[bw_img >= 255*run['threshold']] = 255  # White
@@ -135,27 +176,10 @@ def find_objects(img, run):
 
     box_list = expand_bounding_box(box_list, 0.20, connected_objs.shape)
 
-    debug_msg('INFO: findObjects -> %d total [ Thresh: %f ] -->  %d valid'
-              % (n, run['threshold'], len(box_list)), run['debug'] >= 1)
+    print 'INFO: findObjects -> %d total [ Thresh: %f ] -->  %d valid' % (n, run['threshold'],
+                                                                          len(box_list))
 
     return box_list
-
-
-def border(image, border_size):
-    '''
-    No longer used. Can be deleted
-    '''
-
-    width, height = image.size
-    image = np.array(image)  # y, x, color
-
-    # Top, Bottom, Left, Right
-    image[:round(height * border_size), :, :] = 0
-    image[height-round(height * border_size * 6):height, :, :] = 0
-    image[:, :round(width * border_size), :] = 0
-    image[:, width-round(width * border_size):width, :] = 0
-
-    return Image.fromarray(np.uint8(image))
 
 
 def add_label_area(image):
@@ -183,7 +207,7 @@ def add_label_area(image):
 
 def label_image(orig_image, orig_filename, description, run):
 
-    orig_height = orig_image.size[1]
+    orig_height = np.shape(orig_image)[0]
 
     image = add_label_area(orig_image)
 
@@ -194,7 +218,7 @@ def label_image(orig_image, orig_filename, description, run):
     bar_in_pixels_25 = 25 / run['units_per_pixel']
     bar_in_pixels_100 = bar_in_pixels_25 * 4.
 
-    y_100 = orig_height+15
+    y_100 = orig_height+7
     y_25 = y_100 + 10
     width = 2
 
@@ -214,7 +238,7 @@ def label_image(orig_image, orig_filename, description, run):
     label.insert(0, description)
     label.append('File: %s' % orig_filename)
 
-    text_y = y_25 + 10 + np.array([0, 20, 40, 70, 85, 100, 115])
+    text_y = y_25 + 7 + np.array([0, 20, 40, 70, 85, 100, 115])
     text_size = [14, 14, 14, 9, 9, 9, 9]
 
     for i, line in enumerate(label):
@@ -233,6 +257,8 @@ def set_fontsize(font_size):
 
 
 def draw_bounding_boxes(image, box_list):
+    if isinstance(image, (np.ndarray, np.generic)):
+        image = Image.fromarray(np.uint8(image))
 
     draw = ImageDraw.Draw(image)
 

@@ -40,10 +40,6 @@ maximumSize = 2000.0
 #  'final' - full save of all objects segmented with the best parameters
 mode = final
 
-# debug:
-# Set a level for debug output - off, low or high:
-debug = high
-
 # pixel_size_x, pixel_size_y
 # size of x and y pixels, comment out or remove if reading from xml file
 # set to # of units (see below) per pixel

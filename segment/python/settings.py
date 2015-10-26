@@ -6,10 +6,6 @@ import sys
 import os
 import getpass
 
-
-debug_settings = {'off': 0, 'low': 1, 'high': 2}
-
-
 def parse(filename):
     #
     # Originally written by B. Dobbins
@@ -28,7 +24,6 @@ def parse(filename):
                 'mode': 'sample',
                 'source': 'Unspecified Source',
                 'age': 'Unspecified Age',
-                'debug': 0,
                 'input_ext': 'tif',
                 'output_ext': 'tif',
                 'pixel_size_x': None,
@@ -56,7 +51,7 @@ def parse(filename):
             vfile = StringIO(u'[settings]\n%s' % open(filename).read())
             parser.readfp(vfile)
     else:
-        sys.exit("Error: Cannot open settings file.")
+        sys.exit("Error: Cannot open settings file "+filename)
 
     # set optional variables
     for setting in parser.options('settings'):
@@ -77,13 +72,6 @@ def parse(filename):
                 sys.exit('Error: unrecognized syntax for threshold setting')
 
             num_permutations = len(thresholds)
-
-        elif setting == 'debug':
-            debug_option = parser.get('settings', 'debug')
-            if len(debug_option) > 1:
-                settings['debug'] = debug_settings[debug_option]
-            else:
-                settings['debug'] = int(debug_option)
 
         elif 'Size' in setting or 'size' in setting:
             settings[setting] = float(parser.get('settings', setting))
@@ -112,7 +100,6 @@ def parse(filename):
     settings['subdirectory'] = os.path.split(settings['directory'])[1]
     new_directory = settings['output'] + os.sep + settings['subdirectory']
     settings['full_output'] = new_directory + os.sep + settings['mode']
-    print settings['subdirectory']
 
     # create a unique id
     if settings['unique_id'] is None:
@@ -159,8 +146,6 @@ def save(settings):
     parser.add_section(section)
 
     for option, value in settings.iteritems():
-        if option == 'debug':
-            value = debug_settings.keys()[debug_settings.values().index(value)]
 
         parser.set(section, str(option), str(value))
 

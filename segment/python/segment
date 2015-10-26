@@ -3,7 +3,6 @@
 import settings
 import images
 import process
-import aux
 
 import sys
 import os
@@ -30,7 +29,7 @@ def segment(settings_file):
               % (i+1, len(runs), settings_file))
 
         # Get list of images in directory
-        target_image_list = images.list_files(run['directory'], run['debug'], run['input_ext'])
+        target_image_list = images.list_files(run['directory'], run['input_ext'])
         top_image_filename = target_image_list[-1]
 
         # Set up additonal run parameters
@@ -40,13 +39,11 @@ def segment(settings_file):
             print 'No pixel size set in settings file, attempting to read microns per pixel from xml file...'
             run['pixel_size_x'], run['pixel_size_y'] = images.microns_per_pixel_xml(top_image_filename)
 
-        run['units_per_pixel'] = round(run['pixel_size_y'] * 10) / 10.0
-
         run['image_file_label'] = 'th=%05.4f_size=%04.0fu-%04.0fu' % (run['threshold'],
                                                                       run['minimumSize'],
                                                                       run['maximumSize'])
 
-        run['image_label'] = aux.contruct_image_label(run, version)
+        run['image_label'] = contruct_image_label(run, version)
 
         if not os.path.exists(run['full_output']):
             os.makedirs(run['full_output'])
@@ -55,9 +52,10 @@ def segment(settings_file):
         top_image = images.load(top_image_filename, run)
 
         # Identify all objects based on threshold and size values
+        print 'INFO: Finding objects'
         objects = images.find_objects(top_image, run)
 
-        process.save_overview_image(top_image, objects, top_image_filename, run)
+        images.save_overview_image(top_image, objects, top_image_filename, run)
 
         # Leanne said this no long really used, so I've commented it out for later removal
         # if run['mode'] == 'sample':
@@ -71,6 +69,32 @@ def segment(settings_file):
             for plane_num, plane_image in enumerate(target_image_list[:-1]):
                 process.final(plane_image, objects, run, plane_num)
 
+
+def contruct_image_label(run, version):
+
+    catalog_number = 'None'
+    if run['catalog_prefix']:
+        if 'IP' in run['unique_id']:  # Special fix for Yale
+            catalog_number = run['catalog_prefix']+' '+run['unique_id'].split('.')[1]
+        else:
+            catalog_number = run['catalog_prefix']+' '+run['unique_id']
+
+    text = []
+    text.append('%4.2f %s per pixel | Age and Source:  %s from %s'
+                % (run['units_per_pixel'], run['unit'], run['age'], run['source']))
+    this_line = 'Processed at '+run['location']
+
+    if run['author']:
+        this_line += ' by '+run['author']
+    this_line += ' (Catalog Number: %s)' % catalog_number
+
+    text.append(this_line)
+    text.append('CODE VERSION: %s, PROCESSED ON: %s' % (version, run['timestamp']))
+    text.append('Threshold of %4.2f and size filter of %d - %d %s'
+                % (run['threshold'], run['minimumSize'], run['maximumSize'], run['unit']))
+    text.append('Directory: %s' % run['subdirectory'])
+
+    return text
 
 if __name__ == "__main__":
 
