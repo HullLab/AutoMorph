@@ -55,12 +55,6 @@ def parse(filename):
     # set optional variables
     for setting in parser.options('settings'):
 
-        # Backwards compatibility tweaks
-        if setting == "minimumSize":
-            setting = "minimum_size"
-        if setting == "maximumSize":
-            setting = "maximum_size"
-
         if setting == 'threshold':
             threshold_str = parser.get('settings', 'threshold')
 
@@ -79,6 +73,12 @@ def parse(filename):
 
             num_permutations = len(thresholds)
 
+        # Backwards compatibility tweaks
+        elif setting == "minimumSize":
+            settings['minimum_size'] = float(parser.get('settings', 'minimumSize'))
+        elif setting == "maximumSize":
+            settings['maximum_size'] = float(parser.get('settings', 'maximumSize'))
+
         elif 'size' in setting:
             settings[setting] = float(parser.get('settings', setting))
         else:
@@ -88,6 +88,9 @@ def parse(filename):
     for required in required_list:
         if required not in settings.keys():
             sys.exit('Error: '+required+' must be set in settings file.')
+
+    # need to add flag to settings on whether or not to do this?
+    settings['units_per_pixel'] = round(settings['pixel_size_y'] * 10) / 10.0
 
     # Backwards compatibility tweaks
     if settings['mode'] == 'save':

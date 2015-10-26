@@ -3,6 +3,7 @@
 import settings
 import images
 
+import numpy as np
 import sys
 import os
 
@@ -33,8 +34,8 @@ def segment(settings_file):
 
         # Set up additonal run parameters
         run['image_file_label'] = 'th=%05.4f_size=%04.0fu-%04.0fu' % (run['threshold'],
-                                                                      run['minimumSize'],
-                                                                      run['maximumSize'])
+                                                                      run['minimum_size'],
+                                                                      run['maximum_size'])
 
         run['image_label'] = contruct_image_label(run, version)
 
@@ -60,7 +61,7 @@ def segment(settings_file):
             settings.save(run.copy())
             # Loop over the planes we're interested in, load an image, then process it
             for plane_num, plane_image in enumerate(target_image_list[:-1]):
-                process.final(plane_image, objects, run, plane_num)
+                final(plane_image, objects, run, plane_num)
 
 
 def final(orig_filename, box_list, run, plane_num):
@@ -97,7 +98,6 @@ def final(orig_filename, box_list, run, plane_num):
         images.save(labeled_image_subsample, output_filename, tags=tags)
 
 
-
 def contruct_image_label(run, version):
 
     catalog_number = 'None'
@@ -119,7 +119,7 @@ def contruct_image_label(run, version):
     text.append(this_line)
     text.append('CODE VERSION: %s, PROCESSED ON: %s' % (version, run['timestamp']))
     text.append('Threshold of %4.2f and size filter of %d - %d %s'
-                % (run['threshold'], run['minimumSize'], run['maximumSize'], run['unit']))
+                % (run['threshold'], run['minimum_size'], run['maximum_size'], run['unit']))
     text.append('Directory: %s' % run['subdirectory'])
 
     return text
