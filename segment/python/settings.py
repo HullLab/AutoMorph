@@ -6,6 +6,7 @@ import sys
 import os
 import getpass
 
+
 def parse(filename):
     #
     # Originally written by B. Dobbins
@@ -19,22 +20,20 @@ def parse(filename):
     # Set up defaults
     default_step_size = 0.01
     defaults = {'threshold': 0.20,
-                'minimumSize': 100,
-                'maximumSize': 2000,
+                'minimum_size': 100,
+                'maximum_size': 2000,
                 'mode': 'sample',
                 'source': 'Unspecified Source',
                 'age': 'Unspecified Age',
                 'input_ext': 'tif',
                 'output_ext': 'tif',
-                'pixel_size_x': None,
-                'pixel_size_y': None,
                 'location': 'Yale Peabody Museum',
                 'catalog_prefix': 'YPM IP',
                 'unit': 'microns',
                 'author': None,
                 'unique_id': None
                 }
-    required_list = ['directory', 'output']
+    required_list = ['directory', 'output', 'pixel_size_y', 'pixel_size_x']
 
     # Parse setting
     settings = defaults
@@ -55,6 +54,13 @@ def parse(filename):
 
     # set optional variables
     for setting in parser.options('settings'):
+
+        # Backwards compatibility tweaks
+        if setting == "minimumSize":
+            setting = "minimum_size"
+        if setting == "maximumSize":
+            setting = "maximum_size"
+
         if setting == 'threshold':
             threshold_str = parser.get('settings', 'threshold')
 
@@ -73,7 +79,7 @@ def parse(filename):
 
             num_permutations = len(thresholds)
 
-        elif 'Size' in setting or 'size' in setting:
+        elif 'size' in setting:
             settings[setting] = float(parser.get('settings', setting))
         else:
             settings[setting] = str(parser.get('settings', setting))

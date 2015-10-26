@@ -19,19 +19,19 @@ output = /home/kln26/hull/segment_testing
 # for final mode, only give a single threshold value as threshold = 0.16
 threshold = 0.16
 
-#minimumSize:
+#minimum_size:
 # The smallest width of a valid object in microns (or other base unit). The
 # minimum size is designed to filter out background light scatter. You
 # can, again, use multiple sizes and this will run the segmentation process
 # multiple times, one with each combination of values:
-minimumSize = 100.0
+minimum_size = 100.0
 
 # maximumSize:
 # Same as minimumSize, but for the maximum width of a valid object. The
 # maximum size is designed to ignore the white rim of some slides or other
 # large-scale noise.  maximimSize is also given in the pixel
 # base unit:
-maximumSize = 2000.0
+maximum_size = 2000.0
 
 # mode:
 # tells what method we want to use:
@@ -41,11 +41,10 @@ maximumSize = 2000.0
 mode = final
 
 # pixel_size_x, pixel_size_y
-# size of x and y pixels, comment out or remove if reading from xml file
+# size of x and y pixels, 
 # set to # of units (see below) per pixel
-# must set neither or both pixel sizes
-# pixel_size_x = 
-# pixel_size_y = 
+pixel_size_x = 
+pixel_size_y = 
 
 # unit
 # base unit of measure used in the pixel based unit

@@ -95,33 +95,6 @@ def list_files(directory, file_extension):
     return sorted(file_list)
 
 
-def resize(image, filename, run):
-    '''
-    Scales image based on units per pixel
-    DEPRECATED: this function existed to deal with non-square pixels but is non-square
-    longer needed.
-    '''
-    # if isinstance(image, (np.ndarray, np.generic)):
-    #    image = Image.fromarray(image)
-
-    print 'INFO: resizing...'
-    height, width, _ = np.shape(image)
-    # x_image, y_image = image.size
-    # Calculate the new dimensions
-
-    scale_factor_x = run['units_per_pixel'] / run['pixel_size_x']
-    scale_factor_y = run['units_per_pixel'] / run['pixel_size_y']
-
-    # if scale_factor_x == 1 and scale_factor_y == 1:
-    #    return image
-
-    m_resized = int(math.ceil(scale_factor_x * width))
-    n_resized = int(math.ceil(scale_factor_y * height))
-
-    # return image.resize((m_resized, n_resized), Image.ANTIALIAS)
-    return ndimage.zoom(image, (scale_factor_y, scale_factor_x))
-
-
 def crop(image, box):
 
     image_subsample = image[box[1]:box[3], box[0]:box[2], :]
@@ -161,8 +134,8 @@ def find_objects(img, run):
     size_x = np.array([box[2]-box[0] for box in bounding_boxes])
     size_y = np.array([box[3]-box[1] for box in bounding_boxes])
 
-    minimum_size = run['minimumSize'] / run['units_per_pixel']
-    maximum_size = run['maximumSize'] / run['units_per_pixel']
+    minimum_size = run['minimum_size'] / run['units_per_pixel']
+    maximum_size = run['maximum_size'] / run['units_per_pixel']
 
     # Eliminate all boxed objects with a dimension smaller than the minimum and a huge area:
     # True minimum length can be smaller if the minimum length is oriented at a 45-degree angle,
@@ -312,7 +285,10 @@ def expand_bounding_box(box_list, scale_factor, i_size):
 
 
 def microns_per_pixel_xml(filename):
-
+    '''
+    Retrieves microns per pixel from associated xml file
+    DEPRECATED: now require pixel size input into settings file
+    '''
     xml_name = os.path.splitext(filename)[0]+'.xml'
     # Get the microns-per-pixel values:
     root = xml_tree.parse(xml_name).getroot()
@@ -322,3 +298,30 @@ def microns_per_pixel_xml(filename):
     y = float(sub_root.findtext('MicronsPerPixelY'))
 
     return x, y
+
+
+def resize(image, filename, run):
+    '''
+    Scales image based on units per pixel
+    DEPRECATED: this function existed to deal with non-square pixels but is non-square
+    longer needed.
+    '''
+    # if isinstance(image, (np.ndarray, np.generic)):
+    #    image = Image.fromarray(image)
+
+    print 'INFO: resizing...'
+    height, width, _ = np.shape(image)
+    # x_image, y_image = image.size
+    # Calculate the new dimensions
+
+    scale_factor_x = run['units_per_pixel'] / run['pixel_size_x']
+    scale_factor_y = run['units_per_pixel'] / run['pixel_size_y']
+
+    # if scale_factor_x == 1 and scale_factor_y == 1:
+    #    return image
+
+    m_resized = int(math.ceil(scale_factor_x * width))
+    n_resized = int(math.ceil(scale_factor_y * height))
+
+    # return image.resize((m_resized, n_resized), Image.ANTIALIAS)
+    return ndimage.zoom(image, (scale_factor_y, scale_factor_x))

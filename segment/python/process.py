@@ -33,43 +33,12 @@ def sample(image, box_list, orig_filename, run):
         labeled_image_subsample, _ = images.label_image(image_subsample, orig_filename, description, run)
 
         images.save(labeled_image_subsample, output_filename)
-
-
-def final(orig_filename, box_list, run, plane_num):
-
-    image = images.load(orig_filename, run)
-    image_size = np.shape(image)   # [width, height]
-
-    for box_num, box in enumerate(box_list):
-
-        # crop expects [x1, y1, x2, y2], box is [y1, x1, y2, x2]
-        crop_box = [box[1], box[0], box[3], box[2]]
-        width = crop_box[2] - crop_box[0]
-        height = crop_box[3] - crop_box[1]
-        image_subsample = images.crop(image, crop_box)
-
-        x_percent = crop_box[0] / image_size[1] * 100
-        y_percent = crop_box[1] / image_size[0] * 100
-        description = 'Object #%05d of %05d ( %d x %d pixels at slide position %05.2f x %05.2f )' \
-                      % (box_num+1, len(box_list), width, height, x_percent, y_percent)
-
-        labeled_image_subsample, label = images.label_image(image_subsample, orig_filename,
-                                                            description, run)
-
-        object_directory = '%s%s%s_obj%05d' % (run['full_output'], os.sep, run['unique_id'], box_num+1)
-        if not os.path.exists(object_directory):
-            os.makedirs(object_directory)
-
-        print object_directory
-        output_filename = '%s%s%s_obj%05d_plane%03d.%s' % (object_directory, os.sep,
-                                                           run['unique_id'], box_num+1, plane_num,
-                                                           run['output_ext'])
-
-        tags = images.add_comment(output_filename, '. '.join(label))
-        images.save(labeled_image_subsample, output_filename, tags=tags)
-
+        
 
 def pick_and_expand_sample_boxes(image, box_list, region_size):
+    '''
+    Deprecated: no longer save sample boxes
+    '''
 
     image_size = image.size
 
@@ -116,7 +85,10 @@ def pick_and_expand_sample_boxes(image, box_list, region_size):
 
 
 def closest_box(image, box_list, x_and_y):
-    # NOT SURE IF THIS X AND Y IS CORRECT
+    '''
+    Deprecated: no longer save sample boxes
+    '''
+
     search_x = x_and_y[0] * image.shape[0]
     search_y = x_and_y[1] * image.shape[1]
 
