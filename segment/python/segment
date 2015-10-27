@@ -18,7 +18,7 @@ import os
 
 def segment(settings_file):
 
-    version = '2015-8-31'
+    version = '2015-10-27'
 
     print "Loading settings from %s..." % settings_file
     runs = settings.parse(settings_file)

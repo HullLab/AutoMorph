@@ -53,7 +53,7 @@ unit = microns
 # box_once
 # if set to False, segment will run object finding on every plane separately
 # to be used if objects are not in the exact same place in very plane
-box_once = False
+# box_once = False
 
 ## FILE FORMATS
 
