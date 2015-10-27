@@ -29,8 +29,7 @@ def segment(settings_file):
               % (i+1, len(runs), settings_file))
 
         # Get list of images in directory
-        target_image_list = images.list_files(run['directory'], run['input_ext'])
-        top_image_filename = target_image_list[-1]
+        image_list = images.list_files(run['directory'], run['input_ext'])
 
         # Set up additonal run parameters
         run['image_file_label'] = 'th=%05.4f_size=%04.0fu-%04.0fu' % (run['threshold'],
@@ -42,31 +41,48 @@ def segment(settings_file):
         if not os.path.exists(run['full_output']):
             os.makedirs(run['full_output'])
 
+        top_image_filename = image_list[-1]
+        objects, _ = setup_object_boxes(top_image_filename, run)
+
+        if run['mode'] == 'final':
+            print('Saving Settings into %s' % run['full_output'])
+            settings.save(run.copy())
+
+        if run['mode'] == 'final' or not run['box_once']:
+            
+            # Loop over the planes we're interested in, load an image, then process it
+            for plane_num, plane_image_filename in enumerate(image_list[:-1]):
+
+                if not run['box_once']:
+                    objects, plane_image = setup_object_boxes(plane_image_filename, run)
+
+                    if run['mode'] == 'final':
+                        final(plane_image_filename, objects, run, plane_num, image=plane_image)
+
+                elif run['mode'] == 'final':
+                    final(plane_image_filename, objects, run, plane_num)
+
+
+def setup_object_boxes(image_filename, run):
+
         # Load and resize top-level image
-        top_image = images.load(top_image_filename, run)
+        image = images.load(image_filename, run)
 
         # Identify all objects based on threshold and size values
         print 'INFO: Finding objects'
-        objects = images.find_objects(top_image, run)
+        objects = images.find_objects(image, run)
 
-        images.save_overview_image(top_image, objects, top_image_filename, run)
+        print 'INFO: Saving overview image'
+        images.save_overview_image(image, objects, image_filename, run)
 
-        # Leanne said this no long really used, so I've commented it out for later removal
-        # if run['mode'] == 'sample':
-        #   process.sample(top_image, objects, top_image_filename, run)
-
-        if run['mode'] == 'final':
-
-            print('Saving Settings into %s' % run['full_output'])
-            settings.save(run.copy())
-            # Loop over the planes we're interested in, load an image, then process it
-            for plane_num, plane_image in enumerate(target_image_list[:-1]):
-                final(plane_image, objects, run, plane_num)
+        return objects, image
 
 
-def final(orig_filename, box_list, run, plane_num):
+def final(orig_filename, box_list, run, plane_num, image=None):
 
-    image = images.load(orig_filename, run)
+    if image is None:
+        image = images.load(orig_filename, run)
+
     image_size = np.shape(image)   # [width, height]
 
     for box_num, box in enumerate(box_list):

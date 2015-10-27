@@ -26,7 +26,7 @@ threshold = 0.16
 # multiple times, one with each combination of values:
 minimum_size = 100.0
 
-# maximumSize:
+# maximum_size:
 # Same as minimumSize, but for the maximum width of a valid object. The
 # maximum size is designed to ignore the white rim of some slides or other
 # large-scale noise.  maximimSize is also given in the pixel
@@ -49,6 +49,11 @@ pixel_size_y =
 # unit
 # base unit of measure used in the pixel based unit
 unit = microns
+
+# box_once
+# if set to False, segment will run object finding on every plane separately
+# to be used if objects are not in the exact same place in very plane
+box_once = False
 
 ## FILE FORMATS
 

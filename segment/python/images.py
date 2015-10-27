@@ -22,10 +22,12 @@ def load(filename, run):
     try:
         img = Image.open(filename)
         img = np.array(img)
+        run['bigtiff'] = False
     except IOError:
         if run['input_ext'] == 'tif':
             print "File may be a BIGtiff, attempting alternate read..."
-            img = tifffile.imread('Plane031.tif')
+            img = tifffile.imread(filename)
+            run['bigtiff'] = True
         else:
             raise
 
@@ -47,25 +49,38 @@ def save(image, filename, tags=''):
         image.save(filename)
 
 
-def save_overview_image(full_image, box_list, orig_filename, run):
+def save_overview_image(image, box_list, orig_filename, run):
     '''
     Save low resolution jpg of entire image with boxes marked
     '''
 
-    # if bigtiff, drop resolutions significantly
-
-    full_image = draw_bounding_boxes(full_image, box_list)
+    if run['bigtiff']:
+        # if bigtiff, drop resolutions significantly
+        resize_factor = 0.25
+        factor = int(round(1/resize_factor))
+        #shrunk_image = ndimage.interpolation.zoom(image, [resize_factor, resize_factor, 1])
+        shrunk_image = image[::factor, ::factor,:]
+        print 'INFO: Finished resizing'
+        image = draw_bounding_boxes(shrunk_image, box_list, resize_factor=resize_factor)
+        
+    else:
+        image = draw_bounding_boxes(image, box_list)    
 
     # save entire image
     if run["mode"] == "final":
         output_dir = run['full_output'].replace('/final', '')
     else:
         output_dir = run['full_output']
+    
+    file_label = run['image_file_label']
+    if not run['box_once']:
+        file_label += "_"+os.path.splitext(os.path.basename(orig_filename))[0]
+
     filename_full_image = "%s%s%s_boxes_%s.jpg" % (output_dir, os.sep, run['unique_id'],
-                                                   run['image_file_label'])
+                                                   file_label)
 
     description = 'Full Image'
-    labeled_image, _ = label_image(full_image, orig_filename, description, run)
+    labeled_image, _ = label_image(image, orig_filename, description, run)
 
     save(labeled_image, filename_full_image)
 
@@ -229,26 +244,39 @@ def set_fontsize(font_size):
     return ImageFont.truetype(font_path, font_size)
 
 
-def draw_bounding_boxes(image, box_list):
+def draw_bounding_boxes(image, box_list, resize_factor=None):
+
     if isinstance(image, (np.ndarray, np.generic)):
         image = Image.fromarray(np.uint8(image))
-
+    
     draw = ImageDraw.Draw(image)
+
+    border_width = 20
+    font_size = 40
 
     # Mark the bounding boxes of all objects
     for i, box in enumerate(box_list):
-        y1 = math.ceil(box[0])
-        x1 = math.ceil(box[1])
-        y2 = math.ceil(box[2])
-        x2 = math.ceil(box[3])
+        if resize_factor is not None:
+            this_box = np.empty(4)
+            for i in range(len(box)):
+                this_box[i] = int(round(box[i]*resize_factor))
+                border_width = int(round(border_width*resize_factor))
+                font_size = int(round(font_size*resize_factor))
+        else:
+            this_box = box
 
-        draw.line([x1, y2, x2, y2], fill='red', width=20)
-        draw.line([x1, y1, x2, y1], fill='red', width=20)
-        draw.line([x1, y1, x1, y2], fill='red', width=20)
-        draw.line([x2, y1, x2, y2], fill='red', width=20)
+        y1 = math.ceil(this_box[0])
+        x1 = math.ceil(this_box[1])
+        y2 = math.ceil(this_box[2])
+        x2 = math.ceil(this_box[3])
 
-        font = set_fontsize(40)
-        draw.text((x2+40, y2), str(i+1), fill='red', font=font)
+        draw.line([x1, y2, x2, y2], fill='red', width=border_width)
+        draw.line([x1, y1, x2, y1], fill='red', width=border_width)
+        draw.line([x1, y1, x1, y2], fill='red', width=border_width)
+        draw.line([x2, y1, x2, y2], fill='red', width=border_width)
+
+        font = set_fontsize(font_size)
+        draw.text((x2+font_size, y2), str(i+1), fill='red', font=font)
 
     return image
 

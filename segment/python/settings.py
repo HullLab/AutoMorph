@@ -20,6 +20,7 @@ def parse(filename):
     # Set up defaults
     default_step_size = 0.01
     defaults = {'threshold': 0.20,
+                'box_once': True,
                 'minimum_size': 100,
                 'maximum_size': 2000,
                 'mode': 'sample',
@@ -81,6 +82,9 @@ def parse(filename):
 
         elif 'size' in setting:
             settings[setting] = float(parser.get('settings', setting))
+        elif setting == 'box_once':
+            if parser.get('settings', setting) in ['False', 'false']:
+                settings[setting] = False
         else:
             settings[setting] = str(parser.get('settings', setting))
 
@@ -132,6 +136,7 @@ def drop_extra_settings(settings):
     del settings['timestamp']
     del settings['image_file_label']
     del settings['units_per_pixel']
+    del settings['bigtiff']
 
     return settings
 
