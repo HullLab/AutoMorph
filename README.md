@@ -11,8 +11,13 @@ Prerequisites
 * scipy
 * numpy
 * pillow
+* tifffile
 
 Easiest way to get these python modules is to just install [Anaconda](https://www.continuum.io/downloads).
+
+To get the tifffile module, you can simply pip install it into your Anaconda installation
+
+    $ pip install tifffile
 
 You also need a copy of the Zerene Stacker software to run the focus step.
 
