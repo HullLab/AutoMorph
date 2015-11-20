@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [ $# -ne 1 ]
+then
+	echo "Usage: run3dmorph <control file>"
+	exit
+fi
+
+CONTROLFILE=`readlink -f $1`
+
+nice -n 10 batch3dmorph.py $CONTROLFILE
