@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+
+import subprocess
+import numpy as np
+import sys
+import glob
+import os
+
+settings = {
+            'distance_to_first_plane': 915.0,
+            'distance_between_planes': 1.0,
+            'file_extension': 'jpg'
+            }
+
+
+def scale(input_directory):
+
+    planes = list_files(input_directory, settings['file_extension'])
+    os.chdir(input_directory)
+
+    for i_plane, plane in enumerate(planes):
+
+        print plane
+        _, plane = os.path.split(plane)
+
+        if i_plane == 0:
+            command = ['identify', '-ping', plane]
+            original_size_str = subprocess.check_output(command).split()[2]
+            original_size = original_size_str.split('x')
+            original_size = np.array([float(original_size[0]), float(original_size[1])])
+
+        ratio = settings['distance_to_first_plane'] / ((settings['distance_between_planes'] * i_plane)
+                                                       + settings['distance_to_first_plane'])
+        new_size = original_size*ratio
+        new_size_str = str(int(new_size[0]))+'x'+str(int(new_size[1]))
+
+        command = ['convert', plane, '-resize', new_size_str, '-gravity', 'center',
+                   '-background', 'black', '-extent', original_size_str, 'scaled_'+plane]
+
+        subprocess.call(command)
+
+
+def list_files(directory, file_extension):
+    '''
+    This function takes a directory and returns a list of all images in that
+    directory
+    '''
+
+    file_list = glob.glob(directory+os.sep+"*."+file_extension)
+
+    print 'INFO: images.find() found %d files' % len(file_list)
+
+    return sorted(file_list)
+
+
+if __name__ == "__main__":
+
+    if len(sys.argv) == 2:
+        scale(sys.argv[1])
+
+    else:
+        print 'Usage: scale <input_directory>'
+        sys.exit('Error: incorrect usage')
