@@ -35,6 +35,10 @@ def load(filename, run):
     end = time.time()
     print 'INFO: images.load() processed %s ( %f seconds)' % (filename, end-start)
 
+    if run['pixel_size_x'] != run['pixel_size_y']:
+        print 'INFO: x and y pixel sizes differ, resizing image to have square pixels'
+        img = resize(img, run)
+
     return img
 
 
@@ -58,8 +62,8 @@ def save_overview_image(image, box_list, orig_filename, run):
         # if bigtiff, drop resolutions significantly
         resize_factor = 0.25
         factor = int(round(1/resize_factor))
-        #shrunk_image = ndimage.interpolation.zoom(image, [resize_factor, resize_factor, 1])
-        shrunk_image = image[::factor, ::factor,:]
+        # shrunk_image = ndimage.interpolation.zoom(image, [resize_factor, resize_factor, 1])
+        shrunk_image = image[::factor, ::factor, :]
         print 'INFO: Finished resizing'
         image = draw_bounding_boxes(shrunk_image, box_list, resize_factor=resize_factor)
         
@@ -328,14 +332,13 @@ def microns_per_pixel_xml(filename):
     return x, y
 
 
-def resize(image, filename, run):
+def resize(image, run):
     '''
     Scales image based on units per pixel
-    DEPRECATED: this function existed to deal with non-square pixels but is non-square
-    longer needed.
+    Only works on non-bigtiffs
     '''
-    # if isinstance(image, (np.ndarray, np.generic)):
-    #    image = Image.fromarray(image)
+    if isinstance(image, (np.ndarray, np.generic)):
+        image = Image.fromarray(image)
 
     print 'INFO: resizing...'
     height, width, _ = np.shape(image)
@@ -345,11 +348,10 @@ def resize(image, filename, run):
     scale_factor_x = run['units_per_pixel'] / run['pixel_size_x']
     scale_factor_y = run['units_per_pixel'] / run['pixel_size_y']
 
-    # if scale_factor_x == 1 and scale_factor_y == 1:
-    #    return image
-
     m_resized = int(math.ceil(scale_factor_x * width))
     n_resized = int(math.ceil(scale_factor_y * height))
 
-    # return image.resize((m_resized, n_resized), Image.ANTIALIAS)
-    return ndimage.zoom(image, (scale_factor_y, scale_factor_x))
+    resized = image.resize((m_resized, n_resized), Image.ANTIALIAS)
+
+    return np.array(resized)
+    #return ndimage.zoom(image, (scale_factor_y, scale_factor_x)) # for big tiff, but very inefficient

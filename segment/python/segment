@@ -47,13 +47,12 @@ def segment(settings_file):
         if run['mode'] == 'final':
             print('Saving Settings into %s' % run['full_output'])
             settings.save(run.copy())
-
-        if run['mode'] == 'final' or not run['box_once']:
             
             # Loop over the planes we're interested in, load an image, then process it
             for plane_num, plane_image_filename in enumerate(image_list[:-1]):
 
                 if not run['box_once']:
+                    print run['box_once']
                     objects, plane_image = setup_object_boxes(plane_image_filename, run)
 
                     if run['mode'] == 'final':
