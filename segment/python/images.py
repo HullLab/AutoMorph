@@ -262,10 +262,10 @@ def draw_bounding_boxes(image, box_list, resize_factor=None):
     for i, box in enumerate(box_list):
         if resize_factor is not None:
             this_box = np.empty(4)
-            for i in range(len(box)):
-                this_box[i] = int(round(box[i]*resize_factor))
-                border_width = int(round(border_width*resize_factor))
-                font_size = int(round(font_size*resize_factor))
+            for j in range(len(box)):
+                this_box[j] = int(round(box[j]*resize_factor))
+            #border_width = int(round(border_width/resize_factor))
+            #font_size = int(round(font_size/resize_factor))
         else:
             this_box = box
 
