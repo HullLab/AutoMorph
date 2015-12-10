@@ -29,34 +29,8 @@ def focus(directories, software, ID):
 
     if software['name'] == "zerene":
 
-        # Initialize the batch XML file
-        zerene.write_batchfile(directories)
+        zerene.run(directory, software)
 
-        # Run the XML file
-        zerene_command = zerene.construct_command(software)
-        if software['verbose']:
-            zerene_command += ' %s 2>&1 | tee %s' % (os.path.join(directories['input'], 'zsbatch.xml'),
-                                            os.path.join(directories['input'], 'zerene.log'))
-        else:
-            zerene_command += ' %s > %s' % (os.path.join(directories['input'], 'zsbatch.xml'),
-                                            os.path.join(directories['input'], 'zerene.log'))
-        print 'Running Zerene Stacker: ', zerene_command
-
-        subprocess.call(zerene_command, shell=True)
-
-        first_object = os.path.realpath(os.path.join(directories['stripped'],
-                                                     os.path.basename(directories["objects"][0]),
-                                                     'ZS.tif'))
-        last_object = os.path.realpath(os.path.join(directories['stripped'],
-                                                    os.path.basename(directories["objects"][-1]),
-                                                    'ZS.tif'))
-
-        if not os.path.exists(first_object):
-            sys.exit("Error: Zerene didn't create files. Perhaps something went wrong? Exiting...")
-        elif not os.path.exists(last_object):
-            sys.exit("Error: Zerene didn't finish creating files. Perhaps something went wrong? Exiting...")
-        else:
-            print 'Zerene Stacker finished!'
 
     # ADD BACK LABELS
     print 'Re-labeling images ...'
