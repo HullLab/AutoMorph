@@ -145,12 +145,7 @@ def set_batchxml(batch_type):
                   <AcquisitionSequencer.StepSizesFile value="" />
                   <AlignmentControl.AddNewFilesAsAlreadyAligned value="false" />
                   <AlignmentControl.AlignmentSettingsChanged value="false" />
-                  <AlignmentControl.AllowRotation value="false" />
-                  <AlignmentControl.AllowScale value="false" />
-                  <AlignmentControl.AllowShiftX value="false" />
-                  <AlignmentControl.AllowShiftY value="false" />
                   <AlignmentControl.BrightnessSettingsChanged value="false" />
-                  <AlignmentControl.CorrectBrightness value="false" />
                   <AlignmentControl.MaxRelDegRotation value="20" />
                   <AlignmentControl.MaxRelPctScale value="20" />
                   <AlignmentControl.MaxRelPctShiftX value="20" />
@@ -215,6 +210,106 @@ def set_batchxml(batch_type):
             </Tasks>
           </Batch>
     """
+
+    elif batch_type == "PMAX":
+        batchxml_object = """
+          <Batch>
+            <Sources length="1">
+              <Source value="{0}" />
+            </Sources>
+            <ProjectDispositionCode value="101" />
+            <Tasks length="1">
+              <Task>
+                <OutputImageDispositionCode value="2" />
+                <OutputImagesDesignatedFolder value="{1}/focused/" />
+                <Preferences>
+                  <AcquisitionSequencer.BacklashMillimeters value="0.22" />
+                  <AcquisitionSequencer.CommandLogging value="false" />
+                  <AcquisitionSequencer.DistancePerStepperRotation value="1.5875" />
+                  <AcquisitionSequencer.MaximumMmPerSecond value="2.0" />
+                  <AcquisitionSequencer.MicrostepsPerRotation value="3200" />
+                  <AcquisitionSequencer.MovementRampTime value="2.0" />
+                  <AcquisitionSequencer.NumberOfSteps value="5" />
+                  <AcquisitionSequencer.PrecisionThreshold value="0.05" />
+                  <AcquisitionSequencer.PrerunMillimeters value="0.0" />
+                  <AcquisitionSequencer.RPPIndicatorLeft value="-100.0" />
+                  <AcquisitionSequencer.RPPIndicatorRight value="+100.0" />
+                  <AcquisitionSequencer.SettlingTime value="3.0" />
+                  <AcquisitionSequencer.ShutterActivationsPerStep value="1" />
+                  <AcquisitionSequencer.ShutterAfterTime value="2.0" />
+                  <AcquisitionSequencer.ShutterBetweenTime value="1.0" />
+                  <AcquisitionSequencer.ShutterPulseTime value="0.3" />
+                  <AcquisitionSequencer.StepSize value="0.1" />
+                  <AcquisitionSequencer.StepSizeAdjustmentFactor value="1.0" />
+                  <AcquisitionSequencer.StepSizesFile value="" />
+                  <AlignmentControl.AddNewFilesAsAlreadyAligned value="false" />
+                  <AlignmentControl.AlignmentSettingsChanged value="false" />
+                  <AlignmentControl.BrightnessSettingsChanged value="false" />
+                  <AlignmentControl.MaxRelDegRotation value="20" />
+                  <AlignmentControl.MaxRelPctScale value="20" />
+                  <AlignmentControl.MaxRelPctShiftX value="20" />
+                  <AlignmentControl.MaxRelPctShiftY value="20" />
+                  <AlignmentControl.Order.Automatic value="true" />
+                  <AlignmentControl.Order.NarrowFirst value="true" />
+                  <AllowReporting.UsageStatistics value="false" />
+                  <ColorManagement.DebugPrintProfile value="false" />
+                  <ColorManagement.InputOption value="Use_EXIF_and_DCF_rules" />
+                  <ColorManagement.InputOption.AssumedProfile value="sRGB IEC61966-2.1" />
+                  <ColorManagement.ManageZSDisplays value="false" />
+                  <ColorManagement.ManageZSDisplaysHasChanged value="false" />
+                  <ColorManagement.OutputOption value="CopyInput" />
+                  <DepthMapControl.AlgorithmIdentifier value="1" />
+                  <DepthMapControl.ContrastThresholdLevel value="0" />
+                  <DepthMapControl.ContrastThresholdPercentile value="25.0" />
+                  <DepthMapControl.EstimationRadius value="10" />
+                  <DepthMapControl.SaveDepthMapImage value="false" />
+                  <DepthMapControl.SaveDepthMapImageDirectory value="" />
+                  <DepthMapControl.SaveUsedPixelImages value="false" />
+                  <DepthMapControl.SmoothingRadius value="5" />
+                  <DepthMapControl.UseFixedContrastThresholdLevel value="false" />
+                  <DepthMapControl.UseFixedContrastThresholdPercentile value="true" />
+                  <DepthMapControl.UsedPixelFractionThreshold value="0.5" />
+                  <FileIO.UseExternalTIFFReader value="false" />
+                  <Interpolator.RenderingSelection value="Interpolator.Spline4x4" />
+                  <Interpolator.ShowAdvanced value="false" />
+                  <LightroomPlugin.CurrentInstallationFolder value="" />
+                  <LightroomPlugin.DefaultColorSpace value="AdobeRGB" />
+                  <OutputImageNaming.Template value="ZS" />
+                  <Precrop.LimitsString value="" />
+                  <Precrop.Selected value="false" />
+                  <Prerotation.Degrees value="0" />
+                  <Prerotation.Selected value="false" />
+                  <Presize.UserSetting.Scale value="1.0" />
+                  <Presize.UserSetting.Selected value="false" />
+                  <Presize.Working.Scale value="1.0" />
+                  <PyramidControl.GritSuppressionMethod value="1" />
+                  <PyramidControl.RetainUDRImage value="false" />
+                  <RetouchingBrush.Hardness value="0.5" />
+                  <RetouchingBrush.ShowBrushes value="false" />
+                  <RetouchingBrush.Type value="Details" />
+                  <RetouchingBrush.Width value="10" />
+                  <SaveImage.BitsPerColor value="8" />
+                  <SaveImage.CompressionQuality value="1.00" />
+                  <SaveImage.FileType value="tif" />
+                  <SaveImage.RescaleImageToAvoidOverflow value="false" />
+                  <SkewSequence.FirstImage.MaximumShiftXPct value="-3.0" />
+                  <SkewSequence.FirstImage.MaximumShiftYPct value="0.0" />
+                  <SkewSequence.LastImage.MaximumShiftXPct value="3.0" />
+                  <SkewSequence.LastImage.MaximumShiftYPct value="0.0" />
+                  <SkewSequence.NumberOfOutputImages value="3" />
+                  <SkewSequence.Selected value="false" />
+                  <StackingControl.FrameSkipFactor value="1" />
+                  <StackingControl.FrameSkipSelected value="false" />
+                  <StereoOrdering.LeftRightIndexSeparation value="1" />
+                  <WatchDirectoryOptions.AcceptViaDelay value="false" />
+                  <WatchDirectoryOptions.AcceptViaDelaySeconds value="2.0" />
+                </Preferences>
+                <TaskIndicatorCode value="2" />
+              </Task>
+            </Tasks>
+          </Batch>
+    """
+
 
     else:
         batchxml_object = """

@@ -21,9 +21,12 @@ please be careful!
 
 import os
 import glob
+import time
+import platform
+import subprocess
 
 
-def run(directories):
+def run(directories, software):
     """
     focusedPath: full path to the folder containing the output from
     the AutoMorph 'focus' software.
@@ -44,9 +47,9 @@ def run(directories):
     system_platform = platform.system()
 
     if system_platform == 'Linux':
-        if software['fiji_architecture'] == 32:
+        if software['fiji_architecture'] == '32':
             architecture = 'linux32'
-        elif software['fiji_architecture'] == 64:
+        elif software['fiji_architecture'] == '64':
             architecture = 'linux64'
         else:
             raise ValueError('FIJI architecture inappropriately specified (must be 32 or 64)')
@@ -60,7 +63,7 @@ def run(directories):
 
     print 'Begin FIJI processing...\n'
 
-    command = 'ImageJ-' + sysarchSpecifier + ' --headless --memory=1000m -macro '
+    command = 'ImageJ-' + architecture + ' --headless --memory=1000m -macro '
 
     for stripped_object in stripped_objects:
         start = time.time()
@@ -103,9 +106,8 @@ def write_batchfile(stripped_object, directories, software):
     kernelSize: an odd integer specifying kernel size for heightmap
     generation in StackFocuser.
     """
-    
-    obj_dir, obj_name = os.path.basename(stripped_object)
-    print obj_name
+
+    obj_name = os.path.basename(stripped_object)
 
     # Write individual macro file for object
     macro_file_path = os.path.join(stripped_object,'macro.imj')
@@ -123,12 +125,13 @@ close("*");
 
     macro_text = macro_text.format(stripped_object,
                                    software['kernel_size'],
-                                   obj_name,
+                                   obj_name.split('.')[0],
                                    os.path.join(stripped_object,'ij_focused.tif'),
                                    os.path.join(stripped_object,'ij_heightmap.tif'),
-                                   objName)
+                                   obj_name)
 
     macro_file.write(macro_text)
-    macro_fle.close()
+    macro_file.close()
 
-    return macro_file_path    
+    return macro_file_path
+

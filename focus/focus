@@ -11,6 +11,7 @@ import shutil
 import tarfile
 
 import zerene
+import imagej
 
 
 def focus(directories, software, ID):
@@ -29,7 +30,11 @@ def focus(directories, software, ID):
 
     if software['name'] == "zerene":
 
-        zerene.run(directory, software)
+        zerene.run(directories, software)
+
+    elif software['name'] == "imagej":
+        
+        imagej.run(directories, software)
 
 
     # ADD BACK LABELS
@@ -76,12 +81,15 @@ def strip_labels(directories):
         print 'Cropping ', os.path.basename(object)
         files = [os.path.realpath(x) for x in glob.glob(os.path.join(object, '*plane*tif'))]
         for infile in files:
-            # It'd be nice to use the ImageMagick API here,.. but it doesn't
-            # yet work, so we're using a system call instead:
             fname = os.path.splitext(os.path.basename(infile))[0]+".jpg"
             outfile = os.path.join(directories['input'], 'stripped', os.path.basename(object), fname)
-            convert_command = 'convert ' + infile + ' -crop +0-160 +repage ' + outfile
-            subprocess.call(convert_command, shell=True)
+            if not os.path.exists(outfile):
+                # It'd be nice to use the ImageMagick API here,.. but it doesn't
+                # yet work, so we're using a system call instead:
+                convert_command = 'convert ' + infile + ' -crop +0-160 +repage ' + outfile
+                subprocess.call(convert_command, shell=True)
+            else:
+                print 'Cropped '+fname+' already exists. Skipping.'
 
 
 def add_labels(directories):
@@ -128,8 +136,8 @@ def load_settings():
     # set required variable
     software['name'] = parser.get('focus', 'software')
 
-    if software['name'] not in ['zerene']:
-        sys.exit('Unrecongized software. Available software: zerene')
+    if software['name'] not in ['zerene', 'imagej']:
+        sys.exit('Unrecongized software. Available software: zerene, imagej')
 
     for setting in parser.options(software['name']):
         software[setting] = str(parser.get(software['name'], setting))
