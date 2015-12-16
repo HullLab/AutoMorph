@@ -113,6 +113,8 @@ def write_batchfile(directories, batch_type="default"):
 
 def set_batchxml(batch_type):
 
+    # TaskIndicatorCode: 1 = PMAX and 2 = DMAP
+
     if batch_type == "DMAP":
         batchxml_object = """
           <Batch>
