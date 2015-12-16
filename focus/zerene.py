@@ -2,6 +2,7 @@ import platform
 import os
 import glob
 import pwd
+import subprocess
 
 
 def run(directories, software):
