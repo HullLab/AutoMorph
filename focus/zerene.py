@@ -146,7 +146,12 @@ def set_batchxml(batch_type):
                   <AcquisitionSequencer.StepSizesFile value="" />
                   <AlignmentControl.AddNewFilesAsAlreadyAligned value="false" />
                   <AlignmentControl.AlignmentSettingsChanged value="false" />
+                  <AlignmentControl.AllowRotation value="true" />
+                  <AlignmentControl.AllowScale value="true" />
+                  <AlignmentControl.AllowShiftX value="true" />
+                  <AlignmentControl.AllowShiftY value="true" />
                   <AlignmentControl.BrightnessSettingsChanged value="false" />
+                  <AlignmentControl.CorrectBrightness value="true" />
                   <AlignmentControl.MaxRelDegRotation value="20" />
                   <AlignmentControl.MaxRelPctScale value="20" />
                   <AlignmentControl.MaxRelPctShiftX value="20" />
@@ -169,7 +174,7 @@ def set_batchxml(batch_type):
                   <DepthMapControl.SaveUsedPixelImages value="false" />
                   <DepthMapControl.SmoothingRadius value="5" />
                   <DepthMapControl.UseFixedContrastThresholdLevel value="false" />
-                  <DepthMapControl.UseFixedContrastThresholdPercentile value="true" />
+                  <DepthMapControl.UseFixedContrastThresholdPercentile value="false" />
                   <DepthMapControl.UsedPixelFractionThreshold value="0.5" />
                   <FileIO.UseExternalTIFFReader value="false" />
                   <Interpolator.RenderingSelection value="Interpolator.Spline4x4" />
@@ -210,7 +215,7 @@ def set_batchxml(batch_type):
               </Task>
             </Tasks>
           </Batch>
-    """
+        """
 
     elif batch_type == "PMAX":
         batchxml_object = """
@@ -245,7 +250,12 @@ def set_batchxml(batch_type):
                   <AcquisitionSequencer.StepSizesFile value="" />
                   <AlignmentControl.AddNewFilesAsAlreadyAligned value="false" />
                   <AlignmentControl.AlignmentSettingsChanged value="false" />
+                  <AlignmentControl.AllowRotation value="true" />
+                  <AlignmentControl.AllowScale value="true" />
+                  <AlignmentControl.AllowShiftX value="true" />
+                  <AlignmentControl.AllowShiftY value="true" />
                   <AlignmentControl.BrightnessSettingsChanged value="false" />
+                  <AlignmentControl.CorrectBrightness value="true" />
                   <AlignmentControl.MaxRelDegRotation value="20" />
                   <AlignmentControl.MaxRelPctScale value="20" />
                   <AlignmentControl.MaxRelPctShiftX value="20" />
@@ -268,7 +278,7 @@ def set_batchxml(batch_type):
                   <DepthMapControl.SaveUsedPixelImages value="false" />
                   <DepthMapControl.SmoothingRadius value="5" />
                   <DepthMapControl.UseFixedContrastThresholdLevel value="false" />
-                  <DepthMapControl.UseFixedContrastThresholdPercentile value="true" />
+                  <DepthMapControl.UseFixedContrastThresholdPercentile value="false" />
                   <DepthMapControl.UsedPixelFractionThreshold value="0.5" />
                   <FileIO.UseExternalTIFFReader value="false" />
                   <Interpolator.RenderingSelection value="Interpolator.Spline4x4" />
@@ -305,13 +315,11 @@ def set_batchxml(batch_type):
                   <WatchDirectoryOptions.AcceptViaDelay value="false" />
                   <WatchDirectoryOptions.AcceptViaDelaySeconds value="2.0" />
                 </Preferences>
-                <TaskIndicatorCode value="2" />
+                <TaskIndicatorCode value="1" />
               </Task>
             </Tasks>
           </Batch>
-    """
-
-
+        """
     else:
         batchxml_object = """
           <Batch>
@@ -414,6 +422,6 @@ def set_batchxml(batch_type):
               </Task>
             </Tasks>
           </Batch>
-    """
+        """
 
     return batchxml_object
