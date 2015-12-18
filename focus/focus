@@ -35,8 +35,12 @@ def focus(directories, software, ID):
 
     elif software['name'] == "imagej":
         
-        #imagej.run(directories, software)
+        imagej.run(directories, software)
         outfile = 'ij_focused.tif'
+
+    else:
+        print "Error: unrecognized software: "+software['name']
+        sys.exit()
 
 
     # ADD BACK LABELS
