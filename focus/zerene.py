@@ -3,6 +3,7 @@ import os
 import glob
 import pwd
 import subprocess
+import sys
 
 
 def run(directories, software):
@@ -38,6 +39,7 @@ def run(directories, software):
 
 def construct_command(software):
 
+    print software
     zerene_dir = software['zerene_dir']
     systemMemoryMB = software['system_memory_MB']
     temp_dir = software['temp_dir']
