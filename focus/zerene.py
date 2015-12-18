@@ -48,7 +48,7 @@ def construct_command(software):
     else:
         headless = ''
 
-    zerene_java_options = "-Xmx%sm -Djava.io.tmpDir=%s" % (systemMemoryMB,
+    zerene_java_options = "-Xmx%sm -Djava.io.tmpdir=%s" % (systemMemoryMB,
                                                            os.path.join(temp_dir, pwd.getpwuid(os.getuid()).pw_name)+'_ZereneStacker')
     zerene_java_extensions = ['jai_codec.jar', 'jai_core.jar', 'jai_imageio.jar',
                               'jdom.jar', 'metadata-extractor-2.4.0-beta-1.jar']
