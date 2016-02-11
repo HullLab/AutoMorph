@@ -10,8 +10,6 @@ import cv2
 settings = {
             'distance_to_first_plane': 915.0,
             'distance_between_planes': 0.9,
-            'pixel_size_x': 0.05,
-            'pixel_size_y': 0.057,
             'file_extension': 'jpg'
             }
 
