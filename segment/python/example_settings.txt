@@ -52,6 +52,12 @@ mode = final
 # To segment all images, set to False
 skip_last_plane = True
 
+# box_thickness
+# [OPTIONAL: default is 20]
+# sets the thickness of the red boxes on the overview images
+box_thickness = 20
+
+
 ## FILE FORMATS
 
 # input_ext
