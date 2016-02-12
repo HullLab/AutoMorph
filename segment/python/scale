@@ -11,6 +11,7 @@ import cv2
 settings = {
             'distance_to_first_plane': 915.0,
             'distance_between_planes': 0.9,
+            'file_prefix': 'IMG',
             'file_extension': 'jpg'
             }
 
@@ -20,7 +21,7 @@ def scale(input_directory):
     print 'Scaling '+input_directory
     print settings
 
-    planes = list_files(input_directory, settings['file_extension'])
+    planes = list_files(input_directory, settings)
     os.chdir(input_directory)
 
     if 'final' in os.path.split(planes[0])[1]:
@@ -90,13 +91,13 @@ def clean_up(planes):
             os.remove('scaled_'+plane)
 
 
-def list_files(directory, file_extension):
+def list_files(directory, settings):
     '''
     This function takes a directory and returns a list of all images in that
     directory
     '''
-
-    file_list = glob.glob(directory+os.sep+"*."+file_extension)
+    file_list = glob.glob(directory + os.sep + settings['file_prefix']
+              + '*.' + settings['file_extension'])
 
     print 'INFO: images.find() found %d files' % len(file_list)
 
