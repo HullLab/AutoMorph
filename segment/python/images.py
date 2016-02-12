@@ -65,10 +65,10 @@ def save_overview_image(image, box_list, orig_filename, run):
         # shrunk_image = ndimage.interpolation.zoom(image, [resize_factor, resize_factor, 1])
         shrunk_image = image[::factor, ::factor, :]
         print 'INFO: Finished resizing'
-        image = draw_bounding_boxes(shrunk_image, box_list, resize_factor=resize_factor)
+        image = draw_bounding_boxes(shrunk_image, box_list, run, resize_factor=resize_factor)
         
     else:
-        image = draw_bounding_boxes(image, box_list)    
+        image = draw_bounding_boxes(image, box_list, run)    
 
     # save entire image
     if run["mode"] == "final":
@@ -207,22 +207,23 @@ def label_image(orig_image, orig_filename, description, run):
     draw = ImageDraw.Draw(image)
 
     # Draw scale bars
-    bar_in_pixels_25 = 25 / run['units_per_pixel']
-    bar_in_pixels_100 = bar_in_pixels_25 * 4.
+    bar_in_pixels_L = run['scale_bar_length']/run['units_per_pixel']
+    bar_in_pixels_S = bar_in_pixels_L / 4.
+    bar_in_units_S = run['scale_bar_length'] / 4.
 
-    y_100 = orig_height+7
-    y_25 = y_100 + 10
+    y_L = orig_height+7
+    y_S = y_L + 10
     width = 2
 
-    start_100_x = int(mid_x - bar_in_pixels_100/2)
-    start_25_x = int(mid_x - bar_in_pixels_25/2)
+    start_S_x = int(mid_x - bar_in_pixels_S/2)
+    start_L_x = int(mid_x - bar_in_pixels_L/2)
 
-    draw.line((start_100_x, y_100, start_100_x + bar_in_pixels_100, y_100), fill='black', width=width)
-    draw.line((start_25_x, y_25, start_25_x + bar_in_pixels_25, y_25), fill='black', width=width)
+    draw.line((start_L_x, y_L, start_L_x + bar_in_pixels_L, y_L), fill='black', width=width)
+    draw.line((start_S_x, y_S, start_S_x + bar_in_pixels_S, y_S), fill='black', width=width)
 
     font = set_fontsize(10)
-    draw.text((start_100_x+bar_in_pixels_100+10, y_100 - 4), '100 '+run['unit'], fill='black', font=font)
-    draw.text((start_25_x+bar_in_pixels_25+10, y_25 - 4), '25 '+run['unit'], fill='black', font=font)
+    draw.text((start_L_x+bar_in_pixels_L+10, y_L - 4), str(run['scale_bar_length'])+' '+run['unit'], fill='black', font=font)
+    draw.text((start_S_x+bar_in_pixels_S+10, y_S - 4), str(bar_in_units_S)+' '+run['unit'], fill='black', font=font)
 
     orig_filename = os.path.basename(orig_filename)
 
@@ -230,7 +231,7 @@ def label_image(orig_image, orig_filename, description, run):
     label.insert(0, description)
     label.append('File: %s' % orig_filename)
 
-    text_y = y_25 + 7 + np.array([0, 20, 40, 70, 85, 100, 115])
+    text_y = y_S + 7 + np.array([0, 20, 40, 70, 85, 100, 115])
     text_size = [14, 14, 14, 9, 9, 9, 9]
 
     for i, line in enumerate(label):
@@ -248,15 +249,14 @@ def set_fontsize(font_size):
     return ImageFont.truetype(font_path, font_size)
 
 
-def draw_bounding_boxes(image, box_list, resize_factor=None):
+def draw_bounding_boxes(image, box_list, run, resize_factor=None):
 
     if isinstance(image, (np.ndarray, np.generic)):
         image = Image.fromarray(np.uint8(image))
-    
+
     draw = ImageDraw.Draw(image)
 
-    border_width = 20
-    font_size = 40
+    font_size = run['box_thickness']*3
 
     # Mark the bounding boxes of all objects
     for i, box in enumerate(box_list):
@@ -264,8 +264,6 @@ def draw_bounding_boxes(image, box_list, resize_factor=None):
             this_box = np.empty(4)
             for j in range(len(box)):
                 this_box[j] = int(round(box[j]*resize_factor))
-            #border_width = int(round(border_width/resize_factor))
-            #font_size = int(round(font_size/resize_factor))
         else:
             this_box = box
 
@@ -274,13 +272,13 @@ def draw_bounding_boxes(image, box_list, resize_factor=None):
         y2 = math.ceil(this_box[2])
         x2 = math.ceil(this_box[3])
 
-        draw.line([x1, y2, x2, y2], fill='red', width=border_width)
-        draw.line([x1, y1, x2, y1], fill='red', width=border_width)
-        draw.line([x1, y1, x1, y2], fill='red', width=border_width)
-        draw.line([x2, y1, x2, y2], fill='red', width=border_width)
+        draw.line([x1, y2, x2, y2], fill='red', width=int(run['box_thickness']))
+        draw.line([x1, y1, x2, y1], fill='red', width=int(run['box_thickness']))
+        draw.line([x1, y1, x1, y2], fill='red', width=int(run['box_thickness']))
+        draw.line([x2, y1, x2, y2], fill='red', width=int(run['box_thickness']))
 
-        font = set_fontsize(font_size)
-        draw.text((x2+font_size, y2), str(i+1), fill='red', font=font)
+        font = set_fontsize(int(font_size))
+        draw.text(((x1+x2)/2, (y1+y2)/2), str(i+1), fill='red', font=font)
 
     return image
 
