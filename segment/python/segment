@@ -4,6 +4,7 @@ import settings
 import images
 
 import numpy as np
+import subprocess
 import sys
 import os
 
@@ -13,12 +14,12 @@ import os
 
 # Started on 3/21/2014 by Yusu Liu
 # code uses base code of PM Hull (20-Oct-13) with updates by B. Dobbins, PMH, and Y. Liu
-# converted to python and update by K. Nelson (2015-Oct)
+# converted to python and updated by K. Nelson (2015-Oct)
 
 
 def segment(settings_file):
 
-    version = '2015-10-27'
+    version = '2016-2-12'
 
     print "Loading settings from %s..." % settings_file
     runs = settings.parse(settings_file)
@@ -47,19 +48,30 @@ def segment(settings_file):
         if run['mode'] == 'final':
             print('Saving Settings into %s' % run['full_output'])
             settings.save(run.copy())
-            
+
+            # last plane in some image samples is not a true focus plane
+            if run['skip_last_plane']:
+                final_list = image_list[:-1]
+            else:
+                final_list = image_list
+
             # Loop over the planes we're interested in, load an image, then process it
-            for plane_num, plane_image_filename in enumerate(image_list[:-1]):
+            for plane_num, plane_image_filename in enumerate(final_list):
 
-                if not run['box_once']:
-                    print run['box_once']
-                    objects, plane_image = setup_object_boxes(plane_image_filename, run)
+                final(plane_image_filename, objects, run, plane_num)
 
-                    if run['mode'] == 'final':
-                        final(plane_image_filename, objects, run, plane_num, image=plane_image)
 
-                elif run['mode'] == 'final':
-                    final(plane_image_filename, objects, run, plane_num)
+def get_git_version():
+
+    gitproc = subprocess.Popen(['git', 'show-ref'], stdout=subprocess.PIPE)
+    (stdout, stderr) = gitproc.communicate()
+
+    for row in stdout.split('\n'):
+        if row.find('HEAD') != -1:
+            hash = row.split()[0]
+            break
+
+    return hash
 
 
 def setup_object_boxes(image_filename, run):

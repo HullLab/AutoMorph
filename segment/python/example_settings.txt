@@ -19,6 +19,12 @@ output = /home/kln26/hull/segment_testing
 # for final mode, only give a single threshold value as threshold = 0.16
 threshold = 0.16
 
+# pixel_size_x, pixel_size_y
+# size of x and y pixels, 
+# set to # of units (see below) per pixel
+pixel_size_x = 
+pixel_size_y = 
+
 #minimum_size:
 # The smallest width of a valid object in microns (or other base unit). The
 # minimum size is designed to filter out background light scatter. You
@@ -40,32 +46,35 @@ maximum_size = 2000.0
 #  'final' - full save of all objects segmented with the best parameters
 mode = final
 
-# pixel_size_x, pixel_size_y
-# size of x and y pixels, 
-# set to # of units (see below) per pixel
-pixel_size_x = 
-pixel_size_y = 
-
-# unit
-# base unit of measure used in the pixel based unit
-unit = microns
-
-# box_once
-# if set to False, segment will run object finding on every plane separately
-# to be used if objects are not in the exact same place in very plane
-# box_once = False
+# skip_last_plane
+# [OPTIONAL: default is True]
+# In some image sample, the last plane is not a true focus plane
+# To segment all images, set to False
+skip_last_plane = True
 
 ## FILE FORMATS
 
 # input_ext
+# [OPTIONAL: default is tif]
 # file extension for input images (used in generating file list)
 input_ext = tif
 
 # output_ext
+# [OPTIONAL: default is tif]
 # file type for output object images, full image will always be a jpg
 output_ext = tif
 
 ## LABELING
+
+# unit 
+# [OPTIONAL: default is microns]
+# base unit of measure used in the pixel based unit
+unit = microns
+
+# scale_bar_length
+# [OPTIONAL: default is 100]
+# length of large scale bar in the label (in units), small scale bar is 1/4 this size
+scale_bar_length = 100
 
 # id
 # Collection identifier code. Used as prefix in filename and on label
@@ -91,4 +100,6 @@ author = the Hull Lab
 # catalog_prefix:
 # Library/Museum catalog number prefix, for use in the processed image labels
 catalog_prefix = YPM IP
+
+
 

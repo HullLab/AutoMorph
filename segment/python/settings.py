@@ -23,7 +23,6 @@ def parse(filename):
                 'box_once': True,
                 'minimum_size': 100,
                 'maximum_size': 2000,
-                'mode': 'sample',
                 'source': 'Unspecified Source',
                 'age': 'Unspecified Age',
                 'input_ext': 'tif',
@@ -31,10 +30,14 @@ def parse(filename):
                 'location': 'Yale Peabody Museum',
                 'catalog_prefix': 'YPM IP',
                 'unit': 'microns',
+                'scale_bar_length': 100,
+                'box_thickness': 20,
+                'skip_last_plane': True,
                 'author': None,
                 'unique_id': None
                 }
-    required_list = ['directory', 'output', 'pixel_size_y', 'pixel_size_x']
+
+    required_list = ['mode', 'directory', 'output', 'pixel_size_y', 'pixel_size_x']
 
     # Parse setting
     settings = defaults
@@ -79,10 +82,12 @@ def parse(filename):
             settings['minimum_size'] = float(parser.get('settings', 'minimumSize'))
         elif setting == "maximumSize":
             settings['maximum_size'] = float(parser.get('settings', 'maximumSize'))
-
+        # Special formatting tweaks for robustness
         elif 'size' in setting:
             settings[setting] = float(parser.get('settings', setting))
-        elif setting == 'box_once':
+        elif setting in ['box_thickness', 'scale_bar_length']:
+            settings[setting] = float(parser.get('settings', setting))
+        elif setting == 'skip_last_plane':
             if parser.get('settings', setting) in ['False', 'false']:
                 settings[setting] = False
         else:
