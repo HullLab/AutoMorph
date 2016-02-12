@@ -3,6 +3,7 @@
 import subprocess
 import numpy as np
 import sys
+import shutil
 import glob
 import os
 import cv2
@@ -16,9 +17,17 @@ settings = {
 
 def scale(input_directory):
 
+    print 'Scaling '+input_directory
+    print settings
+
     planes = list_files(input_directory, settings['file_extension'])
     os.chdir(input_directory)
 
+    if 'final' in os.path.split(planes[0])[1]:
+        print 'Aborting: this directory has already been scaled.'
+        return
+
+    print "Resizing..."
     for i_plane, plane in enumerate(planes):
 
         print plane
@@ -30,6 +39,8 @@ def scale(input_directory):
             original_size = original_size_str.split('x')
             original_size = np.array([float(original_size[0]), float(original_size[1])])
 
+            shutil.copy(plane, 'final_'+plane)
+
             image1 = cv2.imread(plane)
 
         else:
@@ -40,6 +51,8 @@ def scale(input_directory):
             command = ['convert', plane, '-resize', resize_str, 'scaled_'+plane]
 
             subprocess.call(command)
+
+    print 'Recentering and adding padding...'
 
     for plane in planes[1:]:
         print plane
@@ -56,6 +69,25 @@ def scale(input_directory):
                    '-layers', 'flatten', 'final_'+plane]
 
         subprocess.call(command)
+
+    clean_up(planes)
+
+
+def clean_up(planes):
+    '''
+    This function deletes intermediate files created by scale
+    and stashes the unscaled originals in an 'unscaled' directory
+    '''
+    print 'Cleaning up...'
+
+    if not os.path.exists('unscaled'):
+        os.makedirs('unscaled')
+
+    for plane in planes:
+        _, plane = os.path.split(plane)
+        shutil.move(plane, 'unscaled')
+        if os.path.exists('scaled_'+plane):
+            os.remove('scaled_'+plane)
 
 
 def list_files(directory, file_extension):
