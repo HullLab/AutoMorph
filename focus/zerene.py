@@ -70,6 +70,7 @@ def construct_command(software):
         print 'Configuring for Linux'
         zerene_java = os.path.join(zerene_dir, 'jre', 'bin', 'java')
         zerene_java_extensions.append('AppleShell.jar')
+        zerene_licensedir = '-Dlaunchcmddir='+zerene_dir+'/launch'
         zerene_class_path = '-classpath ' + os.path.join(zerene_dir, 'ZereneStacker.jar')
         for extension in zerene_java_extensions:
             zerene_class_path = zerene_class_path + ':' + os.path.join(zerene_dir, 'JREextensions', extension)

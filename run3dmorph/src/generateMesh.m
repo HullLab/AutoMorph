@@ -1,4 +1,4 @@
-function [skipped,coordinates,top_surface_area,xy_points,z_values,X,Y,Z] = generateMesh(focused_image_rgb,height_map,image_name,sampleID,calibration,num_slices,zstep,kernel_size_OF,downsample_grid_size)
+function [skipped,coordinates,top_surface_area,z_values,xy_points,X,Y,Z,area_2D,perimeter_2D,centroid_2D,top_volume,final_table_original] = generateMesh(focused_image_rgb,height_map,image_name,sampleID,calibration,num_slices,zstep,kernel_size_OF,downsample_grid_size)
 % Takes heightmap, grayscale focused image, and RGB focused image and
 % generates a 3D mesh.
 
@@ -18,8 +18,15 @@ resized_rgb = resizePixelToMicron(focused_rgb,calibration);
 % Run 2D outline extraction for outline deletion
 % ADD ABILITY HERE TO READ IN PERIMETER VALUES IF RUN2DMORPH HAS ALREADY
 % BEEN RUN ON THE SAMPLES
-[obj_final,~,~,~,~] = extract2doutline(resized_rgb,image_name,sampleID);
+[obj_final,obj_edge,obj_smooth,sampleID,objectID] = extract2doutline(resized_rgb,image_name,sampleID);
 [obj_final_holes,~,~,~,~] = extract2doutline_nofill(resized_rgb,image_name,sampleID);
+
+% Get coordinates, 2D area, and 2D perimeter for surface area/volume estimation
+[final_table_original,final_table_smoothed] = extractcoordinates(obj_edge,obj_smooth,sampleID,objectID,[],[],[]);
+morphproptable = measuremorph(obj_final,obj_edge,obj_smooth,sampleID,objectID,false);
+area_2D = morphproptable.Area;
+perimeter_2D = morphproptable.Perimeter;
+centroid_2D = regionprops(obj_final,'Centroid');
 
 % Convert image formats
 uint8_obj_final = uint8(obj_final);
@@ -57,12 +64,15 @@ end
 
 % Determine outliers (< 1% number of points compared to total)
 sum_values = sum(count_values);
-included_heights = [];
-for i = 1:numel(count_values)
+num_val = numel(count_values);
+included_heights = zeros(1,num_val);
+for i = 1:num_val
     if ((count_values(i) / sum_values) > 0.01)
-        included_heights = [included_heights i];
+        included_heights(i) = i;
     end
 end
+
+included_heights = included_heights(included_heights~=0);
 
 if min(included_heights) ~= 1
 	cutoff_height_lower = min(included_heights)-1;
@@ -85,8 +95,8 @@ if ~isequal(obj_final,obj_final_holes)
 	adjusted = filtered_with_holes + hole_values;
 	[row_hm,column_hm,value_hm] = find(adjusted);
 	coordinates_hm = horzcat(row_hm,column_hm,value_hm);
-	x_hm = double(row_hm);
-	y_hm = double(column_hm);
+	%x_hm = double(row_hm);
+	%y_hm = double(column_hm);
 	z_hm = double(value_hm);
 	count_values = histc(z_hm,unique(z_hm));
 	count_matrix = [unique(z_hm) count_values];
@@ -140,3 +150,23 @@ z_ds_1col = reshape(Z,[numel(Z),1]);
 coords_tophalf_NaNs = [x_ds_1col y_ds_1col z_ds_1col];
 coords_tophalf = coords_tophalf_NaNs(isnan(coords_tophalf_NaNs(:,3)) == 0,:);
 coordinates = coords_tophalf;
+
+% Calculate top volume
+if dxy_ds == 1
+    z_coords = coordinates(:,3);
+    top_volume = sum(z_coords(:) - min(z_values(:)));
+else
+    dxy_ds_1 = downsample_grid_size;
+    x_edge_1 = min(x):dxy_ds_1:max(x);
+    y_edge_1 = min(y):dxy_ds_1:max(y);
+    [X_1,Y_1] = meshgrid(x_edge_1,y_edge_1);
+    Z_1 = griddata(x,y,z,X_1,Y_1);
+    x_ds_1col_1 = reshape(X_1,[numel(X_1),1]);
+    y_ds_1col_1 = reshape(Y_1,[numel(Y_1),1]);
+    z_ds_1col_1 = reshape(Z_1,[numel(Z_1),1]);
+    coords_tophalf_NaNs_1 = [x_ds_1col_1 y_ds_1col_1 z_ds_1col_1];
+    coords_tophalf_1 = coords_tophalf_NaNs_1(isnan(coords_tophalf_NaNs_1(:,3)) == 0,:);
+    coordinates_1 = coords_tophalf_1;
+    z_coords = coordinates_1(:,3);
+    top_volume = sum(z_coords(:) - min(z_values(:)));
+end

@@ -9,7 +9,7 @@
 # Path to run3dmorph Software:
 # The full path to the user's installation fo the run3dmorph software (part of the
 # AutoMorph package) (REQUIRED)
-path_run3dmorph = /hull-disk1/ph269/software/run3dmorph/v1.01
+path_run3dmorph = /hull-disk1/ph269/software/run3dmorph/current
 
 # Path to run2dmorph Software:
 # The full path to the user's installation of the run2dmorph software (part of the
@@ -77,7 +77,7 @@ savePDF = true
 # A string indicating the full path to the user's installation of B. Shoelson and INRA's
 # geom3d package (REQUIRED)
 # (https://www.mathworks.com/matlabcentral/fileexchange/24484-geom3d)
-geom3d_path = /hull-disk1/ph269/software/run3dmorph/v1.01/geom3d-2014.10.13/geom3d/meshes3d
+geom3d_path = /hull-disk1/ph269/software/run3dmorph/current/geom3d-2014.10.13/geom3d/meshes3d
 
 ######################################
 ####### getVolumes.m variables #######
@@ -87,7 +87,7 @@ geom3d_path = /hull-disk1/ph269/software/run3dmorph/v1.01/geom3d-2014.10.13/geom
 # A string indicating the full path to the user's installation of J. Diener's
 # minBoundingBox.m function (REQUIRED)
 # (https://www.mathworks.com/matlabcentral/fileexchange/31126-2d-minimal-bounding-box/content/minBoundingBox.m)
-mbb_path = /hull-disk1/ph269/software/run3dmorph/v1.01
+mbb_path = /hull-disk1/ph269/software/run3dmorph/current
 
 ######################################
 ########## 3D PDF variables ##########
@@ -97,13 +97,13 @@ mbb_path = /hull-disk1/ph269/software/run3dmorph/v1.01
 # A string indicating the full path to the user's installation of D.M. Schwartz and A.
 # Gramfort's Mesh2PDF software package (REQUIRED)
 # (https://www.mathworks.com/matlabcentral/fileexchange/25383-matlab-mesh-to-pdf-with-3d-interactive-object)
-mesh2pdf_path = /hull-disk1/ph269/software/run3dmorph/v1.01/mesh2pdf
+mesh2pdf_path = /hull-disk1/ph269/software/run3dmorph/current/mesh2pdf
 
 # Path to media9.sty LaTeX Package:
 # A string indicating the full path to the user's installation of the media9 LaTeX
 # package - specifically, to the media9.sty file (REQUIRED)
 # (https://www.ctan.org/pkg/media9?lang=en)
-media9_path = /hull-disk1/ph269/software/run3dmorph/v1.01
+media9_path = /hull-disk1/ph269/software/run3dmorph/current
 
 # Run LaTeX?
 # A boolean indicating whether LaTeX should be run to generate 3D PDFs (REQUIRED)
