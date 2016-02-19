@@ -60,7 +60,7 @@ def construct_command(software):
     if platform.system() == 'Darwin':
         print 'Configuring for Mac OS X'
         # Set up the Zerene Variables for Mac OS X:
-        zerene_java = '/usr/bin/java'
+        zerene_java = os.path.join(zerene_dir, 'Contents/Resources/Java', 'jre/bin/java')
         zerene_class_path = '-classpath ' + os.path.join(zerene_dir, 'Contents/Resources/Java', 'ZereneStacker.jar')
         for extension in zerene_java_extensions:
             zerene_class_path = zerene_class_path + ':' + os.path.join(zerene_dir, 'Contents/Resources/Java', extension)

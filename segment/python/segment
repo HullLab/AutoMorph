@@ -7,6 +7,7 @@ import numpy as np
 import subprocess
 import sys
 import os
+import socket
 
 
 # Segment uses the bounding box identified by the sharpest image in a
@@ -152,6 +153,9 @@ def contruct_image_label(run, version):
     return text
 
 if __name__ == "__main__":
+
+    if socket.gethostname() == 'tide.geology.yale.edu':
+        os.nice(10)
 
     if len(sys.argv) == 2:
         segment(sys.argv[1])
