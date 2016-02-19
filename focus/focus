@@ -9,6 +9,7 @@ import glob
 import subprocess
 import shutil
 import tarfile
+import socket
 
 import zerene
 import imagej
@@ -215,6 +216,9 @@ def reset(directories, software):
 
 
 if __name__ == "__main__":
+
+    if socket.gethostname() == 'tide.geology.yale.edu':
+        os.nice(10)
 
     parser = argparse.ArgumentParser(description='')
 
