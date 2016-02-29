@@ -37,6 +37,7 @@ def run(directories, software):
     else:
         print 'Zerene Stacker finished!'
 
+
 def construct_command(software):
 
     print software
@@ -50,8 +51,7 @@ def construct_command(software):
 
     zerene_java_options = "-Xmx%sm -Djava.io.tmpdir=%s" % (systemMemoryMB,
                                                            os.path.join(temp_dir, pwd.getpwuid(os.getuid()).pw_name)+'_ZereneStacker')
-    zerene_java_extensions = ['jai_codec.jar', 'jai_core.jar', 'jai_imageio.jar',
-                              'jdom.jar', 'metadata-extractor-2.4.0-beta-1.jar']
+
     zerene_options = "com.zerenesystems.stacker.gui.MainFrame -exitOnBatchScriptCompletion"
     if headless != '':
         zerene_options += " -runMinimized"
@@ -61,7 +61,11 @@ def construct_command(software):
         print 'Configuring for Mac OS X'
         # Set up the Zerene Variables for Mac OS X:
         zerene_java = os.path.join(zerene_dir, 'Contents/Resources/Java', 'jre/bin/java')
+        zerene_licensedir = '-Dlaunchcmddir='+os.path.expanduser('~')+'/Library/Preferences/ZereneStacker'
         zerene_class_path = '-classpath ' + os.path.join(zerene_dir, 'Contents/Resources/Java', 'ZereneStacker.jar')
+
+        zerene_java_extensions = ['jai_codec.jar', 'jdom.jar', 'jai_core.jar',
+                                  'metadata-extractor-2.4.0-beta-1.jar', 'jai_imageio.jar']
         for extension in zerene_java_extensions:
             zerene_class_path = zerene_class_path + ':' + os.path.join(zerene_dir, 'Contents/Resources/Java', extension)
 
@@ -72,14 +76,16 @@ def construct_command(software):
         zerene_java_extensions.append('AppleShell.jar')
         zerene_licensedir = '-Dlaunchcmddir='+zerene_dir+'/launch'
         zerene_class_path = '-classpath ' + os.path.join(zerene_dir, 'ZereneStacker.jar')
+
+        zerene_java_extensions = ['jai_codec.jar', 'jai_core.jar', 'jai_imageio.jar',
+                                  'jdom.jar', 'metadata-extractor-2.4.0-beta-1.jar']
+
         for extension in zerene_java_extensions:
             zerene_class_path = zerene_class_path + ':' + os.path.join(zerene_dir, 'JREextensions', extension)
 
-    zerene_command = ' '.join([headless, zerene_java, zerene_java_options, zerene_class_path, zerene_options])
+    zerene_command = ' '.join([headless, zerene_java, zerene_java_options, zerene_licensedir, zerene_class_path, zerene_options])
 
     return zerene_command
-
-
 
 
 def write_batchfile(directories, batch_type="default"):
