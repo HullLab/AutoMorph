@@ -1,0 +1,259 @@
+#!/usr/bin/env python
+
+import subprocess
+import argparse
+import numpy as np
+import sys
+import shutil
+import glob
+import os
+import cv2
+
+settings = {
+            'distance_to_first_plane': 915.0,
+            'distance_between_planes': 0.9,
+            'file_prefix': 'IMG',
+            'file_extension': 'jpg',
+            'task_list': ['rescale', 'align']
+            }
+
+
+def prepare(input_directory):
+
+    print 'Preparing '+input_directory
+    print settings
+
+    planes = list_files(input_directory, settings)
+    os.chdir(input_directory)
+
+    if os.path.exists('unprocessed'):
+        print 'Aborting: this directory has already been prepared.'
+        return
+
+    planes, current_dir = setup(planes)
+
+    if 'rotate' in settings['task_list']:
+        current_dir = rotate(planes, current_dir)
+
+    if 'rescale' in settings['task_list']:
+        current_dir = rescale(planes, current_dir)
+
+    if 'align' in settings['task_list']:
+        current_dir = align(planes, current_dir)
+
+    clean_up(planes, current_dir)
+
+
+def setup(planes):
+
+    backup_dir = 'unprocessed'
+
+    if not os.path.exists(backup_dir):
+        os.makedirs(backup_dir)
+
+    trimmed_planes = []
+
+    for plane in planes:
+        # restructure plane list
+        _, plane = os.path.split(plane)
+        trimmed_planes.append(plane)
+
+        # move planes to unprocessed
+        shutil.move(plane, backup_dir)
+
+    return trimmed_planes, backup_dir
+
+
+def rotate(planes, current_dir):
+
+    print 'Checking Rotation...'
+
+    output_dir = 'temp_rotate'
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    for plane in planes:
+
+        input_plane = current_dir + '/' + plane
+        output_plane = output_dir + '/' + plane
+
+        size = subprocess.check_output(['identify', '-format', '"%[fx:w] %[fx:h]"', input_plane])
+        x, y = size.replace('"', '').rstrip('\n').split(' ')
+
+        # rotate all to be portrait
+        if int(x) > int(y):
+            print 'Rotating...'
+            print plane
+            subprocess.call(['convert', input_plane, '-rotate', '270', output_plane])
+
+        else:
+            shutil.copy(input_plane, output_plane)
+
+    return output_dir
+
+
+def rescale(planes, current_dir):
+
+    print 'Rescaling...'
+
+    output_dir = 'temp_rescale'
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    for i_plane, plane in enumerate(planes):
+
+        print plane
+        input_plane = current_dir + '/' + plane
+        output_plane = output_dir + '/' + plane
+
+        if i_plane == 0:
+            shutil.copy(input_plane, output_plane)
+
+        else:
+            ratio = settings['distance_to_first_plane'] / ((settings['distance_between_planes'] * i_plane) +
+                                                           settings['distance_to_first_plane'])
+            resize_str = str(ratio*100)+'%'
+
+            command = ['convert', input_plane, '-resize', resize_str, output_plane]
+
+            subprocess.call(command)
+
+    return output_dir
+
+
+def align(planes, current_dir):
+
+    print 'Recentering and adding padding...'
+
+    output_dir = 'temp_align'
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    for i_plane, plane in enumerate(planes):
+
+        print plane
+        input_plane = current_dir + '/' + plane
+        output_plane = output_dir + '/' + plane
+
+        if i_plane == 0:
+
+            command = ['identify', '-ping', input_plane]
+            original_size_str = subprocess.check_output(command).split()[2]
+            original_size = original_size_str.split('x')
+            original_size = np.array([float(original_size[0]), float(original_size[1])])
+
+            shutil.copy(input_plane, output_plane)
+
+            image1 = cv2.imread(input_plane)
+
+        else:
+
+            maxVal, offset = find_alignment(image1, input_plane)
+
+            # Rotation check. maxVal is goodness of match
+            if maxVal < 0.8:
+
+                print 'Goodness of match: '+str(maxVal)
+                print 'I think '+plane+' is upside down. Rotating...'
+
+                command = ['convert', input_plane, '-rotate', '180', input_plane]
+                subprocess.call(command)
+
+                print 'Retrying alignment...'
+                maxVal, offset = find_alignment(image1, input_plane)
+
+                if maxVal < 0.8:
+                    print 'Nope. Still a bad match ('+str(maxVal)+'). Aborting...'
+                    sys.exit(1)
+
+            print offset
+
+            offset_str = '+'+str(offset[0])+'+'+str(offset[1])
+
+            command = ['convert', '-size', original_size_str, 'xc: black',
+                       '-page', offset_str, input_plane,
+                       '-layers', 'flatten', output_plane]
+
+            subprocess.call(command)
+
+    return output_dir
+
+
+def find_alignment(image1, image2_file):
+
+    image2 = cv2.imread(image2_file)
+
+    result = cv2.matchTemplate(image1, image2, cv2.TM_CCOEFF_NORMED)
+    minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(result)
+
+    return maxVal, maxLoc
+
+
+def clean_up(planes, current_dir):
+    '''
+    Deletes intermediate files created by scale
+    '''
+    print 'Cleaning up...'
+
+    for plane in planes:
+        print current_dir
+        print plane
+        input_plane = current_dir + '/' + plane
+        output_plane = plane
+
+        shutil.copy(input_plane, output_plane)
+
+    for task in settings['task_list']:
+        if os.path.exists('temp_'+task):
+            shutil.rmtree('temp_'+task)
+
+
+def reset(input_directory):
+
+    print 'Resetting...'
+
+    planes = list_files(input_directory+'/unprocessed', settings)
+    os.chdir(input_directory)
+
+    for plane in planes:
+
+        _, plane = os.path.split(plane)
+        shutil.move('unprocessed/'+plane, plane)
+
+    for task in settings['task_list']:
+        if os.path.exists('temp_'+task):
+            shutil.rmtree('temp_'+task)
+
+    if os.path.exists('unprocessed'):
+        shutil.rmtree('unprocessed')
+
+
+def list_files(directory, settings):
+    '''
+    Takes a directory and returns a list of all images in that
+    directory
+    '''
+    file_list = glob.glob(directory + os.sep + settings['file_prefix'] +
+                          '*.' + settings['file_extension'])
+
+    print 'INFO: images.find() found %d files' % len(file_list)
+
+    return sorted(file_list)
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description='')
+
+    parser.add_argument('input_directory', help='input directory')
+
+    parser.add_argument("--reset", help="revert input directory to pre-prepared state",
+                        action="store_true")
+
+    args = parser.parse_args()
+    input_directory = os.path.realpath(args.input_directory)
+
+    if args.reset:
+        reset(input_directory)
+    else:
+        prepare(input_directory)
