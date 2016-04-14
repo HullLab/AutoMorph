@@ -35,14 +35,13 @@ def focus(directories, software, ID):
         outfile = 'ZS.tif'
 
     elif software['name'] == "imagej":
-        
+
         imagej.run(directories, software)
         outfile = 'ij_focused.tif'
 
     else:
         print "Error: unrecognized software: "+software['name']
         sys.exit()
-
 
     # ADD BACK LABELS
     print 'Re-labeling images ...'
@@ -65,7 +64,7 @@ def focus(directories, software, ID):
         shutil.move(object_dir, directories['zstack'])
 
     # Final Images
-    archive('final_focused', directories)
+#    archive('final_focused', directories)
 
     # Z-stacks (Original Segmented Images?)
     archive('zstack', directories)
@@ -73,7 +72,7 @@ def focus(directories, software, ID):
 
 def archive(dir_to_tar, directories):
 
-    tar = tarfile.open(directories[dir_to_tar+'_tar'], 'w:gz')
+    tar = tarfile.open(directories[dir_to_tar+'_tar.gz'], 'w:gz')
     tar.add(directories[dir_to_tar])
     tar.close()
 
@@ -132,7 +131,7 @@ def add_labels(directories, outfile):
 
 def load_settings(directories):
 
-    filename = os.path.join(directories['input'],'focus.cfg')
+    filename = os.path.join(directories['input'], 'focus.cfg')
     if not os.path.exists(filename):
         print 'Could not locate local focus.cfg file, using default.'
         filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'focus.cfg')
@@ -175,7 +174,7 @@ def reset(directories, software):
         if os.path.exists(directories[directory]):
             shutil.rmtree(directories[directory])
 
-    if software['name'] == "zerene" :
+    if software['name'] == "zerene":
         batch_file = os.path.join(directories['input'], 'zsbatch.xml')
         if os.path.exists(batch_file):
             os.remove(batch_file)
@@ -196,7 +195,7 @@ def reset(directories, software):
                 shutil.move(directory, directories['input'])
         os.rmdir(directories['zstack'])
 
-    if software['name'] == "zerene" :
+    if software['name'] == "zerene":
         batch_file = os.path.join(directories['input'], 'zsbatch.xml')
         if os.path.exists(batch_file):
             os.remove(batch_file)
@@ -224,13 +223,13 @@ if __name__ == "__main__":
 
     parser.add_argument('input_dir', help='input directory')
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
-                       action="store_true")
+                        action="store_true")
     parser.add_argument("-i", "--interactive", help="run focusing software interactively (not headless)",
-                       action="store_true")
+                        action="store_true")
     parser.add_argument("--reset", help="revert input directory to pre-focused state",
-                       action="store_true")
+                        action="store_true")
     args = parser.parse_args()
-    
+
     # If that option isn't a directory name, quite:
     if not os.path.isdir(args.input_dir):
         print 'Argument to focus must be a directory name - quitting.'
@@ -249,7 +248,7 @@ if __name__ == "__main__":
                    'zstack': os.path.join(input_dir, 'z.stacks'),
                    'final_focused_tar': os.path.join(input_dir, ID+'-focused.tar'),
                    'zstack_tar': os.path.join(input_dir, ID+'-z.stacks.tar')
-                    }
+                   }
 
     software = load_settings(directories)
     software['verbose'] = args.verbose
@@ -263,8 +262,3 @@ if __name__ == "__main__":
     else:
         print 'Running Focus on ', directories['input']
         focus(directories, software, ID)
-
-
-
-
-
