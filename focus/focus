@@ -72,7 +72,7 @@ def focus(directories, software, ID):
 
 def archive(dir_to_tar, directories):
 
-    tar = tarfile.open(directories[dir_to_tar+'_tar.gz'], 'w:gz')
+    tar = tarfile.open(directories[dir_to_tar+'_tar'], 'w:gz')
     tar.add(directories[dir_to_tar])
     tar.close()
 
@@ -107,7 +107,7 @@ def add_labels(directories, outfile):
         top_file = os.path.realpath(sorted(glob.glob(os.path.join(object_dir, '*plane*tif')))[-1])
 
         # Grab the label:
-        label_file = os.path.realpath(os.path.join(object_dir, 'label.tif'))
+        label_file = os.path.realpath(os.path.join(directories['stripped'], object_name, 'label.tif'))
         #   convert ${HIGHEST} -gravity South -crop 0x160+0+0 ${directories['input']}/stripped/${label_dir}/label.tif
         # convert_command = 'convert ' + top_file + ' -gravity South -crop 0x160+0+0 ' + label_file
         convert_command = "convert %s -gravity South -crop 0x160+0+0 %s" % (top_file, label_file)
@@ -126,7 +126,6 @@ def add_labels(directories, outfile):
         unlabeled_file = os.path.realpath(os.path.join(directories['unlabeled_focused'], object_name+".tif"))
         convert_command = "convert %s %s" % (zs_file, unlabeled_file)
         subprocess.call(convert_command, shell=True)
-        # shutil.copyfile(zs_file, unlabeled_file)
 
 
 def load_settings(directories):
@@ -157,10 +156,11 @@ def load_settings(directories):
 def clean(directories):
 
     if not os.path.exists(directories['zstack_tar']):
-        sys.exit('Error: tar of zstack files not present! Exiting...')
+        print 'tar of zstack not found, attempting creation...'
+        archive('zstack', directories)
 
-    if os.path.exists(directories['stripped']):
-        shutil.rmtree(directories['stripped'])
+        if not os.path.exists(directories['zstack_tar']):
+            sys.exit('Error: tar of zstack files not present! Exiting...')
 
     if os.path.exists(directories['zstack']):
         shutil.rmtree(directories['zstack'])
@@ -228,6 +228,8 @@ if __name__ == "__main__":
                         action="store_true")
     parser.add_argument("--reset", help="revert input directory to pre-focused state",
                         action="store_true")
+    parser.add_argument("--clean", help="removes z.stack directory if tar.gz file present",
+                        action='store_true')
     args = parser.parse_args()
 
     # If that option isn't a directory name, quite:
@@ -246,8 +248,8 @@ if __name__ == "__main__":
                    'final_focused':  os.path.join(input_dir, 'focused'),
                    'unlabeled_focused': os.path.join(input_dir, 'focused_unlabeled'),
                    'zstack': os.path.join(input_dir, 'z.stacks'),
-                   'final_focused_tar': os.path.join(input_dir, ID+'-focused.tar'),
-                   'zstack_tar': os.path.join(input_dir, ID+'-z.stacks.tar')
+                   'final_focused_tar': os.path.join(input_dir, ID+'-focused.tar.gz'),
+                   'zstack_tar': os.path.join(input_dir, ID+'-z.stacks.tar.gz')
                    }
 
     software = load_settings(directories)
@@ -259,6 +261,9 @@ if __name__ == "__main__":
     if args.reset:
         print "Resetting ", directories['input']
         reset(directories, software)
+    elif args.clean:
+        print 'Cleaning up ', directories['input']
+        clean(directories)
     else:
         print 'Running Focus on ', directories['input']
         focus(directories, software, ID)
