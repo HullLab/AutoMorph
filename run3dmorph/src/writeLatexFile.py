@@ -3,31 +3,35 @@
 writeLatexFile.py
 """
 
-def writeLatexFile(u3dFile,media9Path,outputFileNameBase,outputFilePath,focusedPath,sfPath):
+def writeLatexFile(u3dFile,media9Path,outputFileNameBase,outputFilePath,focusedPath,sfPath,unit):
     """
     """
     import os
     
-    volFilePath = os.path.join(sfPath,outputFileNameBase,outputFileNameBase+'_volumes.csv')
+    volFilePath = os.path.join(sfPath,outputFileNameBase,outputFileNameBase+'_volume_surface_area.csv')
     volFile = open(volFilePath,'r')
     volLines = volFile.readlines()[0].split('\r')
     values = volLines[1].split(',')
-    width = values[-1]
+    width = values[-3]
     length = values[-2]
-    gridSize = values[-3]
+    gridSize = values[-5]
     # Build label image path
-    labelPath = os.path.join(focusedPath,'final','z.stacks',outputFileNameBase,'label')
+    labelPath = os.path.join(focusedPath,'final','stripped',outputFileNameBase,'label')
+    if not os.path.exists(labelPath + '.tif'):
+        labelPath = os.path.join(focusedPath,'final','z.stacks',outputFileNameBase,'label')
     # Remove periods from image name if present
     if '.' in outputFileNameBase:
     	newFileNameBase = outputFileNameBase.replace('.','_')
     	rgbPathIn = os.path.join(sfPath,outputFileNameBase,outputFileNameBase + '_focused_rgb')
     	rgbPathOut = os.path.join(sfPath,outputFileNameBase,newFileNameBase + '_focused_rgb')
+    	imRGBCommand = 'convert ' + rgbPathIn + '.tif ' + rgbPathOut + '.png'
     else:
-        rgbPath = os.path.join(sfPath,outputFileNameBase,outputFileNameBase + '_focused_rgb')
+        rgbPathOut = os.path.join(sfPath,outputFileNameBase,outputFileNameBase + '_focused_rgb')
+        imRGBCommand = 'convert ' + rgbPathOut + '.tif ' + rgbPathOut + '.png'
     # Convert image types from .tif to '.png' using an external call to ImageMagick
     imLabelCommand = 'convert ' + labelPath + '.tif ' + labelPath + '.png'
     os.system(imLabelCommand)
-    imRGBCommand = 'convert ' + rgbPathIn + '.tif ' + rgbPathOut + '.png'
+    #imRGBCommand = 'convert ' + rgbPathIn + '.tif ' + rgbPathOut + '.png'
     os.system(imRGBCommand)
     
     latexFile = open(outputFilePath,'w')
@@ -55,19 +59,20 @@ def writeLatexFile(u3dFile,media9Path,outputFileNameBase,outputFilePath,focusedP
 \end{figure}
 
 \\begin{center}
-	\framebox{Length: \SI{""" 
+	Length: \SI{""" 
 	
-    latexText4 = """}{\micro\metre} - Width: \SI{"""
+    latexText4 = """} - Width: \SI{"""
+    
+    latexText5 = """} - Grid Size: \SI{"""
 
-    latexText5 = """}{\micro\metre} - Grid Size: \SI{"""
+    latexText6 = """} - Unit: """
 
-    latexText6 = """}{\micro\metre}}
-\end{center}
+    latexText7 = """\end{center}
 
 \centerline{\includemedia[
 label="""
 
-    latexText7 = """,
+    latexText8 = """,
 width=1\linewidth,height=1\linewidth,
 playbutton=none,
 activate=pageopen,
@@ -78,16 +83,17 @@ activate=pageopen,
 3Droo=85,
 3Dcoo=6 4 0
 ]{}{"""
-    latexText8 = """}}
+    
+    latexText9 = """}}
 
 \\begin{figure}[b]
 	\centerline{\includegraphics[scale=0.2]{"""
  
-    latexText9 = """}}
+    latexText10 = """}}
 \end{figure}
 
 \end{document}"""
 
-    latexTextFinal = ''.join([latexText1,os.path.join(media9Path,'media9'),latexText2,labelPath,latexText3,length,latexText4,width,latexText5,gridSize,latexText6,u3dFile,latexText7,u3dFile,latexText8,rgbPathOut,latexText9])
+    latexTextFinal = ''.join([latexText1,os.path.join(media9Path,'media9'),latexText2,labelPath,latexText3,length,latexText4,width,latexText5,gridSize,latexText6,unit,latexText7,u3dFile,latexText8,u3dFile,latexText9,rgbPathOut,latexText10])
     latexFile.write(latexTextFinal)
     latexFile.close()

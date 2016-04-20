@@ -26,6 +26,7 @@ if not os.path.exists(sfPath):
 # Set up variables for running StackFocuser in ImageJ/FIJI
 kernelSize = settings['kernel_size_SF']
 fijiArchitecture = settings['fiji_architecture']
+macroMode = settings['macro_mode']
 # Set default values as necessary
 if kernelSize == '[]':
     kernelSize = 11
@@ -34,7 +35,7 @@ if fijiArchitecture == '[]':
 elif fijiArchitecture == 'None':
     fijiArchitecture = None
 # Run StackFocuser in ImageJ/FIJI externally
-objDirs = runIJSF(focusedPath,sfPath,kernelSize,fijiArchitecture)
+objDirs = runIJSF(focusedPath,sfPath,kernelSize,macroMode,fijiArchitecture)
 
 # If '.' in object name, make objDirs list with '.'(s) removed for IDTFConverter
 objNamesClean = []
@@ -66,9 +67,9 @@ for obj in objDirs:
     focusedImageRGB = fileNameBase + '_focused_rgb.tif'
     heightmap = fileNameBase + '_heightmap.tif'
     if os.path.exists(heightmap):
-    	matlabCommand = 'matlab -nodisplay -nodesktop -nosplash -r "addpath(' + '\'' + settings['path_run3dmorph'] + '\'' + '); addpath(' + '\'' + settings['path_run2dmorph'] + '\'' + '); morph3dwrapper(' + '\'' + focusedPath + '\',\'' + focusedImageRGB + '\',\'' + heightmap + '\',\'' + obj + '\',\'' + settings['sampleID'] + '\',' + settings['calibration'] + ',' + settings['num_slices'] + ',' + settings['zstep'] + ',' + settings['kernel_size_OF'] + ',' + settings['downsample_grid_size'] + ',' + settings['savePDF'] + ',' + '\'' + settings['mbb_path'] + '\',\'' + settings['geom3d_path'] + '\',\'' + settings['mesh2pdf_path'] + '\'' + '); exit"'
+    	matlabCommand = 'matlab -nodisplay -nodesktop -nosplash -r "addpath(' + '\'' + settings['path_run3dmorph'] + '\'' + '); addpath(' + '\'' + settings['path_run2dmorph'] + '\'' + '); morph3dwrapper(' + '\'' + focusedPath + '\',\'' + focusedImageRGB + '\',\'' + heightmap + '\',\'' + obj + '\',\'' + settings['sampleID'] + '\',' + settings['macro_mode'].lower() + ',\'' + settings['unit'] + '\',' + settings['calibration'] + ',' + settings['num_slices'] + ',' + settings['zstep'] + ',' + settings['kernel_size_OF'] + ',' + settings['downsample_grid_size'] + ',' + settings['savePDF'] + ',' + '\'' + settings['mbb_path'] + '\',\'' + settings['geom3d_path'] + '\',\'' + settings['mesh2pdf_path'] + '\'' + '); exit"'
     	# Run Matlab and suppress header
-    	#os.system(matlabCommand + '| tail -n +15')
+    	#os.system(matlabCommand)
     	os.system(matlabCommand + '| tail -n +13')
     else:
     	print 'Object skipped.'
@@ -118,7 +119,7 @@ if settings['savePDF'] == 'true' or settings['savePDF'] == '[]':
         outputFilePath = os.path.join(latexOutputPath,outputFileName)
         media9Path = settings['media9_path']
         try:
-        	writeLatexFile(u3d,media9Path,outputFileNameBase,outputFilePath,focusedPath,sfPath)
+        	writeLatexFile(u3d,media9Path,outputFileNameBase,outputFilePath,focusedPath,sfPath,settings['unit'])
         except:
         	print '\t\t' + obj + ': Cannot build LaTeX file.'
         	continue

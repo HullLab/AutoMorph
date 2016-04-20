@@ -1,4 +1,4 @@
-function [] = save_idtf(filename,points,faces,face_vertex_data)
+function [] = save_idtf(filename,points,faces,face_vertex_data,normals)
 %   SAVE_IDTF   Save mesh in basic IDTF format
 %       [] = SAVE_IDTF(FILENAME,POINTS,FACES,FACE_VERTEX_DATA)
 %
@@ -10,7 +10,8 @@ function [] = save_idtf(filename,points,faces,face_vertex_data)
 % $LastChangedDate: 2009-08-26 17:05:49 +0200 (Mer, 26 aoû 2009) $
 % $Revision: 2 $
 %
-% 2015-07-22 Edited by Allison Hsaing: Turned off print statement for number of colors
+% 2015-07-22 Edited by Allison Hsiang: Turned off print statement for number of colors
+% 2015-12-02 Edited by Allison Hsiang: Removed call to mesh_normals due to changes in Matlab R2015b, added 'normals' as input parameter
 
 if nargin < 4
     face_vertex_data = [];
@@ -18,7 +19,7 @@ end
 
 nfaces = size(faces,1);
 npoints = size(points,1);
-normals = mesh_normals(points,faces);
+%normals = mesh_normals(points,faces,normals);
 
 if ~isempty(face_vertex_data) && size(face_vertex_data,2) ~= 3
     error('IDTF colors should be RGB');

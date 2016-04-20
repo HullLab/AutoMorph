@@ -27,6 +27,9 @@ surf(X/100,Y/100,Z/100);
 axis equal;
 colormap(gca,parula)
 fvc = u3d_pre;
+[nx,ny,nz] = surfnorm(X/100,Y/100,Z/100);
+numels = size(nx);
+normals = reshape([nx ny nz],numels(1)*numels(2),3);
 
 % Write IDTF file for 3D PDF generation (remove '.' from file name if necessary)
 if ~isempty(strfind(image_name,'.'))
@@ -35,4 +38,4 @@ if ~isempty(strfind(image_name,'.'))
 end
 idtf_filename = strcat(image_name,'.idtf');
 idtf_file_path = fullfile(idtf_path,idtf_filename);
-save_idtf(idtf_file_path,fvc.vertices,uint32(fvc.faces),fvc.facevertexcdata);
+save_idtf(idtf_file_path,fvc.vertices,uint32(fvc.faces),fvc.facevertexcdata,normals);

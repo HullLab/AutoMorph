@@ -18,7 +18,7 @@ please be careful!
 (NOTE: AT THE MOMENT, THIS ONLY WORKS FOR LINUX/TIDE!)
 """
 
-def runIJSF(focusedPath,sfPath,kernelSize,fijiArchitecture=None):
+def runIJSF(focusedPath,sfPath,kernelSize,macroMode,fijiArchitecture=None):
     """
     focusedPath: full path to the folder containing the output from
     the AutoMorph 'focus' software.
@@ -51,7 +51,6 @@ def runIJSF(focusedPath,sfPath,kernelSize,fijiArchitecture=None):
 
     # Get list of subdirectories in 'stripped' folder
     objDirs = glob.glob('*')
-    #objDirs = '/hull-disk1/ph269/other-users/hsiangA/morphospace/IP.307630_KC-78-0-0.5cm-5nlat-44wlon-3273m-g150_Hrectangle_N1of5_Mcompound_Oumbilical_I1_TzEDF-0_X5/IP.307630_KC-78-0-0.5cm-5nlat-44wlon-3273m-g150_Hrectangle_N1of5_Mcompound_Oumbilical_I1_TzEDF-0_X5/final/stripped/IP.307630_obj00090'
     
     # Loop through object directories and run ImageJ StackFocuser
     print 'Begin FIJI processing...\n'
@@ -59,7 +58,7 @@ def runIJSF(focusedPath,sfPath,kernelSize,fijiArchitecture=None):
     	start = time.time()
         print 'Object: ' + obj
         imageStackDir = os.path.join(strippedDir,obj)
-        pathToMacroFile = writeIJMacro(imageStackDir,sfPath,obj,kernelSize)
+        pathToMacroFile = writeIJMacro(imageStackDir,sfPath,obj,kernelSize,macroMode)
         # Move 'ZS.tif' file to separate folder
         zsPath = os.path.join(imageStackDir,'ZS')
         if not os.path.exists(zsPath):
@@ -94,7 +93,7 @@ def runIJSF(focusedPath,sfPath,kernelSize,fijiArchitecture=None):
     return objDirs
 
 
-def writeIJMacro(imageStackDir,outputDir,objName,kernelSize):
+def writeIJMacro(imageStackDir,outputDir,objName,kernelSize,macroMode):
     """
     imageStackDir: full path to folder containing stack of images for
     an object
@@ -114,11 +113,12 @@ def writeIJMacro(imageStackDir,outputDir,objName,kernelSize):
     if not os.path.exists(objOutputDir):
         os.mkdir(objOutputDir)
     os.chdir(objOutputDir)
-    
+
     # Write individual macro file for object
     macroFilePath = os.path.join(objOutputDir,objName + '_macro.imj')
     macroFile = open(macroFilePath,'w')
-    macroText = """setBatchMode(true);
+    if macroMode.lower() == 'false':
+        macroText = """setBatchMode(true);
 run("Image Sequence...", "open={0} file=[.jpg] convert sort");
 run("Stack Focuser ", "enter={1} generate");
 selectWindow("Focused_{2}");
@@ -128,7 +128,18 @@ saveAs("Tiff","{4}");
 selectWindow("{5}");
 close("*");
 """
-
+    else:
+        macroText = """setBatchMode(true);
+run("Image Sequence...", "open={0} file=[.jpg] convert sort");
+run("StackReg", "transformation=[Scaled Rotation]");
+run("Stack Focuser ", "enter={1} generate");
+selectWindow("Focused_{2}");
+saveAs("Tiff","{3}");
+selectWindow("HeightMap_{2}");
+saveAs("Tiff","{4}");
+selectWindow("{5}");
+close("*");
+"""
     var0 = imageStackDir
     var1 = kernelSize
     var2 = objName.split('.')[0]

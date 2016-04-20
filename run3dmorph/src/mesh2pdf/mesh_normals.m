@@ -1,4 +1,4 @@
-function [normals] = mesh_normals(points,faces)
+function [normals] = mesh_normals(points,faces,normals)
 
 % MESH_NORMALS   compute mesh normals
 %
@@ -30,6 +30,5 @@ close(hf);
 norms = sqrt(sum(normals.*conj(normals),2));
 gidx = find(norms);
 normals(gidx,:) = - normals(gidx,:) ./ repmat(norms(gidx),1,3);
-
 end %  function
 

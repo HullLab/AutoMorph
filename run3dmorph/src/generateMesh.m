@@ -1,25 +1,35 @@
-function [skipped,coordinates,top_surface_area,z_values,xy_points,X,Y,Z,area_2D,perimeter_2D,centroid_2D,top_volume,final_table_original] = generateMesh(focused_image_rgb,height_map,image_name,sampleID,calibration,num_slices,zstep,kernel_size_OF,downsample_grid_size)
+function [skipped,coordinates,top_surface_area,z_values,xy_points,X,Y,Z,area_2D,perimeter_2D,centroid_2D,top_volume,final_table_original] = generateMesh(morph3d_path,focused_image_rgb,height_map,image_name,sampleID,macro_mode,calibration,num_slices,zstep,kernel_size_OF,downsample_grid_size)
 % Takes heightmap, grayscale focused image, and RGB focused image and
 % generates a 3D mesh.
 
 % Check variables and set defaults as necessary
-narginchk(8,10);
+narginchk(9,11);
 if ~exist('kernel_size_OF','var') || isempty(kernel_size_OF), kernel_size_OF = 19; end
 if ~exist('downsample_grid_size','var') || isempty(downsample_grid_size), downsample_grid_size = 10; end
 
 % Read in input files
 heightmap = imread(height_map);
 focused_rgb = imread(focused_image_rgb);
-
 % Resize images using pixel-to-micron calibration factor
 resized_hm = resizePixelToMicron(heightmap,calibration);
 resized_rgb = resizePixelToMicron(focused_rgb,calibration);
+
+if macro_mode == true
+	resized_hm = imcomplement(resized_hm);
+	output_file_name = strcat(image_name,'_heightmap_inverted.tif');
+	output_path = fullfile(morph3d_path,'stackfocused',image_name,output_file_name);
+	imwrite(resized_hm,output_path);
+end
 
 % Run 2D outline extraction for outline deletion
 % ADD ABILITY HERE TO READ IN PERIMETER VALUES IF RUN2DMORPH HAS ALREADY
 % BEEN RUN ON THE SAMPLES
 [obj_final,obj_edge,obj_smooth,sampleID,objectID] = extract2doutline(resized_rgb,image_name,sampleID);
 [obj_final_holes,~,~,~,~] = extract2doutline_nofill(resized_rgb,image_name,sampleID);
+
+if ~exist(objectID,'var')
+	objectID = 'noObjectID';
+end
 
 % Get coordinates, 2D area, and 2D perimeter for surface area/volume estimation
 [final_table_original,final_table_smoothed] = extractcoordinates(obj_edge,obj_smooth,sampleID,objectID,[],[],[]);

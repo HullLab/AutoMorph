@@ -1,4 +1,4 @@
-function getVolumeSurfaceArea(mbb_path,morph3d_path,image_name,z_values,xy_points,top_volume,top_surface_area,downsample_grid_size,area_2D,perimeter_2D,centroid_2D,final_table_original)
+function getVolumeSurfaceArea(mbb_path,morph3d_path,image_name,z_values,xy_points,top_volume,top_surface_area,downsample_grid_size,area_2D,perimeter_2D,centroid_2D,final_table_original,unit)
 % Calculates total volume of object assuming 1) a conic base;
 % 2) a cylindrical base; and 3) a dome base. Outputs a .csv file with both measures.
 % Also outputs total surface area estimates for each type of base.
@@ -50,5 +50,5 @@ output_path = fullfile(morph3d_path,'stackfocused',image_name,output_filename);
 % Write volumes to file
 volume_file = fopen(output_path,'w');
 if isempty(downsample_grid_size), downsample_grid_size = 10; end
-fprintf(volume_file,'object,volume_dome,volume_cylinder,volume_cone,volume_top,surface_area_dome,surface_area_cylinder,surface_area_cone,surface_area_top,grid_size,height,width,length\r%s,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d,%.2f,%.2f,%.2f',image_name,total_volume_dome,total_volume_cylinder,total_volume_cone,top_volume,total_surface_area_dome,total_surface_area_cylinder,total_surface_area_cone,top_surface_area,downsample_grid_size,height,W,L);
+fprintf(volume_file,'object,volume_dome,volume_cylinder,volume_cone,volume_top,surface_area_dome,surface_area_cylinder,surface_area_cone,surface_area_top,grid_size,height,width,length,base_unit\r%s,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d,%.2f,%.2f,%.2f,%s',image_name,total_volume_dome,total_volume_cylinder,total_volume_cone,top_volume,total_surface_area_dome,total_surface_area_cylinder,total_surface_area_cone,top_surface_area,downsample_grid_size,height,W,L,unit);
 fclose(volume_file);
