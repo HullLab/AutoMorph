@@ -1,4 +1,4 @@
-function [obj_final,obj_edge,obj_smooth,sampleID,objectID] = extract2doutline(focused_image,image_name,sampleID,save_intermediates,intensity_range_in,intensity_range_out,gamma,threshold_adjustment,smoothing_sigma,noise_limit)
+function [obj_final,obj_edge,obj_smooth,sampleID,objectID] = extract2doutline(focused_image,image_name,output_dir,sampleID,save_intermediates,intensity_range_in,intensity_range_out,gamma,threshold_adjustment,smoothing_sigma,noise_limit)
 %Output:
 %
 %   FILES:
@@ -65,7 +65,7 @@ function [obj_final,obj_edge,obj_smooth,sampleID,objectID] = extract2doutline(fo
 %
 
 % Check number of arguments and set default values as necessary
-narginchk(2,10);
+narginchk(3,11);
 if ~exist('save_intermediates','var') || isempty(save_intermediates), save_intermediates = false; end
 if ~exist('intensity_range_in','var') || isempty(intensity_range_in), intensity_range_in = [0 0.2]; end
 if ~exist('intensity_range_out','var') || isempty(intensity_range_out), intensity_range_out = [0 1]; end
@@ -137,32 +137,26 @@ obj_final = bwareaopen(obj_border,noise_limit_size,4);
     end
     
 % Save output files
-    % Make output directory if it doesn't exist
-    if ~exist('morph2d','dir'), mkdir('morph2d'); end
     % Designate sampleID value
     sampleID = char(sampleID);
     % Generate objectID value
     temp = strsplit(image_name,'.');
     objectID = strjoin(temp(1:end-1),'.');
-    % Check current architecture and assign appropriate path divider
-    % (solidus or reverse solidus)
-    architecture = computer;
-    if strcmp(computer,'MACI64') == 1 || strcmp(computer,'GLNXA64') == 1, path_divider = '/'; else path_divider = '\'; end
     % Save intermediate images for option save_intermediates == true
     if save_intermediates == true
         % Write intermediate files
-        imwrite(obj_open,strcat('morph2d',path_divider,sampleID,'_',objectID,'_1_open.tif'));
-        imwrite(obj_gamma,strcat('morph2d',path_divider,sampleID,'_',objectID,'_2_gamma.tif'));
-        imwrite(obj_rgbfilter,strcat('morph2d',path_divider,sampleID,'_',objectID,'_3_rgbfilter.tif'));
-        imwrite(obj_gray,strcat('morph2d',path_divider,sampleID,'_',objectID,'_4_grayscale.tif'));
-        imwrite(obj_bw,strcat('morph2d',path_divider,sampleID,'_',objectID,'_5_bw.tif'));
-        imwrite(obj_fill,strcat('morph2d',path_divider,sampleID,'_',objectID,'_6_fill.tif'));
-        imwrite(obj_border,strcat('morph2d',path_divider,sampleID,'_',objectID,'_7_border.tif'));
-        imwrite(obj_final,strcat('morph2d',path_divider,sampleID,'_',objectID,'_8_noise.tif'));
-        imwrite(obj_edge,strcat('morph2d',path_divider,sampleID,'_',objectID,'_9_edge.tif'));
-        imwrite(obj_smooth,strcat('morph2d',path_divider,sampleID,'_',objectID,'_10_smooth.tif'));
+        imwrite(obj_open,fullfile(output_dir,strcat(sampleID,'_',objectID,'_1_open.tif')));
+        imwrite(obj_gamma,fullfile(output_dir,strcat(sampleID,'_',objectID,'_2_gamma.tif')));
+        imwrite(obj_rgbfilter,fullfile(output_dir,strcat(sampleID,'_',objectID,'_3_rgbfilter.tif')));
+        imwrite(obj_gray,fullfile(output_dir,strcat(sampleID,'_',objectID,'_4_grayscale.tif')));
+        imwrite(obj_bw,fullfile(output_dir,strcat(sampleID,'_',objectID,'_5_bw.tif')));
+        imwrite(obj_fill,fullfile(output_dir,strcat(sampleID,'_',objectID,'_6_fill.tif')));
+        imwrite(obj_border,fullfile(output_dir,strcat(sampleID,'_',objectID,'_7_border.tif')));
+        imwrite(obj_final,fullfile(output_dir,strcat(sampleID,'_',objectID,'_8_noise.tif')));
+        imwrite(obj_edge,fullfile(output_dir,strcat(sampleID,'_',objectID,'_9_edge.tif')));
+        imwrite(obj_smooth,fullfile(output_dir,strcat(sampleID,'_',objectID,'_10_smooth.tif')));
     end
     % Write final image comparing edge outline to original image
     comparison = imfuse(obj,obj_edge,'diff');
-    imwrite(comparison,strcat('morph2d',path_divider,sampleID,'_',objectID,'_final.tif'));
+    imwrite(comparison,fullfile(output_dir,strcat(sampleID,'_',objectID,'_final.tif')));
 end

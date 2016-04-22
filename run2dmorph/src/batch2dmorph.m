@@ -1,4 +1,4 @@
-function batch2dmorph(directory,image_extension,sampleID,output_filename,microns_per_pixel_X,microns_per_pixel_Y,get_coordinates,save_intermediates,intensity_range_in,intensity_range_out,gamma,threshold_adjustment,smoothing_sigma,noise_limit,write_csv,downsample,num_points,draw_ar)
+function batch2dmorph(directory,output_dir,image_extension,sampleID,output_filename,microns_per_pixel_X,microns_per_pixel_Y,get_coordinates,save_intermediates,intensity_range_in,intensity_range_out,gamma,threshold_adjustment,smoothing_sigma,noise_limit,write_csv,downsample,num_points,draw_ar)
 %Output:
 %   
 %   FILES:
@@ -72,7 +72,7 @@ function batch2dmorph(directory,image_extension,sampleID,output_filename,microns
 
 % Check number of arguments and set default values as necessary
 
-narginchk(3,18);
+narginchk(4,19);
 if ~exist('output_filename','var') || isempty(output_filename), output_filename = sampleID; end
 if ~exist('save_intermediates','var') || isempty(save_intermediates), save_intermediates = false; end
 if ~exist('microns_per_pixel_X','var') || isempty(microns_per_pixel_X), microns_per_pixel_X = 1; end
@@ -93,14 +93,10 @@ if ~exist('draw_ar','var') || isempty(draw_ar), draw_ar = true; end
 cd(directory);
 
 % Make output directory if it doesn't exist
-if ~exist('morph2d','dir'), mkdir('morph2d'); end
-% Check current architecture and assign appropriate path
-% dividor (solidus or reverse solidus)
-architecture = computer;
-if strcmp(computer,'MACI64') == 1 || strcmp(computer,'GLNXA64') == 1, path_divider = '/'; else path_divider = '\'; end
+if ~exist('output_dir','dir'), mkdir(output_dir); end
 
 % Start log file
-diary(strcat('morph2d',path_divider,output_filename,'_log.txt'));
+diary(fullfile(output_dir,strcat(output_filename,'_log.txt')));
 diary on
 
 % Print starting time and date
@@ -133,7 +129,7 @@ for file = files'
     % Force image to RGB mode with three layers
     rgb_image = new_image(:,:,1:3);
     % Extract 2D outline
-    [obj_final,obj_edge,obj_smooth,sampleID,objectID] = extract2doutline(rgb_image,file.name,sampleID,save_intermediates,intensity_range_in,intensity_range_out,gamma,threshold_adjustment,smoothing_sigma,noise_limit); 
+    [obj_final,obj_edge,obj_smooth,sampleID,objectID] = extract2doutline(rgb_image,file.name,output_dir,sampleID,save_intermediates,intensity_range_in,intensity_range_out,gamma,threshold_adjustment,smoothing_sigma,noise_limit); 
     % Determine if outline is discontinuous or non-existent (e.g., no foram
     % in source image), skip additional processing, and add it to list of
     % skipped images
@@ -142,17 +138,17 @@ for file = files'
     temp_area = regionprops(obj_final,'Area');
     if (length(temp_perimeter_bumpy) == 1) && (length(temp_perimeter_smooth) == 1) && (length(temp_area) == 1) && ~(max(obj_edge(:)) == 0)
         % Obtain morphological measurements
-        temp_table = struct2table(measuremorph(obj_final,obj_edge,obj_smooth,sampleID,objectID,write_csv));
+        temp_table = struct2table(measuremorph(output_dir,obj_final,obj_edge,obj_smooth,sampleID,objectID,write_csv));
         % Append morphological measurements for current object to final table
         % of measurements
         final_table_morph = vertcat(final_table_morph,temp_table);
     	% Obtain coordinates if necessary
         if get_coordinates == true
-            [final_table_original,final_table_smoothed] = extractcoordinates(obj_edge,obj_smooth,sampleID,objectID,downsample,num_points,write_csv);
+            [final_table_original,final_table_smoothed] = extractcoordinates(output_dir,obj_edge,obj_smooth,sampleID,objectID,downsample,num_points,write_csv);
             % If draw_AR == true, output sampleID_objectID_aspectratios.csv' and
             % corresponding images.
             if draw_ar == true
-                [H,W,aspect_ratio] = aspectRatio(sampleID,objectID,final_table_smoothed);
+                [H,W,aspect_ratio] = aspectRatio(output_dir,sampleID,objectID,final_table_smoothed);
                 AR_struct = struct('sampleID',char(sampleID),'objectID',char(objectID),'height',H,'width',W,'aspect_ratio',aspect_ratio);
                 temp_table = struct2table(AR_struct);
                 AR_table = [AR_table;temp_table];
@@ -169,14 +165,14 @@ end
 
 % Write final output files
     % Write final tables
-    writetable(final_table_morph,strcat('morph2d',path_divider,output_filename,'_morph2d_properties.csv'));
+    writetable(final_table_morph,fullfile(output_dir,strcat(output_filename,'_morph2d_properties.csv')));
     if get_coordinates == true
-        writetable(final_table_coords_original,strcat('morph2d',path_divider,output_filename,'_coordinates_original.csv'));
-        writetable(final_table_coords_smoothed,strcat('morph2d',path_divider,output_filename,'_coordinates_smoothed.csv'));
+        writetable(final_table_coords_original,fullfile(output_dir,strcat(output_filename,'_coordinates_original.csv')));
+        writetable(final_table_coords_smoothed,fullfile(output_dir,strcat(output_filename,'_coordinates_smoothed.csv')));
     end
     % Write aspect ratio table if draw_AR == true
     if draw_ar == true
-        writetable(AR_table,strcat('morph2d',path_divider,output_filename,'_aspectratio.csv'));
+        writetable(AR_table,fullfile(output_dir,strcat(output_filename,'_aspectratio.csv')));
     end
     % Save parameter values
     parameters = {};
@@ -193,21 +189,21 @@ end
     if downsample == true, parameters.downsample = 'true'; else parameters.downsample = 'false'; end
     parameters.num_points = num_points;
     % Write parameter values to file
-    writetable(struct2table(parameters),strcat('morph2d',path_divider,output_filename,'_parameters.csv'));
+    writetable(struct2table(parameters),fullfile(output_dir,strcat(output_filename,'_parameters.csv')));
     % Write file containing names of skipped images if they exist, and copy images to
     % 'no_outline_extracted' folder
     if ~isempty(skipped)
         % Make 'no_outline_extracted' folder if it doesn't exist
-        if ~exist('no_outline_extracted','dir'), mkdir('no_outline_extracted'); end
+        if ~exist(fullfile(output_dir,'no_outline_extracted'),'dir'), mkdir(fullfile(output_dir,'no_outline_extracted')); end
         % Prepare file names
         split = strsplit(skipped,'.tif');
         % Open file to which names of skipped images will be written
-        skipped_file = fopen(strcat('morph2d/',output_filename,'_skipped.txt'),'w');
+        skipped_file = fopen(fullfile(output_dir,strcat(output_filename,'_skipped.txt')),'w');
         % Loop through skipped files and 1) write names to file; and 2)
         % copy original image file to 'no_outline_extracted' folder
         for object = split(1:end-1)
             fprintf(skipped_file,'%s\n',object{1});
-            copyfile(strcat(object{1},'.tif'),strcat('no_outline_extracted/',object{1},'.tif'));
+            copyfile(strcat(object{1},'.tif'),fullfile(output_dir,'no_outline_extracted',strcat(object{1},'.tif')));
         end
         fclose(skipped_file);
     end

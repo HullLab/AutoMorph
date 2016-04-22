@@ -1,4 +1,4 @@
-function morphproptable = measuremorph(obj_final,obj_edge,obj_smooth,sampleID,objectID,write_csv)
+function morphproptable = measuremorph(output_dir,obj_final,obj_edge,obj_smooth,sampleID,objectID,write_csv)
 %Output:
 %
 %   FILES:
@@ -40,7 +40,7 @@ function morphproptable = measuremorph(obj_final,obj_edge,obj_smooth,sampleID,ob
 %   (Default value: false)
 
 % Check number of input arguments and set up default values as necessary.
-narginchk(5,8);
+narginchk(5,9);
 %if ~exist('microns_per_pixel','var') || isempty(microns_per_pixel), microns_per_pixel = 1; end
 if ~exist('write_csv','var') || isempty(write_csv), write_csv = false; end
 
@@ -60,14 +60,8 @@ morphproptable = props;
 
 % Write csv file
 if write_csv == true
-    % Make output directory if it doesn't exist
-    if ~exist('morph2d','dir'), mkdir('morph2d'); end
-    % Check current architecture and assign appropriate path
-    % dividor (solidus or reverse solidus)
-    architecture = computer;
-    if strcmp(computer,'MACI64') == 1 || strcmp(computer,'GLNXA64') == 1, path_divider = '/'; else path_divider = '\'; end
     % Write final table
     final_table = struct2table(morphproptable);
-    writetable(final_table,strcat('morph2d',path_divider,sampleID,'_',objectID,'_morph2d_properties.csv'));
+    writetable(final_table,fullfile(output_dir,strcat(sampleID,'_',objectID,'_morph2d_properties.csv')));
 end
 end

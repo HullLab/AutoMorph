@@ -1,4 +1,4 @@
-function [H,W,aspect_ratio] = aspectRatio(sampleID,objectID,final_table_smoothed)
+function [H,W,aspect_ratio] = aspectRatio(output_dir,sampleID,objectID,final_table_smoothed)
 
 set(0,'DefaultFigureVisible','off');
 
@@ -33,14 +33,8 @@ aspect_ratio = H/W;
     hold off;
 
 % Save output files
-    % Make output directory if it doesn't exist
-    if ~exist('morph2d','dir'), mkdir('morph2d'); end
-    % Check current architecture and assign appropriate path divider
-    % (solidus or reverse solidus)
-    architecture = computer;
-    if strcmp(computer,'MACI64') == 1 || strcmp(computer,'GLNXA64') == 1, path_divider = '/'; else path_divider = '\'; end
     % Save image file
-    saveas(gcf,strcat('morph2d',path_divider,sampleID,'_',objectID,'_aspectratio.tif'),'tiff');
+    saveas(gcf,fullfile(output_dir,strcat(sampleID,'_',objectID,'_aspectratio.tif')),'tiff');
 end
 
 

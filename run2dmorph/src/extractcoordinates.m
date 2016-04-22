@@ -1,4 +1,4 @@
-function [final_table_original,final_table_smoothed] = extractcoordinates(obj_edge,obj_smooth,sampleID,objectID,downsample_bool,num_points,write_csv)
+function [final_table_original,final_table_smoothed] = extractcoordinates(output_dir,obj_edge,obj_smooth,sampleID,objectID,downsample_bool,num_points,write_csv)
 %Output:
 %
 %   FILES:
@@ -45,7 +45,7 @@ function [final_table_original,final_table_smoothed] = extractcoordinates(obj_ed
 %   (Default value: false)
 
 % Check number of input arguments and set up default values as necessary.
-narginchk(4,7);
+narginchk(4,8);
 if ~exist('downsample_bool','var') || isempty(downsample_bool), downsample_bool = true; end
 if ~exist('min_points','var') || isempty(num_points), num_points = 100; end
 if ~exist('write_csv','var') || isempty(write_csv), write_csv = false; end
@@ -107,18 +107,11 @@ end
     final_table_smoothed = horzcat(sampleID_table_smoothed,objectID_table_smoothed,smoothed_coords_table);
 
 % Write csv if necessary
-    % Make output directory if it doesn't exist
-    if ~exist('morph2d','dir'), mkdir('morph2d'); end
     % Convert coordinate data to table and write to csv file
     if write_csv == true
     % Write output files
-    	% Check current architecture and assign appropriate path
-        % dividor (solidus or reverse solidus)
-        architecture = computer;
-        if strcmp(computer,'MACI64') == 1 || strcmp(computer,'GLNXA64') == 1, path_divider = '/'; else path_divider = '\'; end
         % Write tables
-        output_filename_base = strcat('morph2d',path_divider,sampleID,'_',objectID,'_coordinates');
-        writetable(final_table_original,strcat(output_filename_base,'_original.csv'));
-        writetable(final_table_smoothed,strcat(output_filename_base,'_smoothed.csv'));
+        writetable(final_table_original,fullfile(output_dir,strcat(sampleID,'_',objectID,'_coordinates_original.csv')));
+        writetable(final_table_smoothed,fullfile(output_dir,strcat(sampleID,'_',objectID,'_coordinates_smoothed.csv')));
     end
 end

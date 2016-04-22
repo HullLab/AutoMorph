@@ -19,6 +19,9 @@ while ischar(textline)
 			if strcmp(variable, 'directory') == 1
 				% If the option is a directory name, assign it
                 directory = strjoin(options,'=');
+                
+            elseif strcmp(variable, 'output_dir') == 1
+            	output_dir = strjoin(options,'=');
 
 			elseif strcmp(variable, 'image_extension') == 1
 				% If the option is an image extension, assign it
@@ -169,6 +172,7 @@ timestamp = sprintf('%04d-%02d-%02d at %02d:%02d:%02d', currentTime(1), currentT
 % Now assemble the settings array:
 settings = struct();
 settings.directory = directory;
+settings.output_dir = output_dir;
 settings.image_extension = image_extension;
 settings.sampleID = sampleID;
 settings.output_filename = output_filename;
