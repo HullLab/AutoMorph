@@ -1,11 +1,8 @@
-function morph3dwrapper(focused_path,focused_image_rgb,height_map,image_name,sampleID,macro_mode,unit,calibration,num_slices,zstep,kernel_size_OF,downsample_grid_size,savePDF,mbb_path,geom3d_path,mesh2pdf_path)
+function morph3dwrapper(morph3d_path,focused_image_rgb,height_map,image_name,sampleID,macro_mode,unit,calibration,num_slices,zstep,kernel_size_OF,downsample_grid_size,savePDF,mbb_path,geom3d_path,mesh2pdf_path)
 % Runs suite of morph3D functions to:
 %   1) Extract 3D Mesh from heightmap generated using StackFocuser
 %   2) Generate 3D PDF (if generate_pdf == True)
 %   3) Output OBJ file for downstream morphometrics processing
-
-% Build 'morph3d' path
-morph3d_path = fullfile(focused_path,'morph3d');
 
 % Generate mesh
 time_start = datestr(now);

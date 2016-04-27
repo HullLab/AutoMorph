@@ -24,16 +24,16 @@ end
 % Run 2D outline extraction for outline deletion
 % ADD ABILITY HERE TO READ IN PERIMETER VALUES IF RUN2DMORPH HAS ALREADY
 % BEEN RUN ON THE SAMPLES
-[obj_final,obj_edge,obj_smooth,sampleID,objectID] = extract2doutline(resized_rgb,image_name,sampleID);
-[obj_final_holes,~,~,~,~] = extract2doutline_nofill(resized_rgb,image_name,sampleID);
+[obj_final,obj_edge,obj_smooth,sampleID,objectID] = extract2doutline(resized_rgb,image_name,morph3d_path,sampleID);
+[obj_final_holes,~,~,~,~] = extract2doutline_nofill(resized_rgb,image_name,morph3d_path,sampleID);
 
 if ~exist(objectID,'var')
 	objectID = 'noObjectID';
 end
 
 % Get coordinates, 2D area, and 2D perimeter for surface area/volume estimation
-[final_table_original,final_table_smoothed] = extractcoordinates(obj_edge,obj_smooth,sampleID,objectID,[],[],[]);
-morphproptable = measuremorph(obj_final,obj_edge,obj_smooth,sampleID,objectID,false);
+[final_table_original,final_table_smoothed] = extractcoordinates(morph3d_path,obj_edge,obj_smooth,sampleID,objectID,[],[],[]);
+morphproptable = measuremorph(morph3d_path,obj_final,obj_edge,obj_smooth,sampleID,objectID,false);
 area_2D = morphproptable.Area;
 perimeter_2D = morphproptable.Perimeter;
 centroid_2D = regionprops(obj_final,'Centroid');

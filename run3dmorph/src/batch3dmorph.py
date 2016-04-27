@@ -16,7 +16,7 @@ settings = getSettings(controlFile)
 # Set up necessary paths and create 'morph3d' and 'stackfocused' folders to contain output
 run3dmorphPath = settings['path_run3dmorph']
 focusedPath = settings['directory']
-morph3dPath = os.path.join(focusedPath,'morph3d')
+morph3dPath = os.path.join(settings['output_dir'],'morph3d')
 sfPath = os.path.join(morph3dPath,'stackfocused')
 if not os.path.exists(morph3dPath):
     os.mkdir(morph3dPath)
@@ -36,6 +36,7 @@ elif fijiArchitecture == 'None':
     fijiArchitecture = None
 # Run StackFocuser in ImageJ/FIJI externally
 objDirs = runIJSF(focusedPath,sfPath,kernelSize,macroMode,fijiArchitecture)
+#objDirs = ["IP.307717_obj00001","IP.307717_obj00002","IP.307717_obj00003","IP.307717_obj00004","IP.307717_obj00006"]
 
 # If '.' in object name, make objDirs list with '.'(s) removed for IDTFConverter
 objNamesClean = []
@@ -49,7 +50,7 @@ else:
 
 # Loop through object folders
 imgSrcDir = os.path.join(focusedPath,'final/focused_unlabeled')
-imgDstDirBase = os.path.join(focusedPath,'morph3d','stackfocused')
+imgDstDirBase = os.path.join(morph3dPath,'stackfocused')
 for obj in objDirs:
     print '\nProcessing ' + obj + '...'
     # 1) Copy RGB focused image from 'focused_unlabeled' folder
@@ -67,7 +68,7 @@ for obj in objDirs:
     focusedImageRGB = fileNameBase + '_focused_rgb.tif'
     heightmap = fileNameBase + '_heightmap.tif'
     if os.path.exists(heightmap):
-    	matlabCommand = 'matlab -nodisplay -nodesktop -nosplash -r "addpath(' + '\'' + settings['path_run3dmorph'] + '\'' + '); addpath(' + '\'' + settings['path_run2dmorph'] + '\'' + '); morph3dwrapper(' + '\'' + focusedPath + '\',\'' + focusedImageRGB + '\',\'' + heightmap + '\',\'' + obj + '\',\'' + settings['sampleID'] + '\',' + settings['macro_mode'].lower() + ',\'' + settings['unit'] + '\',' + settings['calibration'] + ',' + settings['num_slices'] + ',' + settings['zstep'] + ',' + settings['kernel_size_OF'] + ',' + settings['downsample_grid_size'] + ',' + settings['savePDF'] + ',' + '\'' + settings['mbb_path'] + '\',\'' + settings['geom3d_path'] + '\',\'' + settings['mesh2pdf_path'] + '\'' + '); exit"'
+    	matlabCommand = 'matlab -nodisplay -nodesktop -nosplash -r "addpath(' + '\'' + settings['path_run3dmorph'] + '\'' + '); addpath(' + '\'' + settings['path_run2dmorph'] + '\'' + '); morph3dwrapper(' + '\'' + morph3dPath + '\',\'' + focusedImageRGB + '\',\'' + heightmap + '\',\'' + obj + '\',\'' + settings['sampleID'] + '\',' + settings['macro_mode'].lower() + ',\'' + settings['unit'] + '\',' + settings['calibration'] + ',' + settings['num_slices'] + ',' + settings['zstep'] + ',' + settings['kernel_size_OF'] + ',' + settings['downsample_grid_size'] + ',' + settings['savePDF'] + ',' + '\'' + settings['mbb_path'] + '\',\'' + settings['geom3d_path'] + '\',\'' + settings['mesh2pdf_path'] + '\'' + '); exit"'
     	# Run Matlab and suppress header
     	#os.system(matlabCommand)
     	os.system(matlabCommand + '| tail -n +13')
