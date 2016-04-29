@@ -58,22 +58,17 @@ def focus(directories, software, ID):
     add_labels(directories, outfile)
 
     # ARCHIVE
-    print 'Archiving focused images ... '
+    print 'Archiving original z.stacks... '
 
     for object_dir in directories['objects']:
         shutil.move(object_dir, directories['zstack'])
 
-    # Final Images
-#    archive('final_focused', directories)
-
-    # Z-stacks (Original Segmented Images?)
-    archive('zstack', directories)
-
+    clean(directories)
 
 def archive(dir_to_tar, directories):
-
+    dir_name = os.path.basename(directories[dir_to_tar].rstrip('/'))
     tar = tarfile.open(directories[dir_to_tar+'_tar'], 'w:gz')
-    tar.add(directories[dir_to_tar])
+    tar.add(directories[dir_to_tar], arcname=dir_name)
     tar.close()
 
 
@@ -156,14 +151,14 @@ def load_settings(directories):
 def clean(directories):
 
     if not os.path.exists(directories['zstack_tar']):
-        print 'tar of zstack not found, attempting creation...'
+        print 'creating tar of zstack'
         archive('zstack', directories)
 
-        if not os.path.exists(directories['zstack_tar']):
-            sys.exit('Error: tar of zstack files not present! Exiting...')
-
-    if os.path.exists(directories['zstack']):
-        shutil.rmtree(directories['zstack'])
+    if os.path.exists(directories['zstack_tar']):
+        if os.path.exists(directories['zstack']):
+            shutil.rmtree(directories['zstack'])
+    else:
+        print 'Error: tar of zstack files not present. leaving directory in place.'
 
 
 def reset(directories, software):
@@ -182,12 +177,14 @@ def reset(directories, software):
         if os.path.exists(log_file):
             os.remove(log_file)
 
-    remove_files = ['final_focused_tar', 'zstack_tar']
-    for file in remove_files:
-        if os.path.exists(directories[file]):
-            os.remove(directories[file])
-
     # copy back originals if they have been moved
+
+    if not os.path.exists(directories['zstack']):
+        if os.path.exists(directories['zstack_tar']):
+            tar = tarfile.open(directories['zstack_tar'])
+            tar.extractall()
+            tar.close()
+
     if os.path.exists(directories['zstack']):
         if os.listdir(directories['zstack']) != []:
             for directory in os.listdir(directories['zstack']):
@@ -212,6 +209,13 @@ def reset(directories, software):
             zs_file = os.path.join(object_dir, 'ZS.tif')
             if os.path.exists(zs_file):
                 os.remove(zs_file)
+
+    remove_files = ['final_focused_tar', 'zstack_tar']
+    for file in remove_files:
+        if os.path.exists(directories[file]):
+            os.remove(directories[file])
+        if os.path.exists(directories[file].rstrip('.gz')):
+            os.remove(directories[file].rstrip('.gz'))
 
 
 if __name__ == "__main__":
