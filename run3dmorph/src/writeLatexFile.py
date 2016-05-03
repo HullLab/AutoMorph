@@ -7,6 +7,7 @@ def writeLatexFile(u3dFile,media9Path,outputFileNameBase,outputFilePath,focusedP
     """
     """
     import os
+    import glob
     
     volFilePath = os.path.join(sfPath,outputFileNameBase,outputFileNameBase+'_volume_surface_area.csv')
     volFile = open(volFilePath,'r')
@@ -16,9 +17,17 @@ def writeLatexFile(u3dFile,media9Path,outputFileNameBase,outputFilePath,focusedP
     length = values[-2]
     gridSize = values[-5]
     # Build label image path
-    labelPath = os.path.join(focusedPath,'final','stripped',outputFileNameBase,'label')
-    if not os.path.exists(labelPath + '.tif'):
-        labelPath = os.path.join(focusedPath,'final','z.stacks',outputFileNameBase,'label')
+    labelPath_1 = os.path.join(focusedPath,'final','stripped',outputFileNameBase,'label')
+    labelPath_2 = os.path.join(focusedPath,'final','z.stacks',outputFileNameBase,'label')
+    label_1 = glob.glob(labelPath_1 + '*')
+    label_2 = glob.glob(labelPath_2 + '*')
+    if label_1:
+        labelPath = labelPath_1
+        labelExt = label_1[0].split('label')[1]
+    else:
+        labelPath = labelPath_2
+        labelExt = label_2[0].split('label')[1]
+        
     # Remove periods from image name if present
     if '.' in outputFileNameBase:
     	newFileNameBase = outputFileNameBase.replace('.','_')
@@ -29,7 +38,7 @@ def writeLatexFile(u3dFile,media9Path,outputFileNameBase,outputFilePath,focusedP
         rgbPathOut = os.path.join(sfPath,outputFileNameBase,outputFileNameBase + '_focused_rgb')
         imRGBCommand = 'convert ' + rgbPathOut + '.tif ' + rgbPathOut + '.png'
     # Convert image types from .tif to '.png' using an external call to ImageMagick
-    imLabelCommand = 'convert ' + labelPath + '.tif ' + labelPath + '.png'
+    imLabelCommand = 'convert ' + labelPath + labelExt + ' ' + labelPath + '.png'
     os.system(imLabelCommand)
     #imRGBCommand = 'convert ' + rgbPathIn + '.tif ' + rgbPathOut + '.png'
     os.system(imRGBCommand)
