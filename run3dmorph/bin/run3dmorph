@@ -1,11 +1,12 @@
 #!/bin/bash
 
-if [ $# -ne 1 ]
+if [ $# == 2 ]
 then
-	echo "Usage: run3dmorph <control file>"
-	exit
+	RESTART=$2
+else
+	RESTART='no-restart'
 fi
 
 CONTROLFILE=`readlink -f $1`
 
-nice -n 10 batch3dmorph.py $CONTROLFILE
+nice -n 10 batch3dmorph.py $CONTROLFILE $RESTART

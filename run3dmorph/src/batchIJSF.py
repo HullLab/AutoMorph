@@ -18,7 +18,7 @@ please be careful!
 (NOTE: AT THE MOMENT, THIS ONLY WORKS FOR LINUX/TIDE!)
 """
 
-def runIJSF(focusedPath,sfPath,kernelSize,macroMode,fijiArchitecture=None):
+def runIJSF(objDirs,focusedPath,sfPath,kernelSize,macroMode,fijiArchitecture=None):
     """
     focusedPath: full path to the folder containing the output from
     the AutoMorph 'focus' software.
@@ -49,9 +49,6 @@ def runIJSF(focusedPath,sfPath,kernelSize,macroMode,fijiArchitecture=None):
     strippedDir = os.path.join(focusedPath,'final/stripped')
     os.chdir(strippedDir)
 
-    # Get list of subdirectories in 'stripped' folder
-    objDirs = glob.glob('*')
-    
     # Loop through object directories and run ImageJ StackFocuser
     print 'Begin FIJI processing...\n'
     for obj in objDirs:
@@ -90,8 +87,7 @@ def runIJSF(focusedPath,sfPath,kernelSize,macroMode,fijiArchitecture=None):
         end = time.time()
         time_elapsed = end - start
 	print 'Time Elapsed: ' + '%6.3f' % time_elapsed + ' seconds\n'
-    return objDirs
-
+	
 
 def writeIJMacro(imageStackDir,outputDir,objName,kernelSize,macroMode):
     """
