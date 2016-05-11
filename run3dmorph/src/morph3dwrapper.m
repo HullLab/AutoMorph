@@ -1,4 +1,4 @@
-function morph3dwrapper(morph3d_path,focused_image_rgb,height_map,image_name,sampleID,macro_mode,unit,calibration,num_slices,zstep,kernel_size_OF,downsample_grid_size,savePDF,mbb_path,geom3d_path,mesh2pdf_path)
+function morph3dwrapper(morph3d_path,focused_image_rgb,height_map,image_name,sampleID,macro_mode,unit,calibration,num_slices,zstep,kernel_size_OF,downsample_grid_size,savePDF,mbb_path,geom3d_path,mesh2pdf_path,intensity_range_in,intensity_range_out,gamma,threshold_adjustment,noise_limit)
 % Runs suite of morph3D functions to:
 %   1) Extract 3D Mesh from heightmap generated using StackFocuser
 %   2) Generate 3D PDF (if generate_pdf == True)
@@ -7,8 +7,9 @@ function morph3dwrapper(morph3d_path,focused_image_rgb,height_map,image_name,sam
 % Generate mesh
 time_start = datestr(now);
 disp(strcat('Start: ',time_start))
+
 try
-	[skipped,coordinates,top_surface_area,z_values,xy_points,X,Y,Z,area_2D,perimeter_2D,centroid_2D,top_volume,final_table_original] = generateMesh(morph3d_path,focused_image_rgb,height_map,image_name,sampleID,macro_mode,calibration,num_slices,zstep,kernel_size_OF,downsample_grid_size);
+	[skipped,coordinates,top_surface_area,z_values,xy_points,X,Y,Z,area_2D,perimeter_2D,centroid_2D,top_volume,final_table_original] = generateMesh(morph3d_path,focused_image_rgb,height_map,image_name,sampleID,macro_mode,calibration,num_slices,zstep,kernel_size_OF,downsample_grid_size,intensity_range_in,intensity_range_out,gamma,threshold_adjustment,noise_limit);
 catch
 	warning('Cannot generate mesh!')
 	exit()

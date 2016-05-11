@@ -1,11 +1,16 @@
-function [skipped,coordinates,top_surface_area,z_values,xy_points,X,Y,Z,area_2D,perimeter_2D,centroid_2D,top_volume,final_table_original] = generateMesh(morph3d_path,focused_image_rgb,height_map,image_name,sampleID,macro_mode,calibration,num_slices,zstep,kernel_size_OF,downsample_grid_size)
+function [skipped,coordinates,top_surface_area,z_values,xy_points,X,Y,Z,area_2D,perimeter_2D,centroid_2D,top_volume,final_table_original] = generateMesh(morph3d_path,focused_image_rgb,height_map,image_name,sampleID,macro_mode,calibration,num_slices,zstep,kernel_size_OF,downsample_grid_size,intensity_range_in,intensity_range_out,gamma,threshold_adjustment,noise_limit)
 % Takes heightmap, grayscale focused image, and RGB focused image and
 % generates a 3D mesh.
 
 % Check variables and set defaults as necessary
-narginchk(9,11);
+narginchk(9,16);
 if ~exist('kernel_size_OF','var') || isempty(kernel_size_OF), kernel_size_OF = 19; end
 if ~exist('downsample_grid_size','var') || isempty(downsample_grid_size), downsample_grid_size = 10; end
+if ~exist('intensity_range_in','var') || isempty(intensity_range_in), intensity_range_in = [0 0.2]; end
+if ~exist('intensity_range_out','var') || isempty(intensity_range_out), intensity_range_out = [0 1]; end
+if ~exist('gamma','var') || isempty(gamma), gamma = 2; end
+if ~exist('threshold_adjustment','var') || isempty(threshold_adjustment), threshold_adjustment = 0; end
+if ~exist('noise_limit','var') || isempty(noise_limit), noise_limit = 0.05; end
 
 % Read in input files
 heightmap = imread(height_map);
@@ -24,8 +29,8 @@ end
 % Run 2D outline extraction for outline deletion
 % ADD ABILITY HERE TO READ IN PERIMETER VALUES IF RUN2DMORPH HAS ALREADY
 % BEEN RUN ON THE SAMPLES
-[obj_final,obj_edge,obj_smooth,sampleID,objectID] = extract2doutline(resized_rgb,image_name,morph3d_path,sampleID);
-[obj_final_holes,~,~,~,~] = extract2doutline_nofill(resized_rgb,image_name,morph3d_path,sampleID);
+[obj_final,obj_edge,obj_smooth,sampleID,objectID] = extract2doutline(resized_rgb,image_name,morph3d_path,sampleID,[],intensity_range_in,intensity_range_out,gamma,threshold_adjustment,[],noise_limit);
+[obj_final_holes,~,~,~,~] = extract2doutline_nofill(resized_rgb,image_name,morph3d_path,sampleID,[],intensity_range_in,intensity_range_out,gamma,threshold_adjustment,[],noise_limit);
 
 if ~exist(objectID,'var')
 	objectID = 'noObjectID';

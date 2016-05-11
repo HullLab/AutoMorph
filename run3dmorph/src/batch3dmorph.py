@@ -45,13 +45,13 @@ elif fijiArchitecture == 'None':
 totalObjects = [os.path.basename(x) for x in glob.glob(os.path.join(focusedPath,'final','stripped','*'))]
 FIJIObjects = [os.path.basename(x) for x in glob.glob(os.path.join(sfPath,'*'))]
 OFFObjects = [os.path.basename(x)[:-4] for x in glob.glob(os.path.join(morph3dPath,'off_files','*'))]
-
 if len(FIJIObjects) < len(totalObjects):
 	objDirs = list(set(totalObjects) - set(FIJIObjects))
 	objDirs.sort()
 	runIJSF(objDirs,focusedPath,sfPath,kernelSize,macroMode,fijiArchitecture)
 	objDirs = list(totalObjects)
 	objDirs.sort()
+	skipMeshExtraction = False
 else:
 	if len(OFFObjects) < len(totalObjects):
 		objDirs = list(set(totalObjects) - set(OFFObjects))
@@ -85,9 +85,8 @@ if not skipMeshExtraction:
 		focusedImageRGB = fileNameBase + '_focused_rgb.tif'
 		heightmap = fileNameBase + '_heightmap.tif'
 		if os.path.exists(heightmap):
-			matlabCommand = 'matlab -nodisplay -nodesktop -nosplash -r "addpath(' + '\'' + settings['path_run3dmorph'] + '\'' + '); addpath(' + '\'' + settings['path_run2dmorph'] + '\'' + '); morph3dwrapper(' + '\'' + morph3dPath + '\',\'' + focusedImageRGB + '\',\'' + heightmap + '\',\'' + obj + '\',\'' + settings['sampleID'] + '\',' + settings['macro_mode'].lower() + ',\'' + settings['unit'] + '\',' + settings['calibration'] + ',' + settings['num_slices'] + ',' + settings['zstep'] + ',' + settings['kernel_size_OF'] + ',' + settings['downsample_grid_size'] + ',' + settings['savePDF'] + ',' + '\'' + settings['mbb_path'] + '\',\'' + settings['geom3d_path'] + '\',\'' + settings['mesh2pdf_path'] + '\'' + '); exit"'
+			matlabCommand = 'matlab -nodisplay -nodesktop -nosplash -r "addpath(' + '\'' + settings['path_run3dmorph'] + '\'' + '); addpath(' + '\'' + settings['path_run2dmorph'] + '\'' + '); morph3dwrapper(' + '\'' + morph3dPath + '\',\'' + focusedImageRGB + '\',\'' + heightmap + '\',\'' + obj + '\',\'' + settings['sampleID'] + '\',' + settings['macro_mode'].lower() + ',\'' + settings['unit'] + '\',' + settings['calibration'] + ',' + settings['num_slices'] + ',' + settings['zstep'] + ',' + settings['kernel_size_OF'] + ',' + settings['downsample_grid_size'] + ',' + settings['savePDF'] + ',' + '\'' + settings['mbb_path'] + '\',\'' + settings['geom3d_path'] + '\',\'' + settings['mesh2pdf_path'] + '\'' + ',' + settings['intensity_range_in'] + ',' + settings['intensity_range_out'] + ',' + settings['gamma'] + ',' + settings['threshold_adjustment'] + ',' + settings['noise_limit'] + '); exit"'
 			# Run Matlab and suppress header
-			#os.system(matlabCommand)
 			os.system(matlabCommand + '| tail -n +13')
 		else:
 			print 'Object skipped.'
