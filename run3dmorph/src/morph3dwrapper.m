@@ -30,7 +30,7 @@ else
     writeOBJOFF(morph3d_path,image_name,geom3d_path,coordinates);
     
     % 3D PDF preprocessing (if specified)
-    if savePDF == true || isempty(savePDF)
+    if isequal(savePDF,true) || isempty(savePDF)
     	pdfPreprocess(morph3d_path,mesh2pdf_path,image_name,X,Y,Z);
     end
 time_end = datestr(now);
