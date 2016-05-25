@@ -48,6 +48,11 @@ def runIJSF(objDirs,focusedPath,sfPath,kernelSize,macroMode,fijiArchitecture=Non
     # Move to 'stripped' directory within 'focus' directory
     strippedDir = os.path.join(focusedPath,'final/stripped')
     os.chdir(strippedDir)
+    
+    # Check image extension type
+    temp = glob.glob('*')
+    temp_ext = [x[-4:] for x in temp]
+    ext = max(set(ok),key=ok.count)
 
     # Loop through object directories and run ImageJ StackFocuser
     print 'Begin FIJI processing...\n'
@@ -55,7 +60,7 @@ def runIJSF(objDirs,focusedPath,sfPath,kernelSize,macroMode,fijiArchitecture=Non
     	start = time.time()
         print 'Object: ' + obj
         imageStackDir = os.path.join(strippedDir,obj)
-        pathToMacroFile = writeIJMacro(imageStackDir,sfPath,obj,kernelSize,macroMode)
+        pathToMacroFile = writeIJMacro(imageStackDir,sfPath,obj,kernelSize,macroMode,ext)
         # Move 'ZS.tif' file to separate folder
         zsPath = os.path.join(imageStackDir,'ZS')
         if not os.path.exists(zsPath):
@@ -89,7 +94,7 @@ def runIJSF(objDirs,focusedPath,sfPath,kernelSize,macroMode,fijiArchitecture=Non
 	print 'Time Elapsed: ' + '%6.3f' % time_elapsed + ' seconds\n'
 	
 
-def writeIJMacro(imageStackDir,outputDir,objName,kernelSize,macroMode):
+def writeIJMacro(imageStackDir,outputDir,objName,kernelSize,macroMode,ext):
     """
     imageStackDir: full path to folder containing stack of images for
     an object
@@ -115,34 +120,35 @@ def writeIJMacro(imageStackDir,outputDir,objName,kernelSize,macroMode):
     macroFile = open(macroFilePath,'w')
     if macroMode.lower() == 'false':
         macroText = """setBatchMode(true);
-run("Image Sequence...", "open={0} file=[.jpg] convert sort");
-run("Stack Focuser ", "enter={1} generate");
-selectWindow("Focused_{2}");
-saveAs("Tiff","{3}");
-selectWindow("HeightMap_{2}");
+run("Image Sequence...", "open={0} file=[{1}] convert sort");
+run("Stack Focuser ", "enter={2} generate");
+selectWindow("Focused_{3}");
 saveAs("Tiff","{4}");
-selectWindow("{5}");
+selectWindow("HeightMap_{3}");
+saveAs("Tiff","{5}");
+selectWindow("{6}");
 close("*");
 """
     else:
         macroText = """setBatchMode(true);
-run("Image Sequence...", "open={0} file=[.jpg] convert sort");
+run("Image Sequence...", "open={0} file=[{1}] convert sort");
 run("StackReg", "transformation=[Scaled Rotation]");
-run("Stack Focuser ", "enter={1} generate");
-selectWindow("Focused_{2}");
-saveAs("Tiff","{3}");
-selectWindow("HeightMap_{2}");
+run("Stack Focuser ", "enter={2} generate");
+selectWindow("Focused_{3}");
 saveAs("Tiff","{4}");
-selectWindow("{5}");
+selectWindow("HeightMap_{3}");
+saveAs("Tiff","{5}");
+selectWindow("{6}");
 close("*");
 """
     var0 = imageStackDir
-    var1 = kernelSize
-    var2 = objName.split('.')[0]
-    var3 = os.path.join(objOutputDir,objName+'_focused.tif')
-    var4 = os.path.join(objOutputDir,objName+'_heightmap.tif')
-    var5 = objName
-    textToWrite = macroText.format(var0,var1,var2,var3,var4,var5)
+    var1 = ext
+    var2 = kernelSize
+    var3 = objName.split('.')[0]
+    var4 = os.path.join(objOutputDir,objName+'_focused.tif')
+    var5 = os.path.join(objOutputDir,objName+'_heightmap.tif')
+    var6 = objName
+    textToWrite = macroText.format(var0,var1,var2,var3,var4,var5,var6)
 
     macroFile.write(textToWrite)
     macroFile.close()
