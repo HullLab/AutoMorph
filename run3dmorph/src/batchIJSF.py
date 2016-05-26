@@ -43,7 +43,7 @@ def runIJSF(objDirs,focusedPath,sfPath,kernelSize,macroMode,fijiArchitecture=Non
     
     # Set default value for fijiArchitecture if none specified
     if fijiArchitecture == None:
-        fijiArchitecture = 32
+        fijiArchitecture = '32'
 
     # Move to 'stripped' directory within 'focus' directory
     strippedDir = os.path.join(focusedPath,'final/stripped')
