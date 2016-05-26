@@ -52,7 +52,7 @@ def runIJSF(objDirs,focusedPath,sfPath,kernelSize,macroMode,fijiArchitecture=Non
     # Check image extension type
     temp = glob.glob('*')
     temp_ext = [x[-4:] for x in temp]
-    ext = max(set(ok),key=ok.count)
+    ext = max(set(temp_ext),key=temp_ext.count)
 
     # Loop through object directories and run ImageJ StackFocuser
     print 'Begin FIJI processing...\n'
