@@ -74,9 +74,9 @@ def runIJSF(objDirs,focusedPath,sfPath,kernelSize,macroMode,fijiArchitecture=Non
         # Determine and set system and architecture
         sysPlatform = platform.system()
         if sysPlatform == 'Linux':
-            if fijiArchitecture == 32:
+            if fijiArchitecture == '32':
                 sysarchSpecifier = 'linux32'
-            elif fijiArchitecture == 64:
+            elif fijiArchitecture == '64':
                 sysarchSpecifier = 'linux64'
             else:
                 raise ValueError('FIJI architecture inappropriately specified (must be 32 or 64)')
