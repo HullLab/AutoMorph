@@ -142,7 +142,7 @@ selectWindow("{6}");
 close("*");
 """
     var0 = imageStackDir
-    var1 = ext
+    var1 = str(ext)
     var2 = kernelSize
     var3 = objName.split('.')[0]
     var4 = os.path.join(objOutputDir,objName+'_focused.tif')
