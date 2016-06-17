@@ -98,7 +98,7 @@ def parse(filename):
         if required not in settings.keys():
             sys.exit('Error: '+required+' must be set in settings file.')
 
-    settings['units_per_pixel'] = (settings['pixel_size_x']**2 + settings['pixel_size_y']**2)**0.5
+    settings['units_per_pixel'] = (settings['pixel_size_x'] + settings['pixel_size_y'])*0.5
 
     # Backwards compatibility tweaks
     if settings['mode'] == 'save':
