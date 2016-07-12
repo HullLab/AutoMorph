@@ -20,7 +20,7 @@ import socket
 
 def segment(settings_file):
 
-    version = '2016-2-12'
+    version = '2016-7-12'
 
     print "Loading settings from %s..." % settings_file
     runs = settings.parse(settings_file)
@@ -105,8 +105,9 @@ def final(orig_filename, box_list, run, plane_num, image=None):
         height = crop_box[3] - crop_box[1]
         image_subsample = images.crop(image, crop_box)
 
-        x_percent = crop_box[0] / image_size[1] * 100
-        y_percent = crop_box[1] / image_size[0] * 100
+        x_percent = float(crop_box[0]) / float(image_size[1]) * 100
+        y_percent = float(crop_box[1]) / float(image_size[0]) * 100
+
         description = 'Object #%05d of %05d ( %d x %d pixels at slide position %05.2f x %05.2f )' \
                       % (box_num+1, len(box_list), width, height, x_percent, y_percent)
 
