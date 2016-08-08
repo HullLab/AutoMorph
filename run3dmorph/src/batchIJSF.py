@@ -51,8 +51,10 @@ def runIJSF(objDirs,focusedPath,sfPath,kernelSize,macroMode,fijiArchitecture=Non
     
     # Check image extension type
     temp = glob.glob('*')
-    temp_ext = [x[-4:] for x in temp]
-    ext = max(set(temp_ext),key=temp_ext.count)
+    temp_ext = [os.path.splitext(x)[1] for x in temp]
+    #ext = max(set(temp_ext),key=temp_ext.count)
+    # Until ImageJ's ability to open tif images on Grace is fixed... this is a temporary hack:
+    ext = '.jpg'
 
     # Loop through object directories and run ImageJ StackFocuser
     print 'Begin FIJI processing...\n'
@@ -117,7 +119,7 @@ def writeIJMacro(imageStackDir,outputDir,objName,kernelSize,macroMode,ext):
 
     # Write individual macro file for object
     macroFilePath = os.path.join(objOutputDir,objName + '_macro.imj')
-    macroFile = open(macroFilePath,'w')
+    macroFile = open(macroFilePath,'wb')
     if macroMode.lower() == 'false':
         macroText = """setBatchMode(true);
 run("Image Sequence...", "open={0} file=[{1}] convert sort");
