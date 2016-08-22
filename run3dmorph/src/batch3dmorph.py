@@ -111,8 +111,7 @@ if settings['savePDF'] == 'true' or settings['savePDF'] == '[]':
 		idtfFilePath = os.path.join(idtfPath,obj + '.idtf')
 		u3dFileName = obj + '.u3d'
 		u3dOutputFilePath = os.path.join(u3dPath,u3dFileName)
-		# note that mesh2pdf/bin/glx needs to be added to path manually and externally
-		idtfCommand = ' '.join(['IDTFConverter.sh -input',idtfFilePath,'-output',u3dOutputFilePath])
+		idtfCommand = ' '.join([os.path.join(settings['mesh2pdf_path'],'bin','glx','IDTFConverter.sh'),' -input',idtfFilePath,'-output',u3dOutputFilePath])
 		commandFile.write(idtfCommand + ' | tail -n +26\n')
 	commandFile.close()
 	# Run commands from file
