@@ -32,6 +32,7 @@ There are lines that look like (bashrc version):
     export PATH=${PATH}:${AUTOMORPH_DIR}/segment
     export PATH=${PATH}:${AUTOMORPH_DIR}/focus
     export PATH=${PATH}:${AUTOMORPH_DIR}/run2dmorph/bin
+    export PATh=${PATH}:${AUTOMOPRH_DIR}/utilities
 
 Fix the '${AUTOMORPH_DIR}/' bit so that it uses the path you've copied these files into (eg, '/home/me/automorph')
 
