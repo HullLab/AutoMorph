@@ -65,6 +65,7 @@ def focus(directories, software, ID):
 
     clean(directories)
 
+
 def archive(dir_to_tar, directories):
     dir_name = os.path.basename(directories[dir_to_tar].rstrip('/'))
     tar = tarfile.open(directories[dir_to_tar+'_tar'], 'w:gz')
@@ -102,7 +103,7 @@ def add_labels(directories, outfile):
         top_file = os.path.realpath(sorted(glob.glob(os.path.join(object_dir, '*plane*tif')))[-1])
 
         # Grab the label:
-        label_file = os.path.realpath(os.path.join(directories['stripped'], object_name, 'label.tif'))
+        label_file = os.path.realpath(os.path.join(directories['stripped'], 'labels', object_name+'.tif'))
         #   convert ${HIGHEST} -gravity South -crop 0x160+0+0 ${directories['input']}/stripped/${label_dir}/label.tif
         # convert_command = 'convert ' + top_file + ' -gravity South -crop 0x160+0+0 ' + label_file
         convert_command = "convert %s -gravity South -crop 0x160+0+0 %s" % (top_file, label_file)
