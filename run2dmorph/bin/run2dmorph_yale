@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if [ $# -ne 1 ]
+then
+	echo "Usage: run2dmorph <control file>"
+	exit
+fi
+
+CONTROLFILE=`readlink -f $1`
+
+if [[ $(hostname -s) = c*n* ]]; then
+    matlab -nodisplay -nodesktop -nosplash -r "addpath('/home/geo/hull/ph269/software/AutoMorph/run2dmorph/src'); run2dmorph('$CONTROLFILE'); exit"
+else
+    matlab -nodisplay -nodesktop -nosplash -r "addpath('/hull-disk1/ph269/software/run2dmorph/current'); run2dmorph('$CONTROLFILE'); exit"
+fi
+

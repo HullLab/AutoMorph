@@ -1,10 +1,21 @@
-# Control file for batch2dmorph function. To use default values, set variables = [].
+# VERSION 2016.09.26
+# Control file for run2dmorph. To use default values, set variables = [].
 # Variables that are designated as (required) have no default value and must be set by
 # the user.
 
-# Directory:
+# Installation Directory:
+# The full path to the user's installation of AutoMorph. For example, if AutoMorph is
+# found in the /Applications folder, this should be set to '/Applications' (required)
+install_dir = /enter/directory/here
+
+# Image Directory:
 # The full path of the folder containing the image files to be processed (required)
 directory = /enter/directory/here
+
+# Output Directory:
+# The full path of the folder to which output folder should be saved (default behavior:
+# "morph2d" folder in same folder as original images)
+output_dir = []
 
 # Image Extension:
 # String designating file extension of images to process (required)
@@ -12,11 +23,7 @@ image_extension = .tif
 
 # Sample ID:
 # String designating the Sample ID # used to identify the processed files (required)
-sampleID = test
-
-# Output Filename:
-# String designating the output filename base (default: 'sampleID_outputID')
-output_filename = []
+sampleID = 4sq_example
 
 # Microns Per Pixel X:
 # A number specifying the conversion factor for microns to pixels for the x-axis/width
@@ -68,12 +75,6 @@ smoothing_sigma = []
 # noise removal limit is 0.05, then all objects smaller than 5% of the total image size
 # will be removed (default: 0.05)
 noise_limit = []
-
-# Write CSV:
-# A boolean specifying whether individual CSV files per object should be written (as
-# opposed to a single CSV file containing all parameters/measurements/coordinates)
-# (default: false)
-write_csv = []
 
 # Downsample:
 # A boolean specifying whether extracted coordinates should be downsampled (default: true)

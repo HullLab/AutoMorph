@@ -22,8 +22,8 @@ threshold = 0.16
 # pixel_size_x, pixel_size_y
 # size of x and y pixels, 
 # set to # of units (see below) per pixel
-pixel_size_x = 
-pixel_size_y = 
+pixel_size_x = 0.975
+pixel_size_y = 0.975
 
 #minimum_size:
 # The smallest width of a valid object in microns (or other base unit). The
@@ -87,7 +87,7 @@ scale_bar_length = 100
 # with below catalog prefix
 # if left out, segment will try to read from directory name, by using
 # everything preceding the first underscore in last the directory in path.
-id = 12577
+id = 307717
 
 # 'Age' tag, used to report a geological age estimation on the sample:
 age = Recent

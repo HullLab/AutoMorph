@@ -2,11 +2,15 @@
 
 if [ $# == 2 ]
 then
-	RESTART=$2
+	RESET=$2
 else
-	RESTART='no-restart'
+	RESET='no-reset'
 fi
 
 CONTROLFILE=`readlink -f $1`
 
-nice -n 10 batch3dmorph.py $CONTROLFILE $RESTART
+if [[ $(hostname -s) = tide ]]; then
+    nice -n 10 batch3dmorph.py $CONTROLFILE $RESET
+else
+    batch3dmorph.py $CONTROLFILE $RESET
+fi

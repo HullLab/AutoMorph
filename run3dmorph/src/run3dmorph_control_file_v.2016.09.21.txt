@@ -1,20 +1,19 @@
+# VERSION 2016.09.26
 # Control file for batch3dmorph function. To use default values, set variables = [].
 # Variables that are designated as (REQUIRED) have no default value and must be set by
 # the user.
 
 ######################################
-########## global variables ##########
+########## global parameters #########
 ######################################
 
 # Path to run3dmorph Software:
-# The full path to the user's installation fo the run3dmorph software (part of the
-# AutoMorph package) (REQUIRED)
-path_run3dmorph = /hull-disk1/ph269/software/run3dmorph/current
+# The full path to the the user's installation of the run2dmorph software (REQUIRED)
+path_run3dmorph = /AutoMorph/run3dmorph/src
 
 # Path to run2dmorph Software:
-# The full path to the user's installation of the run2dmorph software (part of the
-# AutoMorph package) (REQUIRED)
-path_run2dmorph = /hull-disk1/ph269/software/run2dmorph/current
+# The full path to the the user's installation of the run2dmorph software (REQUIRED)
+path_run2dmorph = /AutoMorph/run2dmorph/src
 
 # Focused Directory:
 # The full path of the folder outputted by the 'focus' command - generally, this is
@@ -37,7 +36,7 @@ sampleID = IP.000000
 macro_mode = False
 
 ######################################
-######## runIJSF.py variables ########
+####### imagej/fiji parameters #######
 ######################################
 
 # Kernel Size (StackFocuser):
@@ -51,11 +50,11 @@ kernel_size_SF = []
 fiji_architecture = []
 
 ######################################
-###### generateMesh.m variables ######
+##### mesh extraction parameters #####
 ######################################
 
 # Unit:
-# A string designating the unit for pixel conversation (REQUIRED)
+# A string designating the base unit for pixel conversion (REQUIRED)
 unit = micron
 
 # Pixel Calibration Factor:
@@ -69,25 +68,21 @@ calibration = 0.975
 num_slices = 31
 
 # Z-Step Size:
-# A float designating the distance between slices (z-step size), in microns (REQUIRED)
+# A float designating the distance between slices (z-step size), in base units (REQUIRED)
 zstep = 31.1
 
 # Kernel Size (Outlier Filter):
-# An odd integer designating the neighborhood size for the outlierFilter function
+# An odd integer designating the neighborhood size (in pixels) for the outlierFilter function
 # during 3D mesh generation (default: 19)
 kernel_size_OF = 45
 
 # Downsampling Grid Size:
-# An integer designating the x- and y- grid size to be used when downsampling the 3D mesh
-# coordinates (default: 10)
+# An integer designating the x- and y- grid size (in pixels) to be used when downsampling the 3D mesh
+# coordinates (default: 1)
 downsample_grid_size = 1
 
-# Save PDF:
-# A boolean specifying whether 3D PDFs should be outputted (default: true)
-savePDF = true
-
 ######################################
-######## run2dmorph variables ########
+######## run2dmorph parameters #######
 ######################################
 
 # Intensity Range In:
@@ -116,41 +111,13 @@ threshold_adjustment = []
 noise_limit = []
 
 ######################################
-######## writeOBJ.m variables ########
+########## 3d pdf parameters #########
 ######################################
 
-# Path to Geom3d Package:
-# A string indicating the full path to the user's installation of B. Shoelson and INRA's
-# geom3d package (REQUIRED)
-# (https://www.mathworks.com/matlabcentral/fileexchange/24484-geom3d)
-geom3d_path = /hull-disk1/ph269/software/run3dmorph/current/geom3d-2014.10.13/geom3d/meshes3d
+# Build PDF:
+# A boolean specifying whether 3D PDFs should be outputted (REQUIRED)
+savePDF = true
 
-######################################
-####### getVolumes.m variables #######
-######################################
-
-# Path to minBoundingBox.m:
-# A string indicating the full path to the user's installation of J. Diener's
-# minBoundingBox.m function (REQUIRED)
-# (https://www.mathworks.com/matlabcentral/fileexchange/31126-2d-minimal-bounding-box/content/minBoundingBox.m)
-mbb_path = /hull-disk1/ph269/software/run3dmorph/current
-
-######################################
-########## 3D PDF variables ##########
-######################################
-
-# Path to Mesh2PDF Software Package:
-# A string indicating the full path to the user's installation of D.M. Schwartz and A.
-# Gramfort's Mesh2PDF software package (REQUIRED)
-# (https://www.mathworks.com/matlabcentral/fileexchange/25383-matlab-mesh-to-pdf-with-3d-interactive-object)
-mesh2pdf_path = /hull-disk1/ph269/software/run3dmorph/current/mesh2pdf
-
-# Path to media9.sty LaTeX Package:
-# A string indicating the full path to the user's installation of the media9 LaTeX
-# package - specifically, to the media9.sty file (REQUIRED)
-# (https://www.ctan.org/pkg/media9?lang=en)
-media9_path = /hull-disk1/ph269/software/run3dmorph/current
-
-# Run LaTeX?
+# Run LaTeX
 # A boolean indicating whether LaTeX should be run to generate 3D PDFs (REQUIRED)
 run_latex = true

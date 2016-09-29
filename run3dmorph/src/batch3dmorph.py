@@ -9,18 +9,21 @@ import subprocess
 import glob
 import sys
 
+version = '2016.09.26'
+
 controlFile = sys.argv[1]
-restart = sys.argv[2]
+reset = sys.argv[2]
 
 settings = getSettings(controlFile)
 
 # Set up necessary paths and create 'morph3d' and 'stackfocused' folders to contain output
-run3dmorphPath = settings['path_run3dmorph']
 focusedPath = settings['directory']
+run3dmorphPath = settings['path_run3dmorph']
+run2dmorphPath = settings['path_run2dmorph']
 morph3dPath = os.path.join(settings['output_dir'],'morph3d')
 
 # Restart if specified
-if restart == 'restart':
+if reset == 'reset':
 	shutil.rmtree(morph3dPath)
 
 sfPath = os.path.join(morph3dPath,'stackfocused')
@@ -37,9 +40,9 @@ macroMode = settings['macro_mode']
 if kernelSize == '[]':
     kernelSize = 11
 if fijiArchitecture == '[]':
-    fijiArchitecture = 32
+    fijiArchitecture = '32'
 elif fijiArchitecture == 'None':
-    fijiArchitecture = None
+    fijiArchitecture = 0
     
 # If restarting, check where to restart (with FIJI or mesh extraction)
 totalObjects = [os.path.basename(x) for x in glob.glob(os.path.join(focusedPath,'final','stripped','*'))]
@@ -85,7 +88,7 @@ if not skipMeshExtraction:
 		focusedImageRGB = fileNameBase + '_focused_rgb.tif'
 		heightmap = fileNameBase + '_heightmap.tif'
 		if os.path.exists(heightmap):
-			matlabCommand = 'matlab -nodisplay -nodesktop -nosplash -r "addpath(' + '\'' + settings['path_run3dmorph'] + '\'' + '); addpath(' + '\'' + settings['path_run2dmorph'] + '\'' + '); morph3dwrapper(' + '\'' + morph3dPath + '\',\'' + focusedImageRGB + '\',\'' + heightmap + '\',\'' + obj + '\',\'' + settings['sampleID'] + '\',' + settings['macro_mode'].lower() + ',\'' + settings['unit'] + '\',' + settings['calibration'] + ',' + settings['num_slices'] + ',' + settings['zstep'] + ',' + settings['kernel_size_OF'] + ',' + settings['downsample_grid_size'] + ',' + settings['savePDF'] + ',' + '\'' + settings['mbb_path'] + '\',\'' + settings['geom3d_path'] + '\',\'' + settings['mesh2pdf_path'] + '\'' + ',' + settings['intensity_range_in'] + ',' + settings['intensity_range_out'] + ',' + settings['gamma'] + ',' + settings['threshold_adjustment'] + ',' + settings['noise_limit'] + '); exit"'
+			matlabCommand = 'matlab -nodisplay -nodesktop -nosplash -r "addpath(' + '\'' + settings['path_run3dmorph'] + '\'' + '); addpath(' + '\'' + settings['path_run2dmorph'] + '\'' + '); morph3dwrapper(' + '\'' + run3dmorphPath + '\',''' + '\'' + morph3dPath + '\',\'' + focusedImageRGB + '\',\'' + heightmap + '\',\'' + obj + '\',\'' + settings['sampleID'] + '\',' + settings['macro_mode'].lower() + ',\'' + settings['unit'] + '\',' + settings['calibration'] + ',' + settings['num_slices'] + ',' + settings['zstep'] + ',' + settings['kernel_size_OF'] + ',' + settings['downsample_grid_size'] + ',' + settings['savePDF'] + ',' + settings['intensity_range_in'] + ',' + settings['intensity_range_out'] + ',' + settings['gamma'] + ',' + settings['threshold_adjustment'] + ',' + settings['noise_limit'] + '); exit"'
 			# Run Matlab and suppress header
 			os.system(matlabCommand + '| tail -n +13')
 		else:
@@ -111,7 +114,7 @@ if settings['savePDF'] == 'true' or settings['savePDF'] == '[]':
 		idtfFilePath = os.path.join(idtfPath,obj + '.idtf')
 		u3dFileName = obj + '.u3d'
 		u3dOutputFilePath = os.path.join(u3dPath,u3dFileName)
-		idtfCommand = ' '.join([os.path.join(settings['mesh2pdf_path'],'bin','glx','IDTFConverter.sh'),' -input',idtfFilePath,'-output',u3dOutputFilePath])
+		idtfCommand = ' '.join([os.path.join(run3dmorphPath,'mesh2pdf','bin','glx','IDTFConverter.sh'),' -input',idtfFilePath,'-output',u3dOutputFilePath])
 		commandFile.write(idtfCommand + ' | tail -n +26\n')
 	commandFile.close()
 	# Run commands from file
@@ -133,7 +136,7 @@ if settings['savePDF'] == 'true' or settings['savePDF'] == '[]':
 		outputFileNameBase = obj
 		outputFileName = outputFileNameBase + '.tex'
 		outputFilePath = os.path.join(latexOutputPath,outputFileName)
-		media9Path = settings['media9_path']
+		media9Path = run3dmorphPath
 		try:
 			writeLatexFile(u3d,media9Path,outputFileNameBase,outputFilePath,focusedPath,sfPath,settings['unit'])
 		except:
