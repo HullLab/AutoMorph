@@ -1,5 +1,5 @@
 function settings = parseSettings(filename)
-% Modified from B. Dobbins' code
+% Modified from B. Dobbins' code by A. Hsiang
 % Parses control file and pulls variable values for use in batch2dmorph.m
 
 % Open the file:
@@ -20,8 +20,15 @@ while ischar(textline)
 				% If the option is a directory name, assign it
                 directory = strjoin(options,'=');
                 
+            elseif strcmp(variable,'install_dir') == 1
+                install_dir = strjoin(options,'=');
+                
             elseif strcmp(variable, 'output_dir') == 1
-            	output_dir = strjoin(options,'=');
+            	if strcmp(options{1},'[]') == 1
+                    output_dir = [];
+                else
+                    output_dir = strjoin(options,'=');
+                end
 
 			elseif strcmp(variable, 'image_extension') == 1
 				% If the option is an image extension, assign it
@@ -30,14 +37,6 @@ while ischar(textline)
 			elseif strcmp(variable, 'sampleid') == 1
 				% If the option is a sampleID name, assign it
 				sampleID = options{1};					
-                
-			elseif strcmp(variable, 'output_filename') == 1
-                % If the option is the output filename, assign it
-                if strcmp(options{1},'[]') == 1
-                    output_filename = [];
-                else
-                    output_filename = options{1};
-                end
 
 			elseif strcmp(variable, 'microns_per_pixel_x') == 1
 				% Convert to double and assign:
@@ -125,14 +124,6 @@ while ischar(textline)
                     noise_limit = str2double(options{1});
                 end
                 
-			elseif strcmp(variable, 'write_csv') == 1
-				% Convert to boolean and assign:
-				if strcmp(options{1},'true') == 1
-                    write_csv = true;
-                elseif strcmp(options{1},'false') == 1 || strcmp(options{1},'[]') == 1
-                    write_csv = false;
-                end
-     
 			elseif strcmp(variable, 'downsample') == 1
 				% Convert to boolean and assign:
 				if strcmp(options{1},'true') || strcmp(options{1},'[]')
@@ -171,11 +162,11 @@ timestamp = sprintf('%04d-%02d-%02d at %02d:%02d:%02d', currentTime(1), currentT
 
 % Now assemble the settings array:
 settings = struct();
+settings.install_dir = install_dir;
 settings.directory = directory;
 settings.output_dir = output_dir;
 settings.image_extension = image_extension;
 settings.sampleID = sampleID;
-settings.output_filename = output_filename;
 settings.microns_per_pixel_X = microns_per_pixel_X;
 settings.microns_per_pixel_Y = microns_per_pixel_Y;
 settings.get_coordinates = get_coordinates;
@@ -186,7 +177,6 @@ settings.gamma = gamma;
 settings.threshold_adjustment = threshold_adjustment;
 settings.smoothing_sigma = smoothing_sigma;
 settings.noise_limit = noise_limit;
-settings.write_csv = write_csv;
 settings.downsample = downsample;
 settings.num_points = num_points;
 settings.draw_ar = draw_ar;

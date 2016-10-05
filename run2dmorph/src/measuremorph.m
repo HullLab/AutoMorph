@@ -1,4 +1,4 @@
-function morphproptable = measuremorph(output_dir,obj_final,obj_edge,obj_smooth,sampleID,objectID,write_csv)
+function morphproptable = measuremorph(output_dir,obj_final,obj_edge,obj_smooth,sampleID,objectID)
 %Output:
 %
 %   FILES:
@@ -40,9 +40,7 @@ function morphproptable = measuremorph(output_dir,obj_final,obj_edge,obj_smooth,
 %   (Default value: false)
 
 % Check number of input arguments and set up default values as necessary.
-narginchk(5,9);
-%if ~exist('microns_per_pixel','var') || isempty(microns_per_pixel), microns_per_pixel = 1; end
-if ~exist('write_csv','var') || isempty(write_csv), write_csv = false; end
+narginchk(6,6);
 
 % Calculate area, eccentricity, minor and major axis length 
 props = regionprops(obj_final,'Area','Eccentricity','MinorAxisLength','MajorAxisLength');
@@ -58,10 +56,4 @@ props.SampleID = char(sampleID);
 props.ObjectID = char(objectID);
 morphproptable = props;
 
-% Write csv file
-if write_csv == true
-    % Write final table
-    final_table = struct2table(morphproptable);
-    writetable(final_table,fullfile(output_dir,strcat(sampleID,'_',objectID,'_morph2d_properties.csv')));
-end
 end

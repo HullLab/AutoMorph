@@ -1,4 +1,4 @@
-function [final_table_original,final_table_smoothed] = extractcoordinates(output_dir,obj_edge,obj_smooth,sampleID,objectID,downsample_bool,num_points,write_csv)
+function [final_table_original,final_table_smoothed] = extractcoordinates(output_dir,obj_edge,obj_smooth,sampleID,objectID,downsample_bool,num_points)
 %Output:
 %
 %   FILES:
@@ -45,10 +45,9 @@ function [final_table_original,final_table_smoothed] = extractcoordinates(output
 %   (Default value: false)
 
 % Check number of input arguments and set up default values as necessary.
-narginchk(4,8);
+narginchk(4,7);
 if ~exist('downsample_bool','var') || isempty(downsample_bool), downsample_bool = true; end
 if ~exist('min_points','var') || isempty(num_points), num_points = 100; end
-if ~exist('write_csv','var') || isempty(write_csv), write_csv = false; end
 
 % Blur original images to allow for resampling with higher fidelity
     % Convert edges to doubles
@@ -105,13 +104,4 @@ end
     % Concatenate into final tables
     final_table_original = horzcat(sampleID_table_original,objectID_table_original,original_coords_table);
     final_table_smoothed = horzcat(sampleID_table_smoothed,objectID_table_smoothed,smoothed_coords_table);
-
-% Write csv if necessary
-    % Convert coordinate data to table and write to csv file
-    if write_csv == true
-    % Write output files
-        % Write tables
-        writetable(final_table_original,fullfile(output_dir,strcat(sampleID,'_',objectID,'_coordinates_original.csv')));
-        writetable(final_table_smoothed,fullfile(output_dir,strcat(sampleID,'_',objectID,'_coordinates_smoothed.csv')));
-    end
 end

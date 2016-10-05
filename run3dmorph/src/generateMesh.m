@@ -5,7 +5,7 @@ function [skipped,coordinates,top_surface_area,z_values,xy_points,X,Y,Z,area_2D,
 % Check variables and set defaults as necessary
 narginchk(9,16);
 if ~exist('kernel_size_OF','var') || isempty(kernel_size_OF), kernel_size_OF = 19; end
-if ~exist('downsample_grid_size','var') || isempty(downsample_grid_size), downsample_grid_size = 10; end
+if ~exist('downsample_grid_size','var') || isempty(downsample_grid_size), downsample_grid_size = 1; end
 if ~exist('intensity_range_in','var') || isempty(intensity_range_in), intensity_range_in = [0 0.2]; end
 if ~exist('intensity_range_out','var') || isempty(intensity_range_out), intensity_range_out = [0 1]; end
 if ~exist('gamma','var') || isempty(gamma), gamma = 2; end
@@ -29,16 +29,16 @@ end
 % Run 2D outline extraction for outline deletion
 % ADD ABILITY HERE TO READ IN PERIMETER VALUES IF RUN2DMORPH HAS ALREADY
 % BEEN RUN ON THE SAMPLES
-[obj_final,obj_edge,obj_smooth,sampleID,objectID] = extract2doutline(resized_rgb,image_name,morph3d_path,sampleID,[],intensity_range_in,intensity_range_out,gamma,threshold_adjustment,[],noise_limit);
-[obj_final_holes,~,~,~,~] = extract2doutline_nofill(resized_rgb,image_name,morph3d_path,sampleID,[],intensity_range_in,intensity_range_out,gamma,threshold_adjustment,[],noise_limit);
+[obj_final,obj_edge,obj_smooth,sampleID,objectID] = extract2doutline(resized_rgb,image_name,morph3d_path,sampleID,false,intensity_range_in,intensity_range_out,gamma,threshold_adjustment,[],noise_limit);
+[obj_final_holes,~,~,~,~] = extract2doutline_nofill(resized_rgb,image_name,morph3d_path,sampleID,false,intensity_range_in,intensity_range_out,gamma,threshold_adjustment,[],noise_limit);
 
 if ~exist(objectID,'var')
 	objectID = 'noObjectID';
 end
 
 % Get coordinates, 2D area, and 2D perimeter for surface area/volume estimation
-[final_table_original,final_table_smoothed] = extractcoordinates(morph3d_path,obj_edge,obj_smooth,sampleID,objectID,[],[],[]);
-morphproptable = measuremorph(morph3d_path,obj_final,obj_edge,obj_smooth,sampleID,objectID,false);
+[final_table_original,final_table_smoothed] = extractcoordinates(morph3d_path,obj_edge,obj_smooth,sampleID,objectID,[],[]);
+morphproptable = measuremorph(morph3d_path,obj_final,obj_edge,obj_smooth,sampleID,objectID);
 area_2D = morphproptable.Area;
 perimeter_2D = morphproptable.Perimeter;
 centroid_2D = regionprops(obj_final,'Centroid');

@@ -18,7 +18,7 @@ please be careful!
 (NOTE: AT THE MOMENT, THIS ONLY WORKS FOR LINUX/TIDE!)
 """
 
-def runIJSF(objDirs,focusedPath,sfPath,kernelSize,macroMode,fijiArchitecture=None):
+def runIJSF(objDirs,focusedPath,sfPath,kernelSize,macroMode,fijiArchitecture):
     """
     focusedPath: full path to the folder containing the output from
     the AutoMorph 'focus' software.
@@ -40,21 +40,15 @@ def runIJSF(objDirs,focusedPath,sfPath,kernelSize,macroMode,fijiArchitecture=Non
     import platform
     import subprocess
     import time
-    
-    # Set default value for fijiArchitecture if none specified
-    if fijiArchitecture == None:
-        fijiArchitecture = '32'
 
     # Move to 'stripped' directory within 'focus' directory
     strippedDir = os.path.join(focusedPath,'final/stripped')
     os.chdir(strippedDir)
     
     # Check image extension type
-    temp = glob.glob('*')
-    temp_ext = [os.path.splitext(x)[1] for x in temp]
-    #ext = max(set(temp_ext),key=temp_ext.count)
-    # Until ImageJ's ability to open tif images on Grace is fixed... this is a temporary hack:
-    ext = '.jpg'
+    temp = glob.glob(os.path.join(objDirs[0],'*'))
+    temp_ext = [os.path.splitext(x)[-1] for x in temp]
+    ext = max(set(temp_ext),key=temp_ext.count)
 
     # Loop through object directories and run ImageJ StackFocuser
     print 'Begin FIJI processing...\n'

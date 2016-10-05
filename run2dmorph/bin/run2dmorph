@@ -7,10 +7,11 @@ then
 fi
 
 CONTROLFILE=`readlink -f $1`
+IFS=$'\n'
+INSTALL_VAR=($(grep -F install_dir $CONTROLFILE))
+IFS=$' = ' read -a install_array <<< $INSTALL_VAR
+RUN2DMORPH_DIR='/AutoMorph/run2dmorph/src'
+INSTALL_DIR=${install_array[1]}$RUN2DMORPH_DIR
 
-if [[ $(hostname -s) = c*n* ]]; then
-    matlab -nodisplay -nodesktop -nosplash -r "addpath('/home/geo/hull/ph269/software/AutoMorph/run2dmorph/src'); run2dmorph('$CONTROLFILE'); exit"
-else
-    matlab -nodisplay -nodesktop -nosplash -r "addpath('/hull-disk1/ph269/software/run2dmorph/current'); run2dmorph('$CONTROLFILE'); exit"
-fi
+matlab -nodisplay -nodesktop -nosplash -r "addpath('$INSTALL_DIR'); run2dmorph('$CONTROLFILE'); exit" | tail -n +13
 
