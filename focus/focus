@@ -83,7 +83,7 @@ def strip_labels(directories):
         print 'Cropping ', os.path.basename(object)
         files = [os.path.realpath(x) for x in glob.glob(os.path.join(object, '*plane*tif'))]
         for infile in files:
-            fname = os.path.splitext(os.path.basename(infile))[0]+".jpg"
+            fname = os.path.splitext(os.path.basename(infile))[0]+".tif"
             outfile = os.path.join(directories['input'], 'stripped', os.path.basename(object), fname)
             if not os.path.exists(outfile):
                 # It'd be nice to use the ImageMagick API here,.. but it doesn't
@@ -115,7 +115,7 @@ def add_labels(directories, outfile):
         subprocess.call(convert_command, shell=True)
 
         # Add label
-        edf_file = os.path.realpath(os.path.join(directories['final_focused'], object_name+"_edf.jpg"))
+        edf_file = os.path.realpath(os.path.join(directories['final_focused'], object_name+"_edf.tif"))
         zs_file = os.path.realpath(os.path.join(directories['stripped'], object_name, outfile))
 
         convert_command = "convert -append %s %s %s" % (zs_file, label_file, edf_file)
