@@ -102,10 +102,12 @@ def add_labels(directories, outfile):
         object_name = os.path.basename(object_dir)
         top_file = os.path.realpath(sorted(glob.glob(os.path.join(object_dir, '*plane*tif')))[-1])
 
+        if not os.path.exists(os.path.join(directories['stripped'], 'labels')):
+            os.mkdir(os.path.join(directories['stripped'], 'labels'))
+
         # Grab the label:
         label_file = os.path.realpath(os.path.join(directories['stripped'], 'labels', object_name+'.tif'))
-        #   convert ${HIGHEST} -gravity South -crop 0x160+0+0 ${directories['input']}/stripped/${label_dir}/label.tif
-        # convert_command = 'convert ' + top_file + ' -gravity South -crop 0x160+0+0 ' + label_file
+
         convert_command = "convert %s -gravity South -crop 0x160+0+0 %s" % (top_file, label_file)
         subprocess.call(convert_command, shell=True)
 
@@ -120,8 +122,8 @@ def add_labels(directories, outfile):
         subprocess.call(convert_command, shell=True)
 
         unlabeled_file = os.path.realpath(os.path.join(directories['unlabeled_focused'], object_name+".tif"))
-        convert_command = "convert %s %s" % (zs_file, unlabeled_file)
-        subprocess.call(convert_command, shell=True)
+        os.rename(zs_file, unlabeled_file)
+        
 
 
 def load_settings(directories):
@@ -163,6 +165,8 @@ def clean(directories):
 
 
 def reset(directories, software):
+
+    os.chdir(directories['input'])
 
     remove_directories = ['final_focused', 'unlabeled_focused',
                           'stripped']
