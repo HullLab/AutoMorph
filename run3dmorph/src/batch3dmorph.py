@@ -9,10 +9,13 @@ import subprocess
 import glob
 import sys
 
-version = '2016.09.26'
+version = '2016.10.19'
 
 controlFile = sys.argv[1]
-reset = sys.argv[2]
+try:
+    reset = sys.argv[2]
+except:
+    reset = 'no-reset'
 
 settings = getSettings(controlFile)
 
