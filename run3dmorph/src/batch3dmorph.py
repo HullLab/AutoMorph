@@ -10,6 +10,7 @@ import glob
 import sys
 
 version = '2016.10.25'
+print 'Run3dmorph Version: ' + version
 
 controlFile = sys.argv[1]
 try:
