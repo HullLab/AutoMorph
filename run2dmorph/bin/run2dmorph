@@ -6,7 +6,12 @@ then
 	exit
 fi
 
-CONTROLFILE=`readlink -f $1`
+if [[ $OSTYPE = linux* ]]; then
+    CONTROLFILE=`readlink -f $1`
+elif [[ $OSTYPE = darwin* ]]; then
+    CONTROLFILE=$1
+fi
+
 IFS=$'\n'
 INSTALL_VAR=($(grep -F install_dir $CONTROLFILE))
 IFS=$' = ' read -a install_array <<< $INSTALL_VAR

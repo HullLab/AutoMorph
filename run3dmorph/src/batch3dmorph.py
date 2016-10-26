@@ -9,10 +9,14 @@ import subprocess
 import glob
 import sys
 
-version = '2016.09.26'
+version = '2016.10.25'
+print 'Run3dmorph Version: ' + version
 
 controlFile = sys.argv[1]
-reset = sys.argv[2]
+try:
+    reset = sys.argv[2]
+except:
+    reset = 'no-reset'
 
 settings = getSettings(controlFile)
 
@@ -108,13 +112,18 @@ if settings['savePDF'] == 'true' or settings['savePDF'] == '[]':
 		os.mkdir(u3dPath)
 	# Loop through IDTF files and convert to U3D
 	print '\tBuilding U3D files...'
+	# Check system architecture for writing IDTF command
+	sysArch = sys.platform
 	# Write all commands to temp file
 	commandFile = open('idtfCommands.txt','w')
 	for obj in objNamesClean:
 		idtfFilePath = os.path.join(idtfPath,obj + '.idtf')
 		u3dFileName = obj + '.u3d'
 		u3dOutputFilePath = os.path.join(u3dPath,u3dFileName)
-		idtfCommand = ' '.join([os.path.join(run3dmorphPath,'mesh2pdf','bin','glx','IDTFConverter.sh'),' -input',idtfFilePath,'-output',u3dOutputFilePath])
+		if 'linux' in sysArch:
+		    idtfCommand = ' '.join([os.path.join(run3dmorphPath,'mesh2pdf','bin','glx','IDTFConverter.sh'),' -input',idtfFilePath,'-output',u3dOutputFilePath])
+		elif 'darwin' in sysArch:
+		    idtfCommand = ' '.join(['cd',os.path.join(run3dmorphPath,'mesh2pdf','bin','maci'),';','./IDTFConverter','-input',idtfFilePath,'-output',u3dOutputFilePath])
 		commandFile.write(idtfCommand + ' | tail -n +26\n')
 	commandFile.close()
 	# Run commands from file
