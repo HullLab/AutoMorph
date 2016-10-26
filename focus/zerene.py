@@ -9,7 +9,7 @@ import sys
 def run(directories, software):
 
     # Initialize the batch XML file
-    write_batchfile(directories)
+    write_batchfile(directories, batch_type=software['batch_mode'])
 
     # Run the XML file
     zerene_command = construct_command(software)
@@ -120,6 +120,7 @@ def write_batchfile(directories, batch_type="default"):
 
 def set_batchxml(batch_type):
 
+    print batch_type
     # TaskIndicatorCode: 1 = PMAX and 2 = DMAP
 
     if batch_type == "DMAP":
