@@ -49,7 +49,7 @@ elif fijiArchitecture == 'None':
     fijiArchitecture = 0
     
 # If restarting, check where to restart (with FIJI or mesh extraction)
-totalObjects = [os.path.basename(x) for x in glob.glob(os.path.join(focusedPath,'final','stripped','*'))]
+totalObjects = [os.path.basename(x) for x in glob.glob(os.path.join(focusedPath,'final','stripped','*obj*'))]
 FIJIObjects = [os.path.basename(x) for x in glob.glob(os.path.join(sfPath,'*'))]
 OFFObjects = [os.path.basename(x)[:-4] for x in glob.glob(os.path.join(morph3dPath,'off_files','*'))]
 if len(FIJIObjects) < len(totalObjects):

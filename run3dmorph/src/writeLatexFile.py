@@ -8,6 +8,7 @@ def writeLatexFile(u3dFile,media9Path,outputFileNameBase,outputFilePath,focusedP
     """
     import os
     import glob
+    import string
     
     volFilePath = os.path.join(sfPath,outputFileNameBase,outputFileNameBase+'_volume_surface_area.csv')
     volFile = open(volFilePath,'r')
@@ -17,16 +18,7 @@ def writeLatexFile(u3dFile,media9Path,outputFileNameBase,outputFilePath,focusedP
     length = values[-2]
     gridSize = values[-5]
     # Build label image path
-    labelPath_1 = os.path.join(focusedPath,'final','stripped',outputFileNameBase,'label')
-    labelPath_2 = os.path.join(focusedPath,'final','z.stacks',outputFileNameBase,'label')
-    label_1 = glob.glob(labelPath_1 + '*')
-    label_2 = glob.glob(labelPath_2 + '*')
-    if label_1:
-        labelPath = labelPath_1
-        labelExt = label_1[0].split('label')[1]
-    else:
-        labelPath = labelPath_2
-        labelExt = label_2[0].split('label')[1]
+    labelPath = glob.glob(os.path.join(focusedPath,'final','stripped','labels',outputFileNameBase) + '*')[0]
         
     # Remove periods from image name if present
     if '.' in outputFileNameBase:
@@ -38,7 +30,9 @@ def writeLatexFile(u3dFile,media9Path,outputFileNameBase,outputFilePath,focusedP
         rgbPathOut = os.path.join(sfPath,outputFileNameBase,outputFileNameBase + '_focused_rgb')
         imRGBCommand = 'convert ' + rgbPathOut + '.tif ' + rgbPathOut + '.png'
     # Convert image types from .tif to '.png' using an external call to ImageMagick
-    imLabelCommand = 'convert ' + labelPath + labelExt + ' ' + labelPath + '.png'
+    labelNoExtPath = os.path.splitext(labelPath)[0]
+    pngPath = string.replace(labelNoExtPath,'.','_') + '.png'
+    imLabelCommand = ' '.join(['convert', labelPath, pngPath])
     os.system(imLabelCommand)
     #imRGBCommand = 'convert ' + rgbPathIn + '.tif ' + rgbPathOut + '.png'
     os.system(imRGBCommand)
@@ -103,6 +97,6 @@ activate=pageopen,
 
 \end{document}"""
 
-    latexTextFinal = ''.join([latexText1,os.path.join(media9Path,'media9'),latexText2,labelPath,latexText3,length,latexText4,width,latexText5,gridSize,latexText6,unit,latexText7,u3dFile,latexText8,u3dFile,latexText9,rgbPathOut,latexText10])
+    latexTextFinal = ''.join([latexText1,os.path.join(media9Path,'media9'),latexText2,string.replace(labelNoExtPath,'.','_'),latexText3,length,latexText4,width,latexText5,gridSize,latexText6,unit,latexText7,u3dFile,latexText8,u3dFile,latexText9,rgbPathOut,latexText10])
     latexFile.write(latexTextFinal)
     latexFile.close()
