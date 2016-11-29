@@ -6,6 +6,7 @@ import tifffile
 
 import numpy as np
 from scipy import ndimage, misc
+import cv2
 import time
 import glob
 import math
@@ -46,11 +47,26 @@ def save(image, filename, tags=''):
 
     if isinstance(image, (np.ndarray, np.generic)):
         image = Image.fromarray(image)
+    if image.mode != 'RGB':
+        image = image.convert('RGB')
 
     if tags:
         image.save(filename, tiffinfo=tags)
     else:
         image.save(filename)
+
+
+def save_test_image(image, run, tag):
+
+    # save entire image
+    if run["mode"] == "final":
+        output_dir = run['full_output'].replace('/final', '')
+    else:
+        output_dir = run['full_output']
+
+    filename_full_image = "%s%s%s_%s.jpg" % (output_dir, os.sep, run['unique_id'], tag)
+
+    save(image, filename_full_image)
 
 
 def save_overview_image(image, box_list, orig_filename, run):
@@ -138,7 +154,15 @@ def find_objects(img, run):
     bw_img[bw_img >= 255*run['threshold']] = 255  # White
 
     # and fill holes
-    bw_filled_img = ndimage.morphology.binary_fill_holes(bw_img/255.).astype(int)*255
+    if run['fill_kernel']:
+        kernel = np.ones((run['fill_kernel'], run['fill_kernel']), np.uint8)
+        bw_filled_img = cv2.morphologyEx(bw_img, cv2.MORPH_CLOSE, kernel)
+    else:
+        bw_filled_img = ndimage.morphology.binary_fill_holes(bw_img/255.).astype(int)*255
+
+    if run['debug_images']:
+        save_test_image(bw_img, run, "bw_img")
+        save_test_image(bw_filled_img, run, "bw_filled_img")
 
     # label connected objects
     connected_objs, n = ndimage.measurements.label(bw_filled_img)

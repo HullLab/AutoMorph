@@ -34,7 +34,9 @@ def parse(filename):
                 'box_thickness': 20,
                 'skip_last_plane': True,
                 'author': None,
-                'unique_id': None
+                'unique_id': None,
+                'fill_kernel': 0,
+                'debug_images': False
                 }
 
     required_list = ['mode', 'directory', 'output', 'pixel_size_y', 'pixel_size_x']
@@ -82,14 +84,20 @@ def parse(filename):
             settings['minimum_size'] = float(parser.get('settings', 'minimumSize'))
         elif setting == "maximumSize":
             settings['maximum_size'] = float(parser.get('settings', 'maximumSize'))
+
         # Special formatting tweaks for robustness
+        # FLOAT
         elif 'size' in setting:
             settings[setting] = float(parser.get('settings', setting))
-        elif setting in ['box_thickness', 'scale_bar_length']:
-            settings[setting] = float(parser.get('settings', setting))
-        elif setting == 'skip_last_plane':
+        # INT
+        elif setting in ['fill_kernel', 'box_thickness', 'scale_bar_length']:
+            settings[setting] = int(parser.get('settings', setting))
+        # BOOLEAN
+        elif setting in ['skip_last_plane', 'debug_images']:
             if parser.get('settings', setting) in ['False', 'false']:
                 settings[setting] = False
+            elif parser.get('settings', setting) in ['True', 'true']:
+                settings[setting] = True
         else:
             settings[setting] = str(parser.get('settings', setting))
 
