@@ -124,7 +124,7 @@ if settings['savePDF'] == 'true' or settings['savePDF'] == '[]':
 		    idtfCommand = ' '.join([os.path.join(run3dmorphPath,'mesh2pdf','bin','glx','IDTFConverter.sh'),' -input',idtfFilePath,'-output',u3dOutputFilePath])
 		elif 'darwin' in sysArch:
 		    idtfCommand = ' '.join(['cd',os.path.join(run3dmorphPath,'mesh2pdf','bin','maci'),';','./IDTFConverter','-input',idtfFilePath,'-output',u3dOutputFilePath])
-		commandFile.write(idtfCommand + ' | tail -n +26\n')
+		commandFile.write(idtfCommand + ' | tail -n +30\n')
 	commandFile.close()
 	# Run commands from file
 	commandFile = open('idtfCommands.txt','r')
@@ -160,7 +160,7 @@ if settings['savePDF'] == 'true' or settings['savePDF'] == '[]':
 		os.chdir(latexOutputPath)
 		latexFiles = glob.glob('*.tex')
 		for latex in latexFiles:
-			latexCommand = ' '.join(['pdflatex',latex,'| tail -n +200'])
+			latexCommand = ' '.join(['pdflatex',latex,'| tail -n +300'])
 			os.system(latexCommand)
 		pdfFiles = glob.glob('*.pdf')
 		print '\nCleaning up...'

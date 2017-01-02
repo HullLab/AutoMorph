@@ -29,12 +29,12 @@ def writeLatexFile(u3dFile,media9Path,outputFileNameBase,outputFilePath,focusedP
     else:
         rgbPathOut = os.path.join(sfPath,outputFileNameBase,outputFileNameBase + '_focused_rgb')
         imRGBCommand = 'convert ' + rgbPathOut + '.tif ' + rgbPathOut + '.png'
-    # Convert image types from .tif to '.png' using an external call to ImageMagick
+        
+    # Convert image types from .tif to .png using an external call to ImageMagick
     labelNoExtPath = os.path.splitext(labelPath)[0]
-    pngPath = string.replace(labelNoExtPath,'.','_') + '.png'
+    pngPath = os.path.join(os.path.dirname(labelNoExtPath),string.replace(os.path.basename(labelNoExtPath),'.','_') + '.png')
     imLabelCommand = ' '.join(['convert', labelPath, pngPath])
     os.system(imLabelCommand)
-    #imRGBCommand = 'convert ' + rgbPathIn + '.tif ' + rgbPathOut + '.png'
     os.system(imRGBCommand)
     
     latexFile = open(outputFilePath,'w')
@@ -97,6 +97,6 @@ activate=pageopen,
 
 \end{document}"""
 
-    latexTextFinal = ''.join([latexText1,os.path.join(media9Path,'media9'),latexText2,string.replace(labelNoExtPath,'.','_'),latexText3,length,latexText4,width,latexText5,gridSize,latexText6,unit,latexText7,u3dFile,latexText8,u3dFile,latexText9,rgbPathOut,latexText10])
+    latexTextFinal = ''.join([latexText1,os.path.join(media9Path,'media9'),latexText2,os.path.splitext(pngPath)[0],latexText3,length,latexText4,width,latexText5,gridSize,latexText6,unit,latexText7,u3dFile,latexText8,u3dFile,latexText9,rgbPathOut,latexText10])
     latexFile.write(latexTextFinal)
     latexFile.close()
