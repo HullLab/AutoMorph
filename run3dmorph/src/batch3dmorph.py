@@ -109,7 +109,9 @@ if settings['savePDF'] == 'true' or settings['savePDF'] == '[]':
 	idtfPath = os.path.join(pdf3dPath,'idtf_files')
 	u3dPath = os.path.join(pdf3dPath,'u3d_files')
 	if not os.path.exists(u3dPath):
-		os.mkdir(u3dPath)
+		os.mkdirs(u3dPath)
+	if not os.path.exists(idtfPath):
+		os.mkdirs(idtfPath)
 	# Loop through IDTF files and convert to U3D
 	print '\tBuilding U3D files...'
 	# Check system architecture for writing IDTF command
