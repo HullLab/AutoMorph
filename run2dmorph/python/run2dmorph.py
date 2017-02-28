@@ -53,7 +53,7 @@ def extract_outline(image_file, run):
     # morphological opening
     image_open = morphology.opening(image, morphology.disk(10))
 
-    # Todo: Gamma adjustment and RGB Filter
+    # Not yet implemented: Gamma adjustment and RGB Filter
     image_gamma = image_open
     image_rgb = image_gamma
 
@@ -72,16 +72,15 @@ def extract_outline(image_file, run):
     # from thresholded object
     image_filled = ndimage.morphology.binary_fill_holes(image_bw/255.).astype(int)*255
 
-    # Todo: CLEAR BORDER
+    # Not yet implemented: CLEAR BORDER
     image_cleared = image_filled
 
     # remove noisy objects that are 5% of the total image size or smaller
-
     noise_limit_size = int(math.ceil(size[0]*size[1]*run['noise_limit]']))
     obj = np.ones(noise_limit_size, noise_limit_size)
 
-    # this needs to be "area opening" not "morphological opening"?
-    image_cleaned = morphology.opening(image_border, structure=obj)
+    # Not yet implemented
+    image_cleaned = 
 
     # detect edge
     # get unsmoothed edge
@@ -92,8 +91,8 @@ def extract_outline(image_file, run):
     smooth_edge = canny(image_cleaned, run['smoothing_sigma'])
     if np.amax(image_cleaned) != 0:
         smooth_perimeter = math.ceil(perimeter(smooth_edge) * 0.0)
-        ### this needs to be "area opening" not "morphological opening"?
-        smooth_edge = ndimage.morphology.binary_opening(image_border, structure=smooth_perimeter)
+        # Not yet implemented
+        smooth_edge = 
 
     # save output files
     object_id = '.'/join(image_file.split(',')[0:-1])
@@ -102,13 +101,13 @@ def extract_outline(image_file, run):
         images.save(image_open, run['out_directory']+os.sep+str(sampleID)+'_'+object_id+'_1_open.tif')
         images.save(image_gamma, run['out_directory']+os.sep+str(sampleID)+'_'+object_id+'_2_gamma.tif')
         images.save(image_rgb, run['out_directory']+os.sep+str(sampleID)+'_'+object_id+'_3_rgbfilter.tif')
-        images.save(image_gamma, run['out_directory']+os.sep+str(sampleID)+'_'+object_id+'_4_grayscale.tif')
-        images.save(image_gamma, run['out_directory']+os.sep+str(sampleID)+'_'+object_id+'_5_bw.tif')
-        images.save(image_gamma, run['out_directory']+os.sep+str(sampleID)+'_'+object_id+'_6_fill.tif')
-        images.save(image_gamma, run['out_directory']+os.sep+str(sampleID)+'_'+object_id+'_7_border.tif')
-        images.save(image_gamma, run['out_directory']+os.sep+str(sampleID)+'_'+object_id+'_8_noise.tif')
-        images.save(image_gamma, run['out_directory']+os.sep+str(sampleID)+'_'+object_id+'_9_edge.tif')
-        images.save(image_gamma, run['out_directory']+os.sep+str(sampleID)+'_'+object_id+'_10_smooth.tif')
+        images.save(image_gs, run['out_directory']+os.sep+str(sampleID)+'_'+object_id+'_4_grayscale.tif')
+        images.save(image_bw, run['out_directory']+os.sep+str(sampleID)+'_'+object_id+'_5_bw.tif')
+        images.save(image_filled, run['out_directory']+os.sep+str(sampleID)+'_'+object_id+'_6_fill.tif')
+        images.save(image_cleared, run['out_directory']+os.sep+str(sampleID)+'_'+object_id+'_7_border.tif')
+        images.save(image_cleaned, run['out_directory']+os.sep+str(sampleID)+'_'+object_id+'_8_noise.tif')
+        images.save(unsmooth_edge, run['out_directory']+os.sep+str(sampleID)+'_'+object_id+'_9_edge.tif')
+        images.save(smooth_edge, run['out_directory']+os.sep+str(sampleID)+'_'+object_id+'_10_smooth.tif')
 
     diff = diff(image, smooth_edge)
     images.save(image_diff, run['out_directory']+os.sep+str(sampleID)+'_'+object_id+'_final.tif')
