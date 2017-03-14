@@ -24,6 +24,9 @@ def load(filename, run):
         img = Image.open(filename)
         img = np.array(img)
         run['bigtiff'] = False
+        size = np.shape(img)
+        if size[0]*size[1] >= 89478485:
+            run['bigtiff'] = True
     except IOError:
         if run['input_ext'] == 'tif':
             print "File may be a BIGtiff, attempting alternate read..."
@@ -31,6 +34,8 @@ def load(filename, run):
             run['bigtiff'] = True
         else:
             raise
+
+    
 
     print np.shape(img)
     end = time.time()
