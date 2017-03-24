@@ -47,6 +47,11 @@ def segment(settings_file):
         objects, _ = setup_object_boxes(top_image_filename, run)
 
         if run['mode'] == 'final':
+
+            # sanity check to avoid creating unnecessary file
+            if len(objects) > 10000:
+                sys.exit('Over 10000 objects are identified in the image, are you sure you want to continue?')
+
             print('Saving Settings into %s' % run['full_output'])
             settings.save(run.copy())
 
