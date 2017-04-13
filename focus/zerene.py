@@ -108,7 +108,7 @@ def write_batchfile(directories, batch_type="default"):
 
         zsbatch.write(batchxml_header)
 
-        stripped_objects = [os.path.realpath(x) for x in glob.glob(os.path.join(directories["stripped"], '*_obj*'))]
+        stripped_objects = sorted([os.path.realpath(x) for x in glob.glob(os.path.join(directories["stripped"], '*_obj*'))])
 
         for stripped_object in stripped_objects:
             print 'Adding object to batch file: ', stripped_object

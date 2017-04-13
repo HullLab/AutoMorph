@@ -1,0 +1,278 @@
+#!/usr/bin/env python
+
+import ConfigParser
+import argparse
+import sys
+import os
+import pwd
+import glob
+import subprocess
+import shutil
+import tarfile
+import socket
+
+import zerene
+import imagej
+
+
+def focus(directories, software, ID):
+
+    directories['objects'] = sorted([os.path.realpath(x) for x in glob.glob(os.path.join(directories['input'], '*_obj*'))])
+
+    # STRIPPING LABELS
+    if not os.path.exists(directories['stripped']):
+        os.makedirs(directories['stripped'])
+
+    print 'Stripping labels from', len(directories['objects']), 'images..'
+    strip_labels(directories)
+    print 'Stripping labels complete.'
+
+    # RUNNING EXTERNAL SOFTWARE
+
+    if software['name'] == "zerene":
+
+        zerene.run(directories, software)
+        outfile = 'ZS.tif'
+
+    elif software['name'] == "imagej":
+
+        imagej.run(directories, software)
+        outfile = 'ij_focused.tif'
+
+    else:
+        print "Error: unrecognized software: "+software['name']
+        sys.exit()
+
+    # ADD BACK LABELS
+    print 'Re-labeling images ...'
+
+    if not os.path.exists(directories['final_focused']):
+        os.makedirs(directories['final_focused'])
+
+    if not os.path.exists(directories['unlabeled_focused']):
+        os.makedirs(directories['unlabeled_focused'])
+
+    if not os.path.exists(directories['zstack']):
+        os.makedirs(directories['zstack'])
+
+    add_labels(directories, outfile)
+
+    # ARCHIVE
+    print 'Archiving original z.stacks... '
+
+    for object_dir in directories['objects']:
+        shutil.move(object_dir, directories['zstack'])
+
+    clean(directories)
+
+
+def archive(dir_to_tar, directories):
+    dir_name = os.path.basename(directories[dir_to_tar].rstrip('/'))
+    tar = tarfile.open(directories[dir_to_tar+'_tar'], 'w:gz')
+    tar.add(directories[dir_to_tar], arcname=dir_name)
+    tar.close()
+
+
+def strip_labels(directories):
+
+    for object in directories['objects']:
+        currentdir = os.path.join(directories['stripped'], os.path.basename(object))
+        if not os.path.exists(currentdir):
+            os.makedirs(currentdir)
+
+        print 'Cropping ', os.path.basename(object)
+        files = [os.path.realpath(x) for x in glob.glob(os.path.join(object, '*plane*tif'))]
+        for infile in files:
+            fname = os.path.splitext(os.path.basename(infile))[0]+".tif"
+            outfile = os.path.join(directories['input'], 'stripped', os.path.basename(object), fname)
+            if not os.path.exists(outfile):
+                # It'd be nice to use the ImageMagick API here,.. but it doesn't
+                # yet work, so we're using a system call instead:
+                convert_command = 'convert ' + infile + ' -crop +0-160 +repage ' + outfile
+                subprocess.call(convert_command, shell=True)
+            else:
+                print 'Cropped '+fname+' already exists. Skipping.'
+
+
+def add_labels(directories, outfile):
+
+    for object_dir in directories['objects']:
+        print 'Adding labels to ', object_dir
+
+        object_name = os.path.basename(object_dir)
+        top_file = os.path.realpath(sorted(glob.glob(os.path.join(object_dir, '*plane*tif')))[-1])
+
+        if not os.path.exists(os.path.join(directories['stripped'], 'labels')):
+            os.mkdir(os.path.join(directories['stripped'], 'labels'))
+
+        # Grab the label:
+        label_file = os.path.realpath(os.path.join(directories['stripped'], 'labels', object_name+'.tif'))
+
+        convert_command = "convert %s -gravity South -crop 0x160+0+0 %s" % (top_file, label_file)
+        subprocess.call(convert_command, shell=True)
+
+        convert_command = """convert {0} -fill white -stroke white -draw "path 'M 0,143 l 99999,0 l 0,20 l -99999,0 '" {1} """.format(label_file, label_file)
+        subprocess.call(convert_command, shell=True)
+
+        # Add label
+        edf_file = os.path.realpath(os.path.join(directories['final_focused'], object_name+"_edf.tif"))
+        zs_file = os.path.realpath(os.path.join(directories['stripped'], object_name, outfile))
+
+        convert_command = "convert -append %s %s %s" % (zs_file, label_file, edf_file)
+        subprocess.call(convert_command, shell=True)
+
+        unlabeled_file = os.path.realpath(os.path.join(directories['unlabeled_focused'], object_name+".tif"))
+        os.rename(zs_file, unlabeled_file)
+        
+
+
+def load_settings(directories):
+
+    filename = os.path.join(directories['input'], 'focus.cfg')
+    if not os.path.exists(filename):
+        print 'Could not locate local focus.cfg file, using default.'
+        filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'focus.cfg')
+
+    parser = ConfigParser.SafeConfigParser(allow_no_value=True)
+    parser.optionxform = str  # preserve case
+
+    parser.read(filename)
+
+    software = {}
+    # set required variable
+    software['name'] = parser.get('focus', 'software')
+
+    if software['name'] not in ['zerene', 'imagej']:
+        sys.exit('Unrecongized software. Available software: zerene, imagej')
+
+    for setting in parser.options(software['name']):
+        software[setting] = str(parser.get(software['name'], setting))
+
+    return software
+
+
+def clean(directories):
+
+    if not os.path.exists(directories['zstack_tar']):
+        print 'creating tar of zstack'
+        archive('zstack', directories)
+
+    if os.path.exists(directories['zstack_tar']):
+        if os.path.exists(directories['zstack']):
+            shutil.rmtree(directories['zstack'])
+    else:
+        print 'Error: tar of zstack files not present. leaving directory in place.'
+
+
+def reset(directories, software):
+
+    os.chdir(directories['input'])
+
+    remove_directories = ['final_focused', 'unlabeled_focused',
+                          'stripped']
+    for directory in remove_directories:
+        if os.path.exists(directories[directory]):
+            shutil.rmtree(directories[directory])
+
+    if software['name'] == "zerene":
+        batch_file = os.path.join(directories['input'], 'zsbatch.xml')
+        if os.path.exists(batch_file):
+            os.remove(batch_file)
+        log_file = os.path.join(directories['input'], 'zerene.log')
+        if os.path.exists(log_file):
+            os.remove(log_file)
+
+    # copy back originals if they have been moved
+
+    if not os.path.exists(directories['zstack']):
+        if os.path.exists(directories['zstack_tar']):
+            tar = tarfile.open(directories['zstack_tar'])
+            tar.extractall()
+            tar.close()
+
+    if os.path.exists(directories['zstack']):
+        if os.listdir(directories['zstack']) != []:
+            for directory in os.listdir(directories['zstack']):
+                directory = os.path.join(directories['zstack'], directory)
+                shutil.move(directory, directories['input'])
+        os.rmdir(directories['zstack'])
+
+    if software['name'] == "zerene":
+        batch_file = os.path.join(directories['input'], 'zsbatch.xml')
+        if os.path.exists(batch_file):
+            os.remove(batch_file)
+        log_file = os.path.join(directories['input'], 'zerene.log')
+        if os.path.exists(log_file):
+            os.remove(log_file)
+
+    directories['objects'] = [os.path.realpath(x) for x in glob.glob(os.path.join(directories['input'], '*_obj*'))] 
+    for object_dir in directories['objects']:
+        label_file = os.path.join(object_dir, 'label.tif')
+        if os.path.exists(label_file):
+            os.remove(label_file)
+        if software['name'] == 'zerene':
+            zs_file = os.path.join(object_dir, 'ZS.tif')
+            if os.path.exists(zs_file):
+                os.remove(zs_file)
+
+    remove_files = ['final_focused_tar', 'zstack_tar']
+    for file in remove_files:
+        if os.path.exists(directories[file]):
+            os.remove(directories[file])
+        if os.path.exists(directories[file].rstrip('.gz')):
+            os.remove(directories[file].rstrip('.gz'))
+
+
+if __name__ == "__main__":
+
+    if socket.gethostname() == 'tide.geology.yale.edu':
+        os.nice(10)
+
+    parser = argparse.ArgumentParser(description='')
+
+    parser.add_argument('input_dir', help='input directory')
+    parser.add_argument("-v", "--verbose", help="increase output verbosity",
+                        action="store_true")
+    parser.add_argument("-i", "--interactive", help="run focusing software interactively (not headless)",
+                        action="store_true")
+    parser.add_argument("--reset", help="revert input directory to pre-focused state",
+                        action="store_true")
+    parser.add_argument("--clean", help="removes z.stack directory if tar.gz file present",
+                        action='store_true')
+    args = parser.parse_args()
+
+    # If that option isn't a directory name, quite:
+    if not os.path.isdir(args.input_dir):
+        print 'Argument to focus must be a directory name - quitting.'
+        sys.exit(0)
+
+    # Assign our directory variables:
+    input_dir = os.path.realpath(args.input_dir)
+
+    # Assign our ID variable:
+    ID = os.path.basename(os.path.normpath(input_dir))[0:9]
+
+    directories = {'input': input_dir,
+                   'stripped': os.path.join(input_dir, 'stripped'),
+                   'final_focused':  os.path.join(input_dir, 'focused'),
+                   'unlabeled_focused': os.path.join(input_dir, 'focused_unlabeled'),
+                   'zstack': os.path.join(input_dir, 'z.stacks'),
+                   'final_focused_tar': os.path.join(input_dir, ID+'-focused.tar.gz'),
+                   'zstack_tar': os.path.join(input_dir, ID+'-z.stacks.tar.gz')
+                   }
+
+    software = load_settings(directories)
+    software['verbose'] = args.verbose
+    if args.interactive:
+        print "Running focus in interactive mode. Note: This will cause focus to run MUCH more slowly."
+        software['headless'] = ''
+
+    if args.reset:
+        print "Resetting ", directories['input']
+        reset(directories, software)
+    elif args.clean:
+        print 'Cleaning up ', directories['input']
+        clean(directories)
+    else:
+        print 'Running Focus on ', directories['input']
+        focus(directories, software, ID)
