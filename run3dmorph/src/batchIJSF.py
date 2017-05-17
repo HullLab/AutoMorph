@@ -82,7 +82,7 @@ def runIJSF(objDirs,focusedPath,sfPath,kernelSize,macroMode,fijiArchitecture):
             raise ValueError('Inappropriate system (must be Linux or Darwin)')
 
         # Build final command text
-        ijCommand = 'ImageJ-' + sysarchSpecifier + ' --headless --memory=1000m -macro ' + pathToMacroFile
+        ijCommand = 'ImageJ-' + sysarchSpecifier + ' --headless --memory=5000m -macro ' + pathToMacroFile
         # Call FIJI command externally
         subprocess.call(ijCommand,shell=True)
         end = time.time()
