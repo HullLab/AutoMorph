@@ -213,7 +213,7 @@ def add_label_area(image):
 
     # If we're less than minimumX in the X direction, pad with black:
     if width < minimum_width:
-        padding_width = math.ceil((minimum_width - width) / 2)
+        padding_width = int(math.ceil((minimum_width - width) / 2))
         padding = np.zeros([height, padding_width, 3])
         image = np.hstack((padding, image, padding))
         width += padding_width*2
