@@ -143,7 +143,7 @@ def load_settings(directories):
     software['name'] = parser.get('focus', 'software')
 
     if software['name'] not in ['zerene', 'fiji']:
-        sys.exit('Unrecongized software. Available software: zerene, fiji')
+        sys.exit('Unrecognized software. Available software: zerene, fiji')
 
     for setting in parser.options(software['name']):
         software[setting] = str(parser.get(software['name'], setting))

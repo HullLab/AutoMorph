@@ -109,23 +109,30 @@ def write_batchfile(stripped_object, directories, software):
 
     obj_name = os.path.basename(stripped_object)
 
+    # Determine image extension by counting most common image extension in
+    # target object folder
+    objects = glob.glob(os.path.join(stripped_object,'*'))
+    extensions = [os.path.splitext(x)[1] for obj in objects]
+    extension = max(extensions,key=extensions.count)
+
     # Write individual macro file for object
     macro_file_path = os.path.join(stripped_object,'macro.imj')
     macro_file = open(macro_file_path,'w')
     macro_text = """setBatchMode(true);
-run("Image Sequence...", "open={0} file=[.jpg] convert sort");
-run("Stack Focuser ", "enter={1} generate");
-selectWindow("Focused_{2}");
-saveAs("Tiff","{3}");
-selectWindow("HeightMap_{2}");
+run("Image Sequence...", "open={0} file=[{1}] convert sort");
+run("Stack Focuser ", "enter={2} generate");
+selectWindow("Focused_{3}");
 saveAs("Tiff","{4}");
-selectWindow("{5}");
+selectWindow("HeightMap_{5}");
+saveAs("Tiff","{6}");
+selectWindow("{7}");
 close("*");
 """
 
     macro_text = macro_text.format(stripped_object,
+                                   extension,
                                    software['kernel_size'],
-                                   os.path.splitext(obj_name)[1],
+                                   obj_name.split('.')[0],
                                    os.path.join(stripped_object,'ij_focused.tif'),
                                    os.path.join(stripped_object,'ij_heightmap.tif'),
                                    obj_name)
