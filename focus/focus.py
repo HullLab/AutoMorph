@@ -12,7 +12,7 @@ import tarfile
 import socket
 
 import zerene
-import imagej
+import fiji
 
 
 def focus(directories, software, ID):
@@ -34,9 +34,9 @@ def focus(directories, software, ID):
         zerene.run(directories, software)
         outfile = 'ZS.tif'
 
-    elif software['name'] == "imagej":
+    elif software['name'] == "fiji":
 
-        imagej.run(directories, software)
+        fiji.run(directories, software)
         outfile = 'ij_focused.tif'
 
     else:
@@ -123,7 +123,7 @@ def add_labels(directories, outfile):
 
         unlabeled_file = os.path.realpath(os.path.join(directories['unlabeled_focused'], object_name+".tif"))
         os.rename(zs_file, unlabeled_file)
-        
+
 
 
 def load_settings(directories):
@@ -142,8 +142,8 @@ def load_settings(directories):
     # set required variable
     software['name'] = parser.get('focus', 'software')
 
-    if software['name'] not in ['zerene', 'imagej']:
-        sys.exit('Unrecongized software. Available software: zerene, imagej')
+    if software['name'] not in ['zerene', 'fiji']:
+        sys.exit('Unrecongized software. Available software: zerene, fiji')
 
     for setting in parser.options(software['name']):
         software[setting] = str(parser.get(software['name'], setting))
@@ -205,7 +205,7 @@ def reset(directories, software):
         if os.path.exists(log_file):
             os.remove(log_file)
 
-    directories['objects'] = [os.path.realpath(x) for x in glob.glob(os.path.join(directories['input'], '*_obj*'))] 
+    directories['objects'] = [os.path.realpath(x) for x in glob.glob(os.path.join(directories['input'], '*_obj*'))]
     for object_dir in directories['objects']:
         label_file = os.path.join(object_dir, 'label.tif')
         if os.path.exists(label_file):

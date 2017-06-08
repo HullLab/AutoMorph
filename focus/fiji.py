@@ -1,10 +1,10 @@
 """
-imagej.py
+fiji.py
 
 Adapted from batchIJSF.py
 
 Script for batch focusing of segment output using StackFocuser
-plugin for ImageJ. Generates grayscale focused image and heightmap
+plugin for FIJI. Generates grayscale focused image and heightmap
 for all objects.
 
 Requires an installation of FIJI (http://fiji.sc/Fiji) that is
@@ -12,7 +12,7 @@ accessible from the path via the following commands:
 
     Mac:    'ImageJ-macosx'
     Linux:  'ImageJ-linux32' OR 'ImageJ-linux64'
-    
+
 This program will overwrite existing files from previous runs, so
 please be careful!
 
@@ -77,7 +77,7 @@ def run(directories, software):
         time_elapsed = end - start
         print 'Time Elapsed: ' + '%6.3f' % time_elapsed + ' seconds\n'
 
-    # check 
+    # check
     first_object = os.path.realpath(os.path.join(directories['stripped'],
                                                  os.path.basename(directories["objects"][0]),
                                                  'ij_focused.tif'))
@@ -86,11 +86,11 @@ def run(directories, software):
                                                 'ij_focused.tif'))
 
     if not os.path.exists(first_object):
-        sys.exit("Error: ImageJ didn't create files. Perhaps something went wrong? Exiting...")
+        sys.exit("Error: FIJI didn't create files. Perhaps something went wrong? Exiting...")
     elif not os.path.exists(last_object):
-        sys.exit("Error: ImageJ didn't finish creating files. Perhaps something went wrong? Exiting...")
+        sys.exit("Error: FIJI didn't finish creating files. Perhaps something went wrong? Exiting...")
     else:
-        print 'ImageJ finished!'
+        print 'FIJI finished!'
 
 
 def write_batchfile(stripped_object, directories, software):
@@ -134,4 +134,3 @@ close("*");
     macro_file.close()
 
     return macro_file_path
-
