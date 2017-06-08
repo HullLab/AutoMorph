@@ -123,9 +123,8 @@ run("Image Sequence...", "open={0} file=[{1}] convert sort");
 run("Stack Focuser ", "enter={2} generate");
 selectWindow("Focused_{3}");
 saveAs("Tiff","{4}");
-selectWindow("HeightMap_{5}");
-saveAs("Tiff","{6}");
-selectWindow("{7}");
+close("*");
+selectWindow("{5}");
 close("*");
 """
 
@@ -134,7 +133,6 @@ close("*");
                                    software['kernel_size'],
                                    obj_name.split('.')[0],
                                    os.path.join(stripped_object,'ij_focused.tif'),
-                                   os.path.join(stripped_object,'ij_heightmap.tif'),
                                    obj_name)
 
     macro_file.write(macro_text)
