@@ -112,7 +112,7 @@ def write_batchfile(stripped_object, directories, software):
     # Determine image extension by counting most common image extension in
     # target object folder
     objects = glob.glob(os.path.join(stripped_object,'*'))
-    extensions = [os.path.splitext(x)[1] for obj in objects]
+    extensions = [os.path.splitext(obj)[1] for obj in objects]
     extension = max(extensions,key=extensions.count)
 
     # Write individual macro file for object
