@@ -1,0 +1,109 @@
+#!/usr/bin/env python
+
+import initialize
+import settings
+import checkpoint
+import heightmap
+import mesh
+import volume
+import objoff
+import pdf
+
+import argparse
+import inspect
+import shutil
+import os
+import glob
+import socket
+
+
+version = '2017-06'
+
+def morph3d(control_file,reset):
+    # Print run3dmorph version and time stamp
+    initialize.displayVersion(version)
+    initialize.displayTime()
+
+    # Load settings from control file
+    print 'INFO: Loading settings from %s...\n' % control_file
+    run = settings.parse(control_file)
+    settings.save(run)
+
+    morph3dPath = os.path.join(run['out_directory'],'morph3d')
+
+    # Reset if requested and previous run output exists
+    if reset:
+        if os.path.exists(morph3dPath):
+            print 'INFO: Resetting previous run3dmorph run...\n'
+            initialize.resetRun(morph3dPath)
+        else:
+            print 'INFO: Reset requested, but no previous run3dmorph output found. Continuing...\n'
+
+    # Create output folders and initialize objects to process
+    initialize.makeOutputFolders(run,morph3dPath)
+    allObjects = initialize.initializeObjects(run)
+
+    # Checkpointing
+    cpFile = os.path.join(morph3dPath,'checkpoint.txt')
+    restart,lastObj = checkpoint.checkRestart(cpFile,allObjects)
+    if restart:
+        print 'INFO: Checkpoint file found; Restarting from save point...\n'
+        objects = checkpoint.setRestartObjects(lastObj,allObjects)
+    else:
+        objects = allObjects
+
+    # Get path of run3dmorph installation
+    run3dmorphPath = os.path.dirname(os.path.dirname(os.path.abspath(mesh.__file__)))
+
+    for obj in objects:
+        # Print name of current object
+        obj.showObject()
+
+        # Generate height map
+        print '\tINFO: Generating height map...'
+        heightmap.makeHeightMap(run,obj)
+
+        # Extract mesh
+        print '\tINFO: Beginning mesh extraction...'
+        top_volume,top_surface_area,edge,image_clean,z_values,triangulation,triangles,faceColors = mesh.extractMesh(run,obj)
+
+        # Get total volume and surface area estimates
+        print '\tINFO: Estimating object surface area and volume...'
+        length,width = volume.getVolumeSurfaceArea(run,obj,image_clean,edge,z_values,top_volume,top_surface_area)
+
+        # Save mesh in OBJ and OFF format
+        print '\tINFO: Saving OBJ and OFF files...'
+        objoff.saveOBJOFF(run,obj,triangulation)
+
+        # Build 3D PDF
+        print '\tINFO: Generating 3D PDF...'
+        pdf.makePDF(run,obj,run3dmorphPath,triangulation,triangles,faceColors,length,width)
+
+        # Checkpointing
+        checkpoint.saveCheckpoint(obj,cpFile)
+
+    print 'INFO: Run3dmorph process completed.\n'
+
+
+if __name__ == "__main__":
+    # If we're running this on the Tide machine at Yale, be nice to other users
+    if socket.gethostname() == 'tide.geology.yale.edu':
+        os.nice(10)
+
+    # Set up parser to deal with command line arguments
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('control_file',
+                        help='path to control file')
+    parser.add_argument('--reset',
+                        help='removes existing morph3d directory in output directory',
+                        action='store_true')
+    args = parser.parse_args()
+
+    # Set control file
+    control_file = os.path.realpath(args.control_file)
+
+    # Start run
+    if args.reset:
+        morph3d(control_file,args.reset)
+    else:
+        morph3d(control_file,False)
