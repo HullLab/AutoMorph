@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
 import filters
-import save
 
 # Exception for run3dmorph operation
 try:
     import images
+    import save
 except:
     pass
 

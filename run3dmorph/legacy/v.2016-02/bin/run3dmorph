@@ -1,0 +1,20 @@
+#!/bin/bash
+
+RESET='no-reset'
+
+if [ $# == 2 ]
+then
+	RESET=$2
+fi
+
+if [[ $OSTYPE = linux* ]]; then
+    CONTROLFILE=`readlink -f $1`
+elif [[ $OSTYPE = darwin* ]]; then
+    CONTROLFILE=$1
+fi
+
+if [[ $(hostname -s) = tide ]]; then
+    nice -n 10 batch3dmorph.py $CONTROLFILE $RESET
+else
+    batch3dmorph.py $CONTROLFILE $RESET
+fi
