@@ -1,0 +1,22 @@
+# RUN2DMORPH CONTROL FILE
+# VERSION 2017-06
+
+in_directory =
+input_ext =
+sampleID =
+out_directory =
+
+pixel_size_x =
+pixel_size_y =
+
+get_coordinates =
+draw_aspect_ratio =
+save_intermediates =
+
+disk_size_opening =
+contrast_adjustment =
+threshold_adjustment =
+disk_size_smoothing =
+
+downsample =
+num_points =
