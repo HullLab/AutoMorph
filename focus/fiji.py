@@ -124,16 +124,13 @@ run("Stack Focuser ", "enter={2} generate");
 selectWindow("Focused_{3}");
 saveAs("Tiff","{4}");
 close("*");
-selectWindow("{5}");
-close("*");
 """
 
     macro_text = macro_text.format(stripped_object,
                                    extension,
                                    software['kernel_size'],
                                    obj_name.split('.')[0],
-                                   os.path.join(stripped_object,'ij_focused.tif'),
-                                   obj_name)
+                                   os.path.join(stripped_object,'ij_focused.tif'))
 
     macro_file.write(macro_text)
     macro_file.close()
