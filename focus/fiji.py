@@ -125,7 +125,7 @@ close("*");
 
     macro_text = macro_text.format(stripped_object,
                                    software['kernel_size'],
-                                   obj_name.split('.')[0],
+                                   os.path.splitext(obj_name)[1],
                                    os.path.join(stripped_object,'ij_focused.tif'),
                                    os.path.join(stripped_object,'ij_heightmap.tif'),
                                    obj_name)
