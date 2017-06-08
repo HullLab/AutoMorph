@@ -1,0 +1,29 @@
+# SEGMENT CONTROL FILE
+# VERSION 2017-02
+# Saved Settings:
+[settings]
+
+directory = /enter/directory/here
+output = /enter/directory/here
+pixel_size_x =
+pixel_size_y =
+
+mode = final
+threshold = 0.16
+minimum_size = 100.0
+maximum_size = 2000.0
+
+skip_last_plane = True
+box_thickness = 20
+
+input_ext = tif
+output_ext = tif
+unit = microns
+scale_bar_length = 100
+
+id = 12577
+age = Recent
+source = Coretop
+location = Yale Peabody Museum
+author = the Hull Lab
+catalog_prefix = YPM IP
