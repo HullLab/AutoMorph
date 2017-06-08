@@ -76,8 +76,11 @@ def morph3d(control_file,reset):
         objoff.saveOBJOFF(run,obj,triangulation)
 
         # Build 3D PDF
-        print '\tINFO: Generating 3D PDF...'
-        pdf.makePDF(run,obj,run3dmorphPath,triangulation,triangles,faceColors,length,width)
+        if run['latex']:
+            print '\tINFO: Generating 3D PDF...'
+            pdf.makePDF(run,obj,run3dmorphPath,triangulation,triangles,faceColors,length,width)
+        else:
+            print '\tINFO: 3D PDF generation not requested.\n'
 
         # Checkpointing
         checkpoint.saveCheckpoint(obj,cpFile)
