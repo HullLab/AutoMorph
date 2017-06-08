@@ -22,16 +22,19 @@ def makeOutputFolders(settings,morph3dPath):
     if not os.path.exists(morph3dPath):
         os.mkdir(morph3dPath)
     # Top output subdirectories
-    toMake = ['heightmaps','coordinates','volumes','offs','objs','pdfs']
+    toMake = ['heightmaps','coordinates','volumes','offs','objs']
     topPaths = [os.path.join(morph3dPath,x) for x in toMake]
     # Heightmap output subdirectories
     toMake = ['FIJI_focused','macros']
     subPathsHM = [os.path.join(morph3dPath,'heightmaps',x) for x in toMake]
     # PDF output subdirectories
-    toMake = ['idtf','u3d','latex','pdf']
-    subPathsPDF = [os.path.join(morph3dPath,'pdfs',x) for x in toMake]
+    if settings['latex']:
+        toMake = ['idtf','u3d','latex','pdf']
+        pdfPaths = [os.path.join(morph3dPath,'pdfs')] + [os.path.join(morph3dPath,'pdfs',x) for x in toMake]
+    else:
+        pdfPaths = []
 
-    for p in topPaths + subPathsHM + subPathsPDF:
+    for p in topPaths + subPathsHM + pdfPaths:
         if not os.path.exists(p):
             os.mkdir(p)
 
