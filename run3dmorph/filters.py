@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import cv
 import cv2
 import numpy as np
 
@@ -63,7 +62,7 @@ def convertBW(image,image_name,threshold_adjustment):
     if threshold + threshold_adjustment >= 0:
         image_bw = cv2.threshold(image,threshold + threshold_adjustment,255,cv2.THRESH_BINARY)[1]
     else:
-        print 'INFO: threshold adjustment value too large! Using automatic value for', image_file
+        print 'INFO: Threshold adjustment value too large! Using automatic value for', image_file
     return image_bw
 
 
@@ -80,18 +79,18 @@ def clearBorder(image,size):
     Deletes binary objects that touch the border of the image.
     '''
     h,w = size[:2]
-    image_noise = image.copy()
-    imgMat = cv.fromarray(image_noise)
+    image_noise = np.array(image.copy())
+    mask = np.zeros((h+2,w+2),np.uint8)
 
     # Loop through border pixels as seeds
     for x in range(w):
-        temp = cv.FloodFill(imgMat,(x,0),0)
-        temp = cv.FloodFill(imgMat,(x,h-1),0)
+        temp = cv2.floodFill(image_noise,mask,(x,0),0)
+        temp = cv2.floodFill(image_noise,mask,(x,h-1),0)
     for y in range(h):
-        temp = cv.FloodFill(imgMat,(0,y),0)
-        temp = cv.FloodFill(imgMat,(w-1,y),0)
+        temp = cv2.floodFill(image_noise,mask,(0,y),0)
+        temp = cv2.floodFill(image_noise,mask,(w-1,y),0)
 
-    image_border = np.asarray(imgMat)
+    image_border = np.asarray(image_noise)
     return image_border
 
 
