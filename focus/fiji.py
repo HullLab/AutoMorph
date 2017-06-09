@@ -117,7 +117,7 @@ def write_batchfile(stripped_object, directories):
     macro_file_path = os.path.join(stripped_object,'macro.imj')
     macro_file = open(macro_file_path,'w')
     macro_text = """setBatchMode(true);
-run("Image Sequence...", "open={0} file=[{1}] convert sort");
+run("Image Sequence...", "open={0} file=[{1}] sort");
 run("Stack Focuser ", "enter={2} generate");
 selectWindow("Focused_{3}");
 saveAs("Tiff","{4}");
