@@ -15,8 +15,6 @@ accessible from the path via the following commands:
 
 This program will overwrite existing files from previous runs, so
 please be careful!
-
-(NOTE: AT THE MOMENT, THIS ONLY WORKS FOR LINUX/TIDE!)
 """
 
 import os
@@ -44,26 +42,25 @@ def run(directories, software):
 
     # os.chdir(directories['stripped'])
 
-    system_platform = platform.system()
+    def checkSystem():
+        '''
+        Checks system type (Mac OSX, Linux, or Windows) and architecture (32 or 64
+        bit) for specifying FIJI exectuable call.
+        '''
+        system = platform.system()
+        architecture = struct.calcsize('P') * 8
+        return system,architecture
 
-    if system_platform == 'Linux':
-        if software['fiji_architecture'] == '32':
-            architecture = 'linux32'
-        elif software['fiji_architecture'] == '64':
-            architecture = 'linux64'
-        else:
-            raise ValueError('FIJI architecture inappropriately specified (must be 32 or 64)')
-    elif system_platform == 'Darwin':
-        architecture = 'macosx'
-    else:
-        raise ValueError('Inappropriate system (must be Linux or Darwin)')
+    # Automatically check system and architecture for specifying FIJI executable
+    system,architecture = checkSystem()
+    sysDict = {'Darwin':'macosx','Linux':'linux'+str(architecture)}
 
     stripped_objects = [os.path.realpath(x) for x in glob.glob(os.path.join(directories["stripped"],
                                                                             '*_obj*'))]
 
     print 'Begin FIJI processing...\n'
 
-    command = 'ImageJ-' + architecture + ' --headless --memory=1000m -macro '
+    command = 'ImageJ-' + sysDict[system] + ' --headless --memory=1000m -macro '
 
     for stripped_object in stripped_objects:
         start = time.time()
