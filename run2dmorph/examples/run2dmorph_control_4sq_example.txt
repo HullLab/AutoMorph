@@ -1,90 +1,23 @@
-# VERSION 2016.09.26
-# Control file for run2dmorph. To use default values, set variables = [].
-# Variables that are designated as (required) have no default value and must be set by
-# the user.
+# RUN2DMORPH CONTROL FILE
+# VERSION 2017-06
+# 4SQ EXAMPLE
 
-# Installation Directory:
-# The full path to the user's installation of AutoMorph. For example, if AutoMorph is
-# found in the /Applications folder, this should be set to '/Applications' (required)
-install_dir = /enter/directory/here
-
-# Image Directory:
-# The full path of the folder containing the image files to be processed (required)
-directory = /enter/directory/here
-
-# Output Directory:
-# The full path of the folder to which output folder should be saved (default behavior:
-# "morph2d" folder in same folder as original images)
-output_dir = []
-
-# Image Extension:
-# String designating file extension of images to process (required)
-image_extension = .tif
-
-# Sample ID:
-# String designating the Sample ID # used to identify the processed files (required)
+in_directory =
+input_ext = .tif
 sampleID = 4sq_example
+out_directory =
 
-# Microns Per Pixel X:
-# A number specifying the conversion factor for microns to pixels for the x-axis/width
-# (default: 1)
-microns_per_pixel_X = []
+pixel_size_x = 0.975
+pixel_size_y = 0.975
 
-# Microns Per Pixel Y:
-# A number specifying the conversion factor for microns to pixels for the y-axis/height
-# (default: 1)
-microns_per_pixel_Y = []
+get_coordinates =
+draw_aspect_ratio =
+save_intermediates = True
 
-# Get Coordinates:
-# A boolean specifying whether coordinate data should be extracted and saved to file
-# (default: true)
-get_coordinates = []
+disk_size_opening =
+contrast_adjustment =
+threshold_adjustment =
+disk_size_smoothing =
 
-# Save Intermediates:
-# A boolean specifying whether the function should output intermediate images of the
-# outline extraction process for troubleshooting (default: false)
-save_intermediates = []
-
-# Intensity Range In:
-# Specifies the input range for the intensity filtering step (default: [0 0.2])
-intensity_range_in = []
-
-# Intensity Range Out:
-# Specifies the output range for the intensity filtering step (default: [0 1])
-intensity_range_out = []
-
-# Gamma:
-# Specifies the gamma value for the intensity filtering step (default: 2)
-gamma = []
-
-# Threshold Adjustment:
-# Specifies an adjustment value for the automatic threshold value during conversion of
-# image to black and white. Higher values correspond to higher tolerance. Adjustment value
-# is ADDED to the automatic threshold value (default: 0)
-threshold_adjustment = []
-
-# Smoothing Sigma:
-# An integer that controls the amount of smoothing applied to the edge outline for
-# rugosity calculations. Higher values correspond to higher amounts of smoothing
-# (default: 7)
-smoothing_sigma = []
-
-# Noise Removal Limit:
-# A number specifying the size (in proportion of total image size) below which objects
-# will be removed from the image during the noise removal step. For instance, if the
-# noise removal limit is 0.05, then all objects smaller than 5% of the total image size
-# will be removed (default: 0.05)
-noise_limit = []
-
-# Downsample:
-# A boolean specifying whether extracted coordinates should be downsampled (default: true)
-downsample = []
-
-# Number of Points:
-# An integer specifying the number of points desired if downsample == true (default: 100)
-num_points = []
-
-# Draw AR:
-# A boolean specifying whether images and .csv file containing aspect ratio information
-# should be written (default: true)
-draw_ar = []
+downsample =
+num_points =

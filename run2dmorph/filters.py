@@ -63,7 +63,7 @@ def convertBW(image,image_name,threshold_adjustment):
     if threshold + threshold_adjustment >= 0:
         image_bw = cv2.threshold(image,threshold + threshold_adjustment,255,cv2.THRESH_BINARY)[1]
     else:
-        print 'INFO: threshold adjustment value too large! Using automatic value for', image_file
+        print 'INFO: Threshold adjustment value too large! Using automatic value for', image_file
     return image_bw
 
 

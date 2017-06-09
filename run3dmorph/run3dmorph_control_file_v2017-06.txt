@@ -5,18 +5,18 @@ in_directory =
 out_directory =
 sampleID =
 stack_image_ext =
+macro =
+latex =
 
 unit = micron
 pixel_size_x =
 pixel_size_y =
 slices =
-zstep = 
+zstep =
 
-macro =
 kernel_heightmap =
 kernel_outlierfilter =
 grid_size =
-latex =
 
 disk_size_opening =
 contrast_adjustment =
