@@ -36,7 +36,7 @@ def focus(directories, software, ID):
 
     elif software['name'] == "fiji":
 
-        fiji.run(directories, software)
+        fiji.run(directories)
         outfile = 'ij_focused.tif'
 
     else:

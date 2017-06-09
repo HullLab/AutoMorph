@@ -21,10 +21,11 @@ import os
 import glob
 import time
 import platform
+import struct
 import subprocess
 
 
-def run(directories, software):
+def run(directories):
     """
     focusedPath: full path to the folder containing the output from
     the AutoMorph 'focus' software.
@@ -66,7 +67,7 @@ def run(directories, software):
         start = time.time()
         print 'Object: ' + stripped_object
 
-        batch_file = write_batchfile(stripped_object, directories, software)
+        batch_file = write_batchfile(stripped_object, directories)
 
         subprocess.call(command+batch_file, shell=True)
 
@@ -90,7 +91,7 @@ def run(directories, software):
         print 'FIJI finished!'
 
 
-def write_batchfile(stripped_object, directories, software):
+def write_batchfile(stripped_object, directories):
     """
     imageStackDir: full path to folder containing stack of images for
     an object
@@ -125,7 +126,7 @@ close("*");
 
     macro_text = macro_text.format(stripped_object,
                                    extension,
-                                   software['kernel_size'],
+                                   '11',
                                    obj_name.split('.')[0],
                                    os.path.join(stripped_object,'ij_focused.tif'))
 
