@@ -16,6 +16,8 @@ import getpass
 def parse(filename):
     # Set up defaults
     defaults = {
+                'pixel_size_x':1,
+                'pixel_size_y':1,
                 'macro':False,
                 'kernel_heightmap':11,
                 'kernel_outlierfilter':45,
