@@ -53,7 +53,7 @@ def morph3d(control_file,reset):
         objects = allObjects
 
     # Get path of run3dmorph installation
-    run3dmorphPath = os.path.dirname(os.path.dirname(os.path.abspath(mesh.__file__)))
+    run3dmorphPath = os.path.dirname(os.path.realpath(__file__))
 
     for obj in objects:
         # Print name of current object
