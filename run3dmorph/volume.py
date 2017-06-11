@@ -15,7 +15,7 @@ import numpy as np
 import time
 
 
-def getVolumeSurfaceArea(settings,obj,image_clean,edge,z_values,top_volume,top_surface_area):
+def getVolumeSurfaceArea(settings,obj,image_clean,edge,z_values,top_surface_area):
     '''
     Wrapper function for estimating surface area and volume for object,
     assuming one of three 'Platonic' base shapes: 1) Dome; 2) Cylinder; and
@@ -35,6 +35,9 @@ def getVolumeSurfaceArea(settings,obj,image_clean,edge,z_values,top_volume,top_s
     area = measures['Area']
     perimeter = measures['Perimeter']
     centroid = np.array(properties.centroid)
+
+    # Calculate top volume
+    top_volume = sum(z_values - bottom_height)
 
     # Get bottom volume and surface area for idealized dome, cylinder, and cone bases
     bd_volume,bd_surface_area = dome(length,width,bottom_height)

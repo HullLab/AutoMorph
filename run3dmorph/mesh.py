@@ -253,9 +253,6 @@ def extractMesh(settings,obj):
     # Extract mesh from x,y,z point cloud
     z_values,triangulation,triangles,faceColors,top_surface_area = meshDelaunay(settings,final_heights)
 
-    # Calculate top volume
-    top_volume = sum(z_values)
-
     # Write 3D x,y,z-coordinates file
     writeCoordinates(obj,triangulation)
 
@@ -263,4 +260,4 @@ def extractMesh(settings,obj):
     time_elapsed = end - start
     print '\tINFO: Time elapsed: {0:.3f} seconds\n'.format(time_elapsed)
 
-    return top_volume,top_surface_area,edge,image_clean,z_values,triangulation,triangles,faceColors
+    return top_surface_area,edge,image_clean,z_values,triangulation,triangles,faceColors
