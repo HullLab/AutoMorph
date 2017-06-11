@@ -69,7 +69,7 @@ def morph3d(control_file,reset):
 
         # Get total volume and surface area estimates
         print '\tINFO: Estimating object surface area and volume...'
-        length,width = volume.getVolumeSurfaceArea(run,obj,image_clean,edge,z_values,top_surface_area)
+        length,width = volume.getVolumeSurfaceArea(run,obj,image_clean,edge,z_values,top_surface_area,triangulation)
 
         # Save mesh in OBJ and OFF format
         print '\tINFO: Saving OBJ and OFF files...'

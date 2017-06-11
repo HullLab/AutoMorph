@@ -15,7 +15,7 @@ import numpy as np
 import time
 
 
-def getVolumeSurfaceArea(settings,obj,image_clean,edge,z_values,top_surface_area):
+def getVolumeSurfaceArea(settings,obj,image_clean,edge,z_values,top_surface_area,triangulation):
     '''
     Wrapper function for estimating surface area and volume for object,
     assuming one of three 'Platonic' base shapes: 1) Dome; 2) Cylinder; and
@@ -37,7 +37,12 @@ def getVolumeSurfaceArea(settings,obj,image_clean,edge,z_values,top_surface_area
     centroid = np.array(properties.centroid)
 
     # Calculate top volume
-    top_volume = sum(z_values - bottom_height)
+    top_volume = 0
+    for s in triangulation.simplices:
+        vertices = triangulation.points[s]
+        top_volume += volumeTetrahedron(vertices)
+
+    #top_volume = sum(z_values - bottom_height)
 
     # Get bottom volume and surface area for idealized dome, cylinder, and cone bases
     bd_volume,bd_surface_area = dome(length,width,bottom_height)
@@ -72,6 +77,15 @@ def saveVolumes(settings,obj,top_measures,dome_measures,cylinder_measures,cone_m
         columns = 'Volume_Dome,Volume_Cylinder,Volume_Cone,Volume_Top,Surface_Area_Dome,Surface_Area_Cylinder,Surface_Area_Cone,Surface_Area_Top,Grid_Size,Height,Width,Length,Base_Unit'
         data = ','.join(map(str,[dome_measures[0],cylinder_measures[0],cone_measures[0],top_measures[0],dome_measures[1],cylinder_measures[1],cone_measures[1],top_measures[1],settings['grid_size'],top_height,width,length,settings['unit']]))
         v.write('{:s}\n{:s}'.format(columns,data))
+
+
+def volumeTetrahedron(vertices):
+    '''
+    Calculates the volume of an individual tetrahedron given its vertices.
+    '''
+    matrix = np.vstack((vertices.T,np.ones(4)))
+    volume = (1/6) * np.linalg.det(matrix)
+    return abs(volume)
 
 
 def dome(length,width,height):
