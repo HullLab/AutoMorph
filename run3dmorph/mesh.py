@@ -183,7 +183,6 @@ def meshDelaunay(settings,heights):
     Y_nz = np.array([Y[:,0][yi] for yi in nonZero[1]])
 
     xyz_points = np.column_stack((X_nz,Y_nz,Z_nz))
-    #xyz_points_100 = np.column_stack((Xnn[::100],Ynn[::100],Znn[::100]))
     triangulation = Delaunay(xyz_points)
 
     # Get surface triangles
@@ -203,7 +202,7 @@ def meshDelaunay(settings,heights):
     top_surface_area = sum([x.area for x in polygons])
 
     return z,triangulation,triangles,colors,top_surface_area
-
+    
 
 def writeCoordinates(obj,triangulation):
     '''
@@ -228,7 +227,7 @@ def extractMesh(settings,obj):
     hmap_resized,rgb_resized = imagePreparation(settings,obj)
 
     # Get 2D binary outline map for background removal
-    edge,image_clean,image_clean_unfilled = extractoutline.extractOutline(settings,obj.name,rgb_resized,settings,True)
+    edge,image_clean,image_clean_unfilled = extractoutline.extractOutline(settings,obj.name,rgb_resized,True)
 
     # Remove background in height map by performing element-wise multiplication with binary outline map from run2dmorph
     hmap_no_BG = hmap_resized * (image_clean / 255)

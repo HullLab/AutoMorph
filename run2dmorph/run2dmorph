@@ -51,7 +51,7 @@ def morph2d(settings_file):
         object_name = '_'.join([sample_id,object_id])
 
         # Extract edge and cleaned images
-        edge_unsmoothed,edge_smoothed,image_clean,image_smoothed,image_border = extractoutline.extractOutline(run,object_id,image,run,False)
+        edge_unsmoothed,edge_smoothed,image_clean,image_smoothed,image_border = extractoutline.extractOutline(run,object_id,image,False)
         # Get region properties: Area, eccentricity, perimeter, major axis length, minor axis length, and rugosity
         original_props = extractmorph.getRegionProps(image_clean)
         smoothed_props = extractmorph.getRegionProps(image_smoothed)
