@@ -17,7 +17,7 @@ import time
 from shapely.geometry.polygon import Polygon
 
 
-def getVolumeSurfaceArea(settings,obj,image_clean,edge,triangulation,triangles,bottom_height,top_height):
+def getVolumeSurfaceArea(settings,obj,image_clean,edge,triangulation,triangles,length,width,bottom_height,top_height):
     '''
     Wrapper function for estimating surface area and volume for object,
     assuming one of three 'Platonic' base shapes: 1) Dome; 2) Cylinder; and

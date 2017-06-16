@@ -105,7 +105,7 @@ def getTopBottom(image,heights):
     bottom_height = np.amin(heights) # Height from 0 to bottom of mesh
     top_height = np.amax(heights) # Top height of mesh
 
-    return bottom_height,top_height
+    return length,width,bottom_height,top_height
 
 
 def deleteOutliers(image,counts):
@@ -243,7 +243,7 @@ def extractMesh(settings,obj):
 
     # Get number of pixels on each z-level and average level height
     counts = countPerLevel(filtered)
-    bottom_height,top_height = getTopBottom(image_clean,heights)
+    length,width,bottom_height,top_height = getTopBottom(image_clean,heights)
 
     # Delete outliers from filtered heights
     no_outliers = deleteOutliers(filtered,counts)
@@ -261,4 +261,4 @@ def extractMesh(settings,obj):
     time_elapsed = end - start
     print '\tINFO: Time elapsed: {0:.3f} seconds\n'.format(time_elapsed)
 
-    return edge,image_clean,triangulation,triangles,faceColors,bottom_height,top_height
+    return edge,image_clean,triangulation,triangles,faceColors,length,width,bottom_height,top_height

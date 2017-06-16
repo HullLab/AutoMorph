@@ -65,11 +65,11 @@ def morph3d(control_file,reset):
 
         # Extract mesh
         print '\tINFO: Beginning mesh extraction...'
-        edge,image_clean,triangulation,triangles,faceColors,bottom_height,top_height = mesh.extractMesh(run,obj)
+        edge,image_clean,triangulation,triangles,faceColors,length,width,bottom_height,top_height = mesh.extractMesh(run,obj)
 
         # Get total volume and surface area estimates
         print '\tINFO: Estimating object surface area and volume...'
-        length,width = volume.getVolumeSurfaceArea(run,obj,image_clean,edge,triangulation,triangles,bottom_height,top_height)
+        volume.getVolumeSurfaceArea(run,obj,image_clean,edge,triangulation,triangles,length,width,bottom_height,top_height)
 
         # Save mesh in OBJ and OFF format
         print '\tINFO: Saving OBJ and OFF files...'
