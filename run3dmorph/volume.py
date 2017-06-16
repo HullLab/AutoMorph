@@ -14,8 +14,10 @@ import pandas
 import numpy as np
 import time
 
+from shapely.geometry.polygon import Polygon
 
-def getVolumeSurfaceArea(settings,obj,image_clean,edge,z_values,top_surface_area,triangulation):
+
+def getVolumeSurfaceArea(settings,obj,image_clean,edge,triangulation,triangles,bottom_height,top_height):
     '''
     Wrapper function for estimating surface area and volume for object,
     assuming one of three 'Platonic' base shapes: 1) Dome; 2) Cylinder; and
@@ -24,25 +26,18 @@ def getVolumeSurfaceArea(settings,obj,image_clean,edge,z_values,top_surface_area
     '''
     start = time.time()
 
-    mbb,_ = aspectratio.getMBB(image_clean)
-    length,width,_ = aspectratio.measureMBB(mbb)
-    bottom_height = min(z_values) # Height from 0 to bottom of mesh
-    top_height = max(z_values) # Top height of mesh
+    # Calculate top surface area
+    top_surface_area = getTopSurfaceArea(triangulation,triangles)
 
-    # Get coordinates, 2D area, and 2D perimeter for surface area/volume estimation
+    # Calculate top volume
+    top_volume = getTopVolume(triangulation)
+
+    # Get coordinates, 2D area, and 2D perimeter for bottom surface area/volume estimation
     properties = extractmorph.getRegionProps(image_clean)
     measures = extractmorph.extractMorphology(properties,properties)
     area = measures['Area']
     perimeter = measures['Perimeter']
     centroid = np.array(properties.centroid)
-
-    # Calculate top volume
-    top_volume = 0
-    for s in triangulation.simplices:
-        vertices = triangulation.points[s]
-        top_volume += volumeTetrahedron(vertices)
-
-    #top_volume = sum(z_values - bottom_height)
 
     # Get bottom volume and surface area for idealized dome, cylinder, and cone bases
     bd_volume,bd_surface_area = dome(length,width,bottom_height)
@@ -60,7 +55,7 @@ def getVolumeSurfaceArea(settings,obj,image_clean,edge,z_values,top_surface_area
     cone_surface_area = bco_surface_area + top_surface_area
 
     # Save 3D measures as CSV file
-    saveVolumes(settings,obj,[top_volume,top_surface_area],[dome_volume,dome_surface_area],[cylinder_volume,cylinder_surface_area],[cone_volume,cone_surface_area],length,width,top_height)
+    saveVolumes(settings,obj,[top_volume,top_surface_area],[dome_volume,dome_surface_area],[cylinder_volume,cylinder_surface_area],[cone_volume,cone_surface_area],length,width,top_height,bottom_height)
 
     end = time.time()
     time_elapsed = end - start
@@ -69,13 +64,38 @@ def getVolumeSurfaceArea(settings,obj,image_clean,edge,z_values,top_surface_area
     return length,width
 
 
-def saveVolumes(settings,obj,top_measures,dome_measures,cylinder_measures,cone_measures,length,width,top_height):
+def getTopVolume(triangulation):
+    '''
+    Calculates top volume by summing volume of all simplices comprising the mesh.
+    '''
+    top_volume = 0
+    for s in triangulation.simplices:
+        vertices = triangulation.points[s]
+        top_volume += volumeTetrahedron(vertices)
+
+    #top_volume = sum(z_values - bottom_height)
+
+    return top_volume
+
+
+def getTopSurfaceArea(triangulation,triangles):
+    '''
+    Get top surface area by summing areas of all triangles comprising the mesh.
+    '''
+    coord_groups = [triangulation.points[t] for t in triangles]
+    polygons = [Polygon(cg) for cg in coord_groups]
+    top_surface_area = sum([x.area for x in polygons])
+
+    return top_surface_area
+
+
+def saveVolumes(settings,obj,top_measures,dome_measures,cylinder_measures,cone_measures,length,width,top_height,bottom_height):
     '''
     Saves volume and surface area estimates in a CSV file.
     '''
     with open(obj.volume,'wb') as v:
-        columns = 'Volume_Dome,Volume_Cylinder,Volume_Cone,Volume_Top,Surface_Area_Dome,Surface_Area_Cylinder,Surface_Area_Cone,Surface_Area_Top,Grid_Size,Height,Width,Length,Base_Unit'
-        data = ','.join(map(str,[dome_measures[0],cylinder_measures[0],cone_measures[0],top_measures[0],dome_measures[1],cylinder_measures[1],cone_measures[1],top_measures[1],settings['grid_size'],top_height,width,length,settings['unit']]))
+        columns = 'Volume_Dome,Volume_Cylinder,Volume_Cone,Volume_Top,Surface_Area_Dome,Surface_Area_Cylinder,Surface_Area_Cone,Surface_Area_Top,Grid_Size,Height,Base_Height,Width,Length,Base_Unit'
+        data = ','.join(map(str,[dome_measures[0],cylinder_measures[0],cone_measures[0],top_measures[0],dome_measures[1],cylinder_measures[1],cone_measures[1],top_measures[1],settings['grid_size'],top_height,bottom_height,width,length,settings['unit']]))
         v.write('{:s}\n{:s}'.format(columns,data))
 
 

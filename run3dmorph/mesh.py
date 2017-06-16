@@ -9,6 +9,7 @@ import extractoutline
 import extractmorph
 import extractcoordinates
 import initialize
+import aspectratio
 
 import numpy as np
 import cv2
@@ -21,7 +22,6 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 
 from matplotlib.tri.triangulation import Triangulation
-from shapely.geometry.polygon import Polygon
 
 
 def macroSetup(heightmap):
@@ -95,12 +95,17 @@ def countPerLevel(image):
     return counts
 
 
-def getAverageLevel(counts):
+def getTopBottom(image,heights):
     '''
-    Returns the average level height based on the pixel count per level.
+    Returns the distance between the background (height = 0) and the
+    beginning of the mesh (bottom height).
     '''
-    average_level = np.abs(counts.keys() - np.mean(counts.keys())).argmin()
-    return average_level
+    mbb,_ = aspectratio.getMBB(image)
+    length,width,_ = aspectratio.measureMBB(mbb)
+    bottom_height = min(heights) # Height from 0 to bottom of mesh
+    top_height = max(heights) # Top height of mesh
+
+    return bottom_height,top_height
 
 
 def deleteOutliers(image,counts):
@@ -133,7 +138,7 @@ def deleteOutliers(image,counts):
     return image
 
 
-def blackHole(binary_outline,binary_outline_unfilled,heights,average_level):
+def blackHole(binary_outline,binary_outline_unfilled,heights,bottom_height):
     '''
     If aperture present, replaces pixel values of aperture with average pixel
     value from getAverageLevel().
@@ -146,7 +151,7 @@ def blackHole(binary_outline,binary_outline_unfilled,heights,average_level):
         for i in range(len(aperture[0])):
             x = aperture[0]
             y = aperture[1]
-            heights[x[i],y[i]] = average_level
+            heights[x[i],y[i]] = bottom_height
 
     return heights
 
@@ -196,13 +201,10 @@ def meshDelaunay(settings,heights):
     m = plt.cm.ScalarMappable(cmap=surf.cmap,norm=surf.norm)
     colors = m.to_rgba(Z_nz)
 
-    # Get top surface area
-    coord_groups = [triangulation.points[t] for t in triangles]
-    polygons = [Polygon(cg) for cg in coord_groups]
-    top_surface_area = sum([x.area for x in polygons])
 
-    return z,triangulation,triangles,colors,top_surface_area
-    
+
+    return z,triangulation,triangles,colors
+
 
 def writeCoordinates(obj,triangulation):
     '''
@@ -241,16 +243,16 @@ def extractMesh(settings,obj):
 
     # Get number of pixels on each z-level and average level height
     counts = countPerLevel(filtered)
-    average_level = getAverageLevel(counts)
+    bottom_height,top_height = getTopBottom(image_clean,heights)
 
     # Delete outliers from filtered heights
     no_outliers = deleteOutliers(filtered,counts)
 
     # If aperture present, set aperture height to average height
-    final_heights = blackHole(image_clean,image_clean_unfilled,no_outliers,average_level)
+    final_heights = blackHole(image_clean,image_clean_unfilled,no_outliers,bottom_height)
 
     # Extract mesh from x,y,z point cloud
-    z_values,triangulation,triangles,faceColors,top_surface_area = meshDelaunay(settings,final_heights)
+    z_values,triangulation,triangles,faceColors = meshDelaunay(settings,final_heights)
 
     # Write 3D x,y,z-coordinates file
     writeCoordinates(obj,triangulation)
@@ -259,4 +261,4 @@ def extractMesh(settings,obj):
     time_elapsed = end - start
     print '\tINFO: Time elapsed: {0:.3f} seconds\n'.format(time_elapsed)
 
-    return top_surface_area,edge,image_clean,z_values,triangulation,triangles,faceColors
+    return edge,image_clean,triangulation,triangles,faceColors,bottom_height,top_height
