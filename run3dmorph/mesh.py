@@ -95,19 +95,6 @@ def countPerLevel(image):
     return counts
 
 
-def getTopBottom(image,heights):
-    '''
-    Returns the distance between the background (height = 0) and the
-    beginning of the mesh (bottom height).
-    '''
-    mbb,_ = aspectratio.getMBB(image)
-    length,width,_ = aspectratio.measureMBB(mbb)
-    bottom_height = np.amin(heights) # Height from 0 to bottom of mesh
-    top_height = np.amax(heights) # Top height of mesh
-
-    return length,width,bottom_height,top_height
-
-
 def deleteOutliers(image,counts):
     '''
     Deletes pixels at outlier heights, i.e., pixels at height levels for which
@@ -136,24 +123,6 @@ def deleteOutliers(image,counts):
                 image[x,y] = 0
 
     return image
-
-
-def blackHole(binary_outline,binary_outline_unfilled,heights,bottom_height):
-    '''
-    If aperture present, replaces pixel values of aperture with average pixel
-    value from getAverageLevel().
-    '''
-    mask = np.pad(binary_outline,1,'constant')
-    flooded = cv2.floodFill(binary_outline_unfilled,mask,(0,0),1)
-    aperture = np.where(binary_outline_unfilled == 0)
-
-    if len(aperture[0]):
-        for i in range(len(aperture[0])):
-            x = aperture[0]
-            y = aperture[1]
-            heights[x[i],y[i]] = bottom_height
-
-    return heights
 
 
 def meshDelaunay(settings,heights):
@@ -201,8 +170,6 @@ def meshDelaunay(settings,heights):
     m = plt.cm.ScalarMappable(cmap=surf.cmap,norm=surf.norm)
     colors = m.to_rgba(Z_nz)
 
-
-
     return z,triangulation,triangles,colors
 
 
@@ -216,6 +183,39 @@ def writeCoordinates(obj,triangulation):
         for coord in coordinates:
             line = ','.join([obj.name,str(coord[0]),str(coord[1]),str(coord[2])])
             f.write('{:s}\n'.format(line))
+
+
+def getTopBottom(image,heights):
+    '''
+    Returns the distance between the background (height = 0) and the
+    beginning of the mesh (bottom height), although with length and
+    width of the minimum bounding box enclosing the object.
+    '''
+    mbb,_ = aspectratio.getMBB(image)
+    length,width,_ = aspectratio.measureMBB(mbb)
+    bottom_height = np.amin(heights[np.nonzero(heights)]) # Height from 0 to bottom of mesh
+    top_height = np.amax(heights) # Top height of mesh
+
+    return length,width,bottom_height,top_height
+
+
+def aperture(binary_outline,binary_outline_unfilled,heights,bottom_height):
+    '''
+    If aperture present, replaces pixel values of aperture with average pixel
+    value from getAverageLevel().
+    '''
+    mask = np.pad(binary_outline,1,'constant')
+    flooded = cv2.floodFill(binary_outline_unfilled,mask,(0,0),1)
+    aperture = np.where(binary_outline_unfilled == 0)
+
+    if len(aperture[0]):
+        for i in range(len(aperture[0])):
+            x = aperture[0]
+            y = aperture[1]
+            heights[x[i],y[i]] = bottom_height
+
+    return heights
+
 
 
 def extractMesh(settings,obj):
@@ -241,15 +241,18 @@ def extractMesh(settings,obj):
     k = settings['kernel_outlierfilter'] # Kernel size
     filtered = generic_filter(heights,outlierFilter,(k,k))
 
-    # Get number of pixels on each z-level and average level height
+    # Get number of pixels on each z-level
     counts = countPerLevel(filtered)
-    length,width,bottom_height,top_height = getTopBottom(image_clean,heights)
 
     # Delete outliers from filtered heights
     no_outliers = deleteOutliers(filtered,counts)
 
-    # If aperture present, set aperture height to average height
-    final_heights = blackHole(image_clean,image_clean_unfilled,no_outliers,bottom_height)
+    # Get length, width, and top and bottom heights
+    length,width,bottom_height,top_height = getTopBottom(image_clean,no_outliers)
+
+    # If aperture present, set aperture height to average height. Also extract length, width,
+    # and top and bottom heights
+    final_heights = aperture(image_clean,image_clean_unfilled,no_outliers,bottom_height)
 
     # Extract mesh from x,y,z point cloud
     z_values,triangulation,triangles,faceColors = meshDelaunay(settings,final_heights)
