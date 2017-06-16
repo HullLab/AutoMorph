@@ -65,7 +65,7 @@ def morph3d(control_file,reset):
 
         # Extract mesh
         print '\tINFO: Beginning mesh extraction...'
-        edge,image_clean,z_values,triangulation,triangles,faceColors = mesh.extractMesh(run,obj)
+        edge,image_clean,triangulation,triangles,faceColors,bottom_height,top_height = mesh.extractMesh(run,obj)
 
         # Get total volume and surface area estimates
         print '\tINFO: Estimating object surface area and volume...'

@@ -71,7 +71,7 @@ def parse(filename):
 
     # Set default output directory if none specified
     if not settings['out_directory']:
-        settings['out_directory'] = settings['in_directory'] + os.sep + 'morph3d'
+        settings['out_directory'] = settings['in_directory']
 
     # Set up additional global settings
     if settings['in_directory'].endswith(os.sep):

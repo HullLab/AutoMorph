@@ -68,6 +68,14 @@ def getTopVolume(triangulation):
     '''
     Calculates top volume by summing volume of all simplices comprising the mesh.
     '''
+    def volumeTetrahedron(vertices):
+        '''
+        Calculates the volume of an individual tetrahedron given its vertices.
+        '''
+        matrix = np.vstack((vertices.T,np.ones(4)))
+        volume = (1/6) * np.linalg.det(matrix)
+        return abs(volume)
+
     top_volume = 0
     for s in triangulation.simplices:
         vertices = triangulation.points[s]
@@ -97,15 +105,6 @@ def saveVolumes(settings,obj,top_measures,dome_measures,cylinder_measures,cone_m
         columns = 'Volume_Dome,Volume_Cylinder,Volume_Cone,Volume_Top,Surface_Area_Dome,Surface_Area_Cylinder,Surface_Area_Cone,Surface_Area_Top,Grid_Size,Height,Base_Height,Width,Length,Base_Unit'
         data = ','.join(map(str,[dome_measures[0],cylinder_measures[0],cone_measures[0],top_measures[0],dome_measures[1],cylinder_measures[1],cone_measures[1],top_measures[1],settings['grid_size'],top_height,bottom_height,width,length,settings['unit']]))
         v.write('{:s}\n{:s}'.format(columns,data))
-
-
-def volumeTetrahedron(vertices):
-    '''
-    Calculates the volume of an individual tetrahedron given its vertices.
-    '''
-    matrix = np.vstack((vertices.T,np.ones(4)))
-    volume = (1/6) * np.linalg.det(matrix)
-    return abs(volume)
 
 
 def dome(length,width,height):

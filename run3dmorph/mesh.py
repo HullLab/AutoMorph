@@ -102,8 +102,8 @@ def getTopBottom(image,heights):
     '''
     mbb,_ = aspectratio.getMBB(image)
     length,width,_ = aspectratio.measureMBB(mbb)
-    bottom_height = min(heights) # Height from 0 to bottom of mesh
-    top_height = max(heights) # Top height of mesh
+    bottom_height = np.amin(heights) # Height from 0 to bottom of mesh
+    top_height = np.amax(heights) # Top height of mesh
 
     return bottom_height,top_height
 
