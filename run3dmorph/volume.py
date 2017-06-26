@@ -145,67 +145,84 @@ def cylinder(area2D,perimeter2D,height):
     return bottom_volume,bottom_surface_area
 
 
-def cone(cylinderVolume,centroid2D,height,edge,properties):
+def cone(cylinderVolume,length,width,height):
     '''
     Volume and surface area estimate for a Platonic cone base.
     '''
     bottom_volume = cylinderVolume / 3
 
-    coordinates = extractcoordinates.extractCoordinates(edge,False,0,properties)
+    a = length / 2
+    b = width / 2
+    h = height
 
-    def coneSurfaceArea(centroid2D,height,coordinates):
-        '''
-        Approximates the curve surface area of a generalized conical surface,
-        where all points on a basal perimeter (rho,phi,0) are joined by a linear
-        segment to the vertex at (0,0,H) in cylindrical coordinates (rho,phi,z)
-        rho > 0; 0 <= phi <= 2 * pi, H fixed constant.
-
-        Note that this forumulation assumes that the first point has phi
-        closest to zero, and last point phi is close to 2 * pi, with phi
-        increasing monotonically in between.
-
-        The integration rule used is a midpoint rule (equivalent to approximating
-        the integral via small trapeziums, but with possibly unequal width).
-        '''
-        # Initialize Numpy array to hold distances between coordinates and centroid
-        distances = np.empty((len(coordinates),1))
-
-        # Calculate angle of inclination between each coordinate and centroid
-        phis = np.arctan2(coordinates[:,0],coordinates[:,1])
-
-        # Loop through coordinates and 1) Calculate distance between coordinate
-        # and centroid; and 2) Add 2 * pi to negative phi values so that all phis
-        # are placed on a 0 to 2 * pi scale.
-        for i,coord in enumerate(coordinates):
-            # (1)
-            distances[i] = np.linalg.norm(coord - centroid2D)
-            # (2)
-            if phis[i] < 0:
-                phis[i] = phis[i] + (2 * math.pi)
-
-        phi = np.array(sorted(phis))
-        indices = [p[0] for p in sorted(enumerate(phis),key=lambda i:i[1])]
-        rho = distances[indices]
-
-        # Calculate integrand at each point
-        y = 0.5 * rho * np.sqrt((rho ** 2 + height ** 2))
-        # Preallocate vector to hold areas of each trapeziums
-        areas = np.empty((len(y),1))
-
-        # Calculate area of trapezia between points, one by one
-        # For first point, area of trapezium is:
-        #       (average of y at edges) * (change in phi)
-        # However, we need to subtract off 2 * pi to account for phi
-        # jumping from 2 * pi back to zero as we loop around
-        areas[0] = 0.5 * (y[0] + y[-1]) * (phi[0] - (phi[-1] - 2 * math.pi))
-
-        # For subsequent points, area of trapezium is:
-        #       (average of y at edges) * (change in phi)
-        areas[1:] = 0.5 * ((y[0:-1] + y[1:]) * ((phi[1:] - phi[0:-1]).reshape((areas.shape[0]-1,1))))
-
-        # Output total area by summing over areas of all trapezia
-        return sum(areas)[0]
-
-    bottom_surface_area = coneSurfaceArea(centroid2D,height,coordinates)
+    # Lateral surface area is an estimation (real value is slightly higher)
+    bottom_surface_area = 0.5 * math.pi * (a * math.sqrt(b**2 + h**2) + b * math.sqrt(a**2 + h**2))
 
     return bottom_volume,bottom_surface_area
+
+
+##### Old cone calculation method - greatly overestimates lateral surface area
+# def cone(cylinderVolume,centroid2D,height,edge,properties):
+#     '''
+#     Volume and surface area estimate for a Platonic cone base.
+#     '''
+#     bottom_volume = cylinderVolume / 3
+#
+#     coordinates = extractcoordinates.extractCoordinates(edge,False,0,properties)
+#
+#     def coneSurfaceArea(centroid2D,height,coordinates):
+#         '''
+#         Approximates the curve surface area of a generalized conical surface,
+#         where all points on a basal perimeter (rho,phi,0) are joined by a linear
+#         segment to the vertex at (0,0,H) in cylindrical coordinates (rho,phi,z)
+#         rho > 0; 0 <= phi <= 2 * pi, H fixed constant.
+#
+#         Note that this forumulation assumes that the first point has phi
+#         closest to zero, and last point phi is close to 2 * pi, with phi
+#         increasing monotonically in between.
+#
+#         The integration rule used is a midpoint rule (equivalent to approximating
+#         the integral via small trapeziums, but with possibly unequal width).
+#         '''
+#         # Initialize Numpy array to hold distances between coordinates and centroid
+#         distances = np.empty((len(coordinates),1))
+#
+#         # Calculate angle of inclination between each coordinate and centroid
+#         phis = np.arctan2(coordinates[:,0],coordinates[:,1])
+#
+#         # Loop through coordinates and 1) Calculate distance between coordinate
+#         # and centroid; and 2) Add 2 * pi to negative phi values so that all phis
+#         # are placed on a 0 to 2 * pi scale.
+#         for i,coord in enumerate(coordinates):
+#             # (1)
+#             distances[i] = np.linalg.norm(coord - centroid2D)
+#             # (2)
+#             if phis[i] < 0:
+#                 phis[i] = phis[i] + (2 * math.pi)
+#
+#         phi = np.array(sorted(phis))
+#         indices = [p[0] for p in sorted(enumerate(phis),key=lambda i:i[1])]
+#         rho = distances[indices]
+#
+#         # Calculate integrand at each point
+#         y = 0.5 * rho * np.sqrt((rho ** 2 + height ** 2))
+#         # Preallocate vector to hold areas of each trapeziums
+#         areas = np.empty((len(y),1))
+#
+#         # Calculate area of trapezia between points, one by one
+#         # For first point, area of trapezium is:
+#         #       (average of y at edges) * (change in phi)
+#         # However, we need to subtract off 2 * pi to account for phi
+#         # jumping from 2 * pi back to zero as we loop around
+#         areas[0] = 0.5 * (y[0] + y[-1]) * (phi[0] - (phi[-1] - 2 * math.pi))
+#
+#         # For subsequent points, area of trapezium is:
+#         #       (average of y at edges) * (change in phi)
+#         areas[1:] = 0.5 * ((y[0:-1] + y[1:]) * ((phi[1:] - phi[0:-1]).reshape((areas.shape[0]-1,1))))
+#
+#         # Output total area by summing over areas of all trapezia
+#         return sum(areas)[0]
+#
+#     bottom_surface_area = coneSurfaceArea(centroid2D,height,coordinates)
+#
+#     return bottom_volume,bottom_surface_area
