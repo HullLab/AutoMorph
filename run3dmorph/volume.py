@@ -42,7 +42,7 @@ def getVolumeSurfaceArea(settings,obj,image_clean,edge,triangulation,triangles,l
     # Get bottom volume and surface area for idealized dome, cylinder, and cone bases
     bd_volume,bd_surface_area = dome(length,width,bottom_height)
     bcy_volume,bcy_surface_area = cylinder(area,perimeter,bottom_height)
-    bco_volume,bco_surface_area = cone(bcy_volume,centroid,bottom_height,edge,properties)
+    bco_volume,bco_surface_area = cone(bcy_volume,length,width,bottom_height)
 
     # Get final volumes and surface areas
     dome_volume = bd_volume + top_volume
