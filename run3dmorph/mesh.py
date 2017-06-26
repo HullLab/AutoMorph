@@ -201,8 +201,8 @@ def getTopBottom(image,heights):
 
 def aperture(binary_outline,binary_outline_unfilled,heights,bottom_height):
     '''
-    If aperture present, replaces pixel values of aperture with average pixel
-    value from getAverageLevel().
+    If aperture present, replaces pixel values of aperture with bottom height
+    of mesh.
     '''
     mask = np.pad(binary_outline,1,'constant')
     flooded = cv2.floodFill(binary_outline_unfilled,mask,(0,0),1)
@@ -215,7 +215,6 @@ def aperture(binary_outline,binary_outline_unfilled,heights,bottom_height):
             heights[x[i],y[i]] = bottom_height
 
     return heights
-
 
 
 def extractMesh(settings,obj):
