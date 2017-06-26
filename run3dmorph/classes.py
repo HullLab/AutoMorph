@@ -18,7 +18,7 @@ class Object:
         self.rgb = os.path.join(settings['in_directory'],'focused_unlabeled','.'.join([self.name,'tif']))
         self.rgbJPG = os.path.join(os.path.dirname(self.rgb),'.'.join([self.latexName,'jpg']))
         self.stack = os.path.join(settings['in_directory'],'stripped',self.name)
-        self.stackExt = settings['stack_image_ext']
+        self.stackExt = '.' + settings['stack_image_ext'] if '.' not in settings['stack_image_ext'] else settings['stack_image_ext']
         self.label = os.path.join(settings['in_directory'],'stripped','labels','.'.join([self.name,'tif']))
         self.labelJPG = os.path.join(settings['in_directory'],'stripped','labels','.'.join([self.latexName,'jpg']))
 

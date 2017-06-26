@@ -28,14 +28,14 @@ def load(filename, run):
         if size[0]*size[1] >= 89478485:
             run['bigtiff'] = True
     except IOError:
-        if run['input_ext'] == 'tif':
+        if 'tif' in run['input_ext']:
             print "File may be a BIGtiff, attempting alternate read..."
             img = tifffile.imread(filename)
             run['bigtiff'] = True
         else:
             raise
 
-    
+
 
     print np.shape(img)
     end = time.time()
@@ -87,16 +87,16 @@ def save_overview_image(image, box_list, orig_filename, run):
         shrunk_image = image[::factor, ::factor, :]
         print 'INFO: Finished resizing'
         image = draw_bounding_boxes(shrunk_image, box_list, run, resize_factor=resize_factor)
-        
+
     else:
-        image = draw_bounding_boxes(image, box_list, run)    
+        image = draw_bounding_boxes(image, box_list, run)
 
     # save entire image
     if run["mode"] == "final":
         output_dir = run['full_output'].replace('/final', '')
     else:
         output_dir = run['full_output']
-    
+
     file_label = run['image_file_label']
     if not run['box_once']:
         file_label += "_"+os.path.splitext(os.path.basename(orig_filename))[0]
