@@ -68,22 +68,35 @@ def getTopVolume(triangulation):
     '''
     Calculates top volume by summing volume of all simplices comprising the mesh.
     '''
-    def volumeTetrahedron(vertices):
-        '''
-        Calculates the volume of an individual tetrahedron given its vertices.
-        '''
-        matrix = np.vstack((vertices.T,np.ones(4)))
-        volume = (1/6) * np.linalg.det(matrix)
-        return abs(volume)
+    # def volumeTetrahedron(vertices):
+    #     '''
+    #     Calculates the volume of an individual tetrahedron given its vertices.
+    #     '''
+    #     matrix = np.vstack((vertices.T,np.ones(4)))
+    #     volume = (1/6) * np.linalg.det(matrix)
+    #     return abs(volume)
+
+    # top_volume = 0
+    # for s in triangulation.simplices:
+    #     vertices = triangulation.points[s]
+    #     top_volume += volumeTetrahedron(vertices)
 
     top_volume = 0
+
     for s in triangulation.simplices:
         vertices = triangulation.points[s]
-        top_volume += volumeTetrahedron(vertices)
+        v321 = vertices[2][0] * vertices[1][1] * vertices[0][2]
+        v231 = vertices[1][0] * vertices[2][1] * vertices[0][2]
+        v312 = vertices[2][0] * vertices[0][1] * vertices[1][2]
+        v132 = vertices[0][0] * vertices[2][1] * vertices[1][2]
+        v213 = vertices[1][0] * vertices[0][1] * vertices[2][2]
+        v123 = vertices[0][0] * vertices[1][1] * vertices[2][2]
 
-    #top_volume = sum(z_values - bottom_height)
+        tetraVol = (1.0 / 6.0) * (-v321 + v231 + v312 - v132 - v213 + v123)
 
-    return top_volume
+        top_volume += tetraVol
+
+    return abs(top_volume)
 
 
 def getTopSurfaceArea(triangulation,triangles):
