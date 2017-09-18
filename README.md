@@ -26,6 +26,10 @@ To get the tifffile, opencv, and shapely modules, you can simply install them in
     $ conda install opencv -c conda-forge
     $ conda install shapely
 
+  If you choose to install the packages manually instead of using Anaconda, note that
+  scikit-learn and scikit-image and called sklearn and skimage, respectively, in Python
+  repositories.
+
 
 Additional Prerequisites
 -------------
@@ -108,8 +112,8 @@ Copy run2dmorph/run2dmorph_control_file_v2017-06.txt to a directory of your chos
 Use run2dmorph as:
 
     $ run2dmorph <control_file>
-    
-    
+
+
 ### run3dmorph
 
 Copy run3dmorph/run3dmorph_control_file_v2017-06.txt to a directory of your chosing and configure for your run.
@@ -117,10 +121,7 @@ Copy run3dmorph/run3dmorph_control_file_v2017-06.txt to a directory of your chos
 Use run3dmorph as:
 
     $ run3dmorph <control_file>
-    
+
 Run3dmorph can be run with the following optional flags:
 
 --reset : removes any previous run3dmorph output present in the specified output directory
-    
-    
-
