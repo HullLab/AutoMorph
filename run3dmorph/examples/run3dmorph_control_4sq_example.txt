@@ -7,7 +7,7 @@ out_directory =
 sampleID = 4sq_example
 stack_image_ext = .jpg
 macro =
-latex =
+latex = False
 
 unit = micron
 pixel_size_x = 0.975
