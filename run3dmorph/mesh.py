@@ -17,6 +17,8 @@ from scipy.ndimage.filters import generic_filter
 
 from scipy.spatial import Delaunay
 from scipy.interpolate import griddata
+import matplotlib
+matplotlib.use('agg') # Agg backend to avoid X-server on Linux
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
