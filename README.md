@@ -18,7 +18,7 @@ Python Prerequisites
 * opencv
 * shapely
 
-The easiest way to get most of these python modules is to just install [Anaconda](https://www.continuum.io/downloads).
+The easiest way to get most of these Python modules is to just install [Anaconda](https://www.continuum.io/downloads).
 
 To get the tifffile, opencv, and shapely modules, you can simply install them into your Anaconda installation like so:
 
@@ -58,7 +58,7 @@ Or, you can edit the 'rc' files (bashrc / cshrc, depending on shell) to add Auto
     export PATH=${PATH}:${AUTOMORPH_DIR}/run2dmorph
     export PATH=${PATH}:${AUTOMORPH_DIR}/run3dmorph
     export PATH=${PATH}:${AUTOMORPH_DIR}/run3dmorph/lib
-    export PATh=${PATH}:${AUTOMOPRH_DIR}/utilities
+    export PATH=${PATH}:${AUTOMOPRH_DIR}/utilities
 
 In either case, fix the '${AUTOMORPH_DIR}/' bit so that it uses the path you've copied these files into (eg, '/home/me/automorph')
 
