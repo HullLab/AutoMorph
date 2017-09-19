@@ -26,9 +26,17 @@ To get the tifffile, opencv, and shapely modules, you can simply install them in
     $ conda install opencv -c conda-forge
     $ conda install shapely
 
-  If you choose to install the packages manually instead of using Anaconda, note that
-  scikit-learn and scikit-image and called sklearn and skimage, respectively, in Python
-  repositories.
+You may run into the following error message when running AutoMorph:
+
+    ImportError: libopenblas.so.0: cannot open shared object file: No such file or directory
+
+In this situation, you should install Openblas as well:
+
+    $ conda install openblas
+
+Finally, if you choose to install the packages manually instead of using Anaconda, note that
+scikit-learn and scikit-image and called sklearn and skimage, respectively, in Python
+repositories.
 
 
 Additional Prerequisites
