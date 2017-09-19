@@ -8,6 +8,8 @@ import os
 import shutil
 
 import pandas
+import matplotlib
+matplotlib.use('agg') # Agg backend to avoid X-server on Linux
 import matplotlib.pyplot as plt
 
 
