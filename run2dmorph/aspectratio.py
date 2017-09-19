@@ -11,10 +11,11 @@ def getMBB(image_clean):
     Get minimum bounding box of object contour.
     '''
     # Get contours
-    contours,_ = cv2.findContours(image_clean, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    _,contours,_ = cv2.findContours(image_clean, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     # Get minimum bounding box
     rect = cv2.minAreaRect(contours[0])
-    mbb = cv2.cv.BoxPoints(rect)
+    #mbb = cv2.cv.BoxPoints(rect)
+    mbb = cv2.boxPoints(rect)
     return mbb,contours[0]
 
 
