@@ -7,18 +7,19 @@ directory =
 output =
 pixel_size_x =
 pixel_size_y =
-mode =
-skip_last_plane =
-input_ext =
-output_ext =
-unit =
 
+mode =
 threshold =
 minimum_size =
 maximum_size =
 
-scale_bar_length =
+skip_last_plane =
 box_thickness =
+
+input_ext =
+output_ext =
+unit =
+scale_bar_length =
 
 id =
 age =
