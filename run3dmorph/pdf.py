@@ -200,9 +200,12 @@ def writeLatexFile(settings,obj,run3dmorphPath,length,width):
     with open(obj.latex,'wb') as latex:
         text = textwrap.dedent('''
                 \documentclass{{article}}
-                \usepackage{{{:s}}}
+                \IfFileExists{{media9.sty}}{{
+                    \usepackage{{media9}}}}
+                    {{\usepackage{{{:s}}}}}
                 \usepackage[colorlinks=true]{{hyperref}}
                 \usepackage{{siunitx}}
+                \usepackage{{graphicx}}
 
                 \setlength{{\\voffset}}{{-0.75in}}
                 \setlength{{\headsep}}{{5pt}}
