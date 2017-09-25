@@ -74,8 +74,10 @@ def saveMBBFigure(settings,mbb,contour,aspect_ratio,object_name):
     plt.text(0.01,0.96,'Aspect ratio = {0:.4f}'.format(aspect_ratio),transform=ax.transAxes)
 
     # Save output figure
-    dst = os.path.join(settings['out_directory'],'aspect_ratio','_'.join([object_name,'aspect_ratio.pdf']))
-    fig.savefig(dst)
+    dst_pdf = os.path.join(settings['out_directory'],'aspect_ratio','_'.join([object_name,'aspect_ratio.pdf']))
+    dst_jpg = os.path.join(settings['out_directory'],'aspect_ratio','_'.join([object_name,'aspect_ratio.jpg']))
+    for d in [dst_pdf,dst_jpg]:
+        fig.savefig(d)
 
     plt.close()
 
