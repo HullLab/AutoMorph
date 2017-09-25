@@ -8,7 +8,7 @@ Python Prerequisites
 
 * python (2.7)
 * scikit-learn
-* scikit-image
+* scikit-image (v0.9.0+)
 * scipy
 * numpy
 * pillow
