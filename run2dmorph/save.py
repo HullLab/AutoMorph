@@ -80,19 +80,11 @@ def saveMBBFigure(settings,mbb,contour,aspect_ratio,object_name):
     plt.close()
 
 
-def saveIntermediates(settings,image_rgb,image_contrast,image_gray,image_bw,image_filled,image_border,image_clean,edge_unsmoothed,edge_smoothed,image_name):
+def saveIntermediates(settings,image,image_name,tag):
     '''
     Saves intermediate files (output of each individual image filter).
     '''
-    images.save(image_rgb,os.path.join(settings['out_directory'],'intermediates','_'.join([settings['sampleID'],image_name,'1','rgbfilter.tif'])))
-    images.save(image_contrast,os.path.join(settings['out_directory'],'intermediates','_'.join([settings['sampleID'],image_name,'2','contrast.tif'])))
-    images.save(image_gray,os.path.join(settings['out_directory'],'intermediates','_'.join([settings['sampleID'],image_name,'3','grayscale.tif'])))
-    images.save(image_bw,os.path.join(settings['out_directory'],'intermediates','_'.join([settings['sampleID'],image_name,'4','bw.tif'])))
-    images.save(image_filled,os.path.join(settings['out_directory'],'intermediates','_'.join([settings['sampleID'],image_name,'5','fill.tif'])))
-    images.save(image_border,os.path.join(settings['out_directory'],'intermediates','_'.join([settings['sampleID'],image_name,'6','border.tif'])))
-    images.save(image_clean,os.path.join(settings['out_directory'],'intermediates','_'.join([settings['sampleID'],image_name,'7','noise.tif'])))
-    images.save(edge_unsmoothed,os.path.join(settings['out_directory'],'intermediates','_'.join([settings['sampleID'],image_name,'8','edge.tif'])))
-    images.save(edge_smoothed,os.path.join(settings['out_directory'],'intermediates','_'.join([settings['sampleID'],image_name,'9','smooth.tif'])))
+    images.save(image,os.path.join(settings['out_directory'],'intermediates','_'.join([settings['sampleID'],image_name,tag])))
 
 
 def saveFinalOverlay(settings,image,edge,image_name):

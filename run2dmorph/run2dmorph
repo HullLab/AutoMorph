@@ -51,26 +51,29 @@ def morph2d(settings_file):
         object_name = '_'.join([sample_id,object_id])
 
         # Extract edge and cleaned images
-        edge_unsmoothed,edge_smoothed,image_clean,image_smoothed,image_border = extractoutline.extractOutline(run,object_id,image,False)
-        # Get region properties: Area, eccentricity, perimeter, major axis length, minor axis length, and rugosity
-        original_props = extractmorph.getRegionProps(image_clean)
-        smoothed_props = extractmorph.getRegionProps(image_smoothed)
-        measures = extractmorph.extractMorphology(original_props,smoothed_props)
-        # Get minimum bounding box and aspect ratio
-        mbb,contour = aspectratio.getMBB(image_clean)
-        height,width,aspect_ratio = aspectratio.measureMBB(mbb)
-        # Save aspect ratio image if requested
-        if run['draw_aspect_ratio']:
-            save.saveMBBFigure(run,mbb,contour,aspect_ratio,object_name)
-        # Save measurements to data frame
-        data2D = save.saveObject2D(data2D,sample_id,object_id,measures,height,width,aspect_ratio)
+        try:
+            edge_unsmoothed,edge_smoothed,image_clean,image_smoothed,image_border = extractoutline.extractOutline(run,object_id,image,False)
+            # Get region properties: Area, eccentricity, perimeter, major axis length, minor axis length, and rugosity
+            original_props = extractmorph.getRegionProps(image_clean)
+            smoothed_props = extractmorph.getRegionProps(image_smoothed)
+            measures = extractmorph.extractMorphology(original_props,smoothed_props)
+            # Get minimum bounding box and aspect ratio
+            mbb,contour = aspectratio.getMBB(image_clean)
+            height,width,aspect_ratio = aspectratio.measureMBB(mbb)
+            # Save aspect ratio image if requested
+            if run['draw_aspect_ratio']:
+                save.saveMBBFigure(run,mbb,contour,aspect_ratio,object_name)
+            # Save measurements to data frame
+            data2D = save.saveObject2D(data2D,sample_id,object_id,measures,height,width,aspect_ratio)
 
-        # Extract unsmoothed and smoothed coordinates if requested and save to file
-        if run['get_coordinates']:
-            coordinates_unsmoothed = extractcoordinates.extractCoordinates(edge_unsmoothed,run['downsample'],run['num_points'],original_props)
-            coordinates_smoothed = extractcoordinates.extractCoordinates(edge_smoothed,run['downsample'],run['num_points'],smoothed_props)
-            save.saveCoordinates(run,coordinates_unsmoothed,sample_id,object_id,object_name,'original')
-            save.saveCoordinates(run,coordinates_smoothed,sample_id,object_id,object_name,'smoothed')
+            # Extract unsmoothed and smoothed coordinates if requested and save to file
+            if run['get_coordinates']:
+                coordinates_unsmoothed = extractcoordinates.extractCoordinates(edge_unsmoothed,run['downsample'],run['num_points'],original_props)
+                coordinates_smoothed = extractcoordinates.extractCoordinates(edge_smoothed,run['downsample'],run['num_points'],smoothed_props)
+                save.saveCoordinates(run,coordinates_unsmoothed,sample_id,object_id,object_name,'original')
+                save.saveCoordinates(run,coordinates_smoothed,sample_id,object_id,object_name,'smoothed')
+        except:
+            pass # Move to next object if outline cannot be extracted
 
     # Write final collection of measurements into CSV file
     output_path = os.path.join(run['out_directory'],'_'.join([run['sampleID'],'morph2d','properties.csv']))
