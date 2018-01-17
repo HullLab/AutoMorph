@@ -60,46 +60,47 @@ def parse(filename):
 
     # set optional variables
     for setting in parser.options('settings'):
+        currentSetting = parser.get('settings',setting)
+        if currentSetting:
+            if setting == 'threshold':
+                threshold_str = parser.get('settings', 'threshold')
 
-        if setting == 'threshold':
-            threshold_str = parser.get('settings', 'threshold')
+                # remove human language
+                thresholds = threshold_str.replace('-', ',').replace('by', ',').split(',')
+                thresholds = map(float, thresholds)
 
-            # remove human language
-            thresholds = threshold_str.replace('-', ',').replace('by', ',').split(',')
-            thresholds = map(float, thresholds)
+                if len(thresholds) == 2 or len(thresholds) == 3:
+                    # use default step size
+                    if len(thresholds) == 2:
+                        thresholds.append(default_step_size)
+                    thresholds = np.arange(thresholds[0], thresholds[1],
+                                           thresholds[2])
+                elif len(thresholds) > 3 or len(thresholds) < 1:
+                    sys.exit('Error: unrecognized syntax for threshold setting')
 
-            if len(thresholds) == 2 or len(thresholds) == 3:
-                # use default step size
-                if len(thresholds) == 2:
-                    thresholds.append(default_step_size)
-                thresholds = np.arange(thresholds[0], thresholds[1],
-                                       thresholds[2])
-            elif len(thresholds) > 3 or len(thresholds) < 1:
-                sys.exit('Error: unrecognized syntax for threshold setting')
+                num_permutations = len(thresholds)
 
-            num_permutations = len(thresholds)
+            # Backwards compatibility tweaks
+            elif setting == "minimumSize":
+                settings['minimum_size'] = float(parser.get('settings', 'minimumSize'))
+            elif setting == "maximumSize":
+                settings['maximum_size'] = float(parser.get('settings', 'maximumSize'))
 
-        # Backwards compatibility tweaks
-        elif setting == "minimumSize":
-            settings['minimum_size'] = float(parser.get('settings', 'minimumSize'))
-        elif setting == "maximumSize":
-            settings['maximum_size'] = float(parser.get('settings', 'maximumSize'))
-
-        # Special formatting tweaks for robustness
-        # FLOAT
-        elif 'size' in setting:
-            settings[setting] = float(parser.get('settings', setting))
-        # INT
-        elif setting in ['fill_kernel', 'box_thickness', 'scale_bar_length']:
-            settings[setting] = int(parser.get('settings', setting))
-        # BOOLEAN
-        elif setting in ['skip_last_plane', 'debug_images']:
-            if parser.get('settings', setting) in ['False', 'false']:
-                settings[setting] = False
-            elif parser.get('settings', setting) in ['True', 'true']:
-                settings[setting] = True
-        else:
-            settings[setting] = str(parser.get('settings', setting))
+            # Special formatting tweaks for robustness
+            # FLOAT
+            elif 'size' in setting:
+                settings[setting] = float(parser.get('settings', setting))
+            # INT
+            elif setting in ['fill_kernel', 'box_thickness', 'scale_bar_length']:
+                settings[setting] = int(parser.get('settings', setting))
+            # BOOLEAN
+            elif setting in ['skip_last_plane', 'debug_images']:
+                if parser.get('settings', setting) in ['False', 'false']:
+                    settings[setting] = False
+                elif parser.get('settings', setting) in ['True', 'true']:
+                    settings[setting] = True
+            else:
+                settings[setting] = str(parser.get('settings', setting))
 
     # check for required parameters
     for required in required_list:

@@ -236,7 +236,7 @@ def label_image(orig_image, orig_filename, description, run):
     draw = ImageDraw.Draw(image)
 
     # Draw scale bars
-    bar_in_pixels_L = run['scale_bar_length']/run['units_per_pixel']
+    bar_in_pixels_L = run['scale_bar_length'] * run['units_per_pixel']
     bar_in_pixels_S = bar_in_pixels_L / 4.
     bar_in_units_S = run['scale_bar_length'] / 4.
 
