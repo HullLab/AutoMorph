@@ -35,7 +35,9 @@ def load(filename, run):
         else:
             raise
 
-
+    # If image has four channels, convert to three channels
+    if img.shape[2] == 4:
+        img = cv2.cvtColor(img,cv2.COLOR_BGRA2BGR)
 
     print np.shape(img)
     end = time.time()
