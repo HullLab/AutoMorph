@@ -33,7 +33,8 @@ def parse(filename):
 
     required_list = ['in_directory', 'input_ext', 'out_directory', 'sampleID']
     boolean_list = ['get_coordinates', 'draw_aspect_ratio', 'save_intermediates', 'downsample','run3dmorph']
-    float_list = ['pixel_size_x', 'pixel_size_y', 'disk_size_opening','contrast_adjustment', 'threshold_adjustment', 'disk_size_smoothing', 'num_points']
+    float_list = ['pixel_size_x', 'pixel_size_y', 'contrast_adjustment', 'threshold_adjustment']
+    int_list = ['disk_size_opening','disk_size_smoothing', 'num_points']
 
     # Parse setting
     settings = defaults
@@ -62,6 +63,11 @@ def parse(filename):
         elif setting in float_list:
             try:
                 settings[setting] = parser.getfloat('morph2d', setting)
+            except:
+                pass
+        elif setting in int_list:
+            try:
+                settings[setting] = parser.getint('morph2d',setting)
             except:
                 pass
         else:

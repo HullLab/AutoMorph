@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import numpy as np
-from scipy import interpolate, signal
+from scipy import signal
 import pandas
 import math
 
