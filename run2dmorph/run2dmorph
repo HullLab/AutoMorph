@@ -68,8 +68,8 @@ def morph2d(settings_file):
 
             # Extract unsmoothed and smoothed coordinates if requested and save to file
             if run['get_coordinates']:
-                coordinates_unsmoothed = extractcoordinates.extractCoordinates(edge_unsmoothed,run['downsample'],run['num_points'],original_props)
-                coordinates_smoothed = extractcoordinates.extractCoordinates(edge_smoothed,run['downsample'],run['num_points'],smoothed_props)
+                coordinates_unsmoothed = extractcoordinates.extractCoordinates(edge_unsmoothed,run['downsample'],run['num_points'],original_props,measures['MajorAxisLength'])
+                coordinates_smoothed = extractcoordinates.extractCoordinates(edge_smoothed,run['downsample'],run['num_points'],smoothed_props,measures['MajorAxisLength'])
                 save.saveCoordinates(run,coordinates_unsmoothed,sample_id,object_id,object_name,'original')
                 save.saveCoordinates(run,coordinates_smoothed,sample_id,object_id,object_name,'smoothed')
         except:
