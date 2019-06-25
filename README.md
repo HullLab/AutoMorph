@@ -21,9 +21,9 @@ The easiest way to get most of these Python modules is to just install [Anaconda
 To get the tifffile, opencv, and shapely modules, you can simply install them into your Anaconda installation like so:
 
 ```
-$ conda install tifffile -c conda-forge
-$ conda install opencv -c conda-forge
-$ conda install shapely
+conda install tifffile -c conda-forge
+conda install opencv -c conda-forge
+conda install shapely
 ```
 
 You may run into the following error message when running AutoMorph:
@@ -82,7 +82,7 @@ Please refer to the manuals for more detailed explanations of usage and paramete
 
 ### segment
 
-Copy segment/segment_control_file_v2017-06.txt to a directory of your chosing and configure for your run.
+Copy `segment/segment_control_file_v2017-06.txt` to a directory of your chosing and configure for your run.
 
 Use segment as:
 
