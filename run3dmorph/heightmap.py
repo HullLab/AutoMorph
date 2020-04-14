@@ -15,7 +15,7 @@ def writeMacro(settings,obj):
     '''
     with open(obj.macro,'wb') as f:
         if settings['macro']:
-            stackReg = '\nrun("StackReg", "transformation=[Scaled Rotation]");'
+            stackReg = '\nrun("StackReg ", "transformation=[Scaled Rotation]");'
         else:
             stackReg = ''
 
